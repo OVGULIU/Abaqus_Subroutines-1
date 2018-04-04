@@ -338,8 +338,10 @@
             double precision, parameter :: half=0.5d0
             double precision, parameter :: one=1.d0
             double precision, parameter :: two=2.d0
+            double precision, parameter :: three=3.d0
             double precision, parameter :: four=4.d0
             double precision, parameter :: six=6.d0
+            double precision, parameter :: eight=8.d0
 
             ! variables passed in for information (scalar parameters)
             integer, intent(in ) :: NDOFEL         ! number of dof in the element
@@ -431,14 +433,14 @@
             double precision :: JJ(KCORD,KCORD) ! Jacobi matrix
             double precision :: detJ(KGP)       ! Jacobi-determinant (reference)
             double precision :: kPhi(KNODE)     ! Electric Potential
-	    double precision :: CoNODE(KNODE)	! Concentration (from predefined field)
+            double precision :: CoNODE(KNODE)	! Concentration (from predefined field)
             double precision :: E(KCORD)      	! Electric Field
             double precision :: D(KCORD)      	! Electric Displacement
             double precision :: Qf     	! Free Charge Density
             double precision :: vMeq
             double precision :: dofni(KNODE)        ! current dof
-	    double precision :: kCo ! Concentration
-	    double precision :: kEpZero, kEpR, kF, kZ, ksat ! Properties included from input file
+            double precision :: kCo ! Concentration
+            double precision :: kEpZero, kEpR, kF, kZ, ksat ! Properties included from input file
 
             ! trash variables for numerical tangent calculation
             double precision, dimension(MLVARX) :: RHS_num   ! variated residual vector 
@@ -452,18 +454,15 @@
             double precision, parameter :: VPGP = KCORD*KCORD
             !-------------------------------------------------------------------------------  
 
-	    ! Properties
-	    kEpZero = props(1)
-	    kEpR = props(2)
-	    kF = props(3)
-
-	    kZ = props(4)
-	    kSat = props(5)
+            ! Properties
+            kEpZero = props(1)
+            kEpR = props(2)
+            kF = props(3)
+            kZ = props(4)
+            kSat = props(5)
 
             ! element ingoing note =======================
-            if (kinc == 1) then
-!          	write(*,*)"ndofel ",NDOFEL
-	    end if
+            ! write(*,*)
             ! ============================================
             
             ! loop over all integration points (computation of FE variables)
@@ -482,24 +481,40 @@
                 x3 = COORDS(3,:)
             
                 ! ------------------------------------------------------------------
-                if (KNODE==4) then
-            
+                if (KNODE==8) then
+                            
                     ! derivatives of shape functions with respect to natural coordinates                
-                    dNdXi1(1) = -1.d0
-                    dNdXi2(1) = -1.d0
-                    dNdXi3(1) = -1.d0
-                
-                    dNdXi1(2) =  1.d0
-                    dNdXi2(2) =  0.d0
-                    dNdXi3(2) =  0.d0
-                
-                    dNdXi1(3) =  0.d0
-                    dNdXi2(3) =  1.d0
-                    dNdXi3(3) =  0.d0
-                
-                    dNdXi1(4) =  0.d0
-                    dNdXi2(4) =  0.d0
-                    dNdXi3(4) =  1.d0
+                    dNdXi1(1) = -one/eight*(1-xi2)*(1-xi3)
+                    dNdXi2(1) = -one/eight*(1-xi1)*(1-xi3)
+                    dNdXi3(1) = -one/eight*(1-xi1)*(1-xi2)
+    
+                    dNdXi1(2) =  one/eight*(1-xi2)*(1-xi3)
+                    dNdXi2(2) =  -one/eight*(1+xi1)*(1-xi3)
+                    dNdXi3(2) =  -one/eight*(1+xi1)*(1-xi2)
+    
+                    dNdXi1(3) =  one/eight*(1+xi2)*(1-xi3)
+                    dNdXi2(3) =  one/eight*(1+xi1)*(1-xi3)
+                    dNdXi3(3) =  -one/eight*(1+xi1)*(1+xi2)
+    
+                    dNdXi1(4) =  -one/eight*(1+xi2)*(1-xi3)
+                    dNdXi2(4) =  one/eight*(1-xi1)*(1-xi3)
+                    dNdXi3(4) =  -one/eight*(1-xi1)*(1+xi2)
+    
+                    dNdXi1(5) =  -one/eight*(1-xi2)*(1+xi3)
+                    dNdXi2(5) =  -one/eight*(1-xi1)*(1+xi3)
+                    dNdXi3(5) =  one/eight*(1-xi1)*(1-xi2)
+    
+                    dNdXi1(6) =  one/eight*(1-xi2)*(1+xi3)
+                    dNdXi2(6) =  -one/eight*(1+xi1)*(1+xi3)
+                    dNdXi3(6) =  one/eight*(1+xi1)*(1-xi2)
+    
+                    dNdXi1(7) =  one/eight*(1+xi2)*(1+xi3)
+                    dNdXi2(7) =  one/eight*(1+xi1)*(1+xi3)
+                    dNdXi3(7) =  one/eight*(1+xi1)*(1+xi2)
+    
+                    dNdXi1(8) =  -one/eight*(1+xi2)*(1+xi3)
+                    dNdXi2(8) =  one/eight*(1-xi1)*(1+xi3)
+                    dNdXi3(8) =  one/eight*(1-xi1)*(1+xi2)
                              
                 else 
                     stop "Error in computation of shape function derivatives. The number of nodes does not conform with the element type (4 node tetrahedral element)."     
@@ -518,9 +533,12 @@
                 dX3dxi2=dot(X3,dNdXi2)
                 dX3dxi3=dot(X3,dNdXi3)
             
-                ! Jacobian determinant (detJ = 6V)
-                detJ(ip) = dX1dxi1*dX2dxi2*dX3dxi3 + dX2dxi1*dX3dxi2*dX1dxi3 + dX3dxi1*dX1dxi2*dX2dxi3 &
-                         - dX1dxi3*dX2dxi2*dX3dxi1 - dX2dxi3*dX3dxi2*dX1dxi1 - dX3dxi3*dX1dxi2*dX2dxi1
+                ! Jacobian determinant
+                JJ(1,:) = (/dX1dxi1, dX2dxi1, dX3dxi1/)
+                JJ(2,:) = (/dX1dxi2, dX2dxi2, dX3dxi2/)
+                JJ(3,:) = (/dX1dxi3, dX2dxi3, dX3dxi3/)
+                
+                detJ(ip) = det(JJ)
             
                 ! derivatives of shape functions with respect to physical coordinates  
                 do nn=1,KNODE
@@ -538,151 +556,129 @@
             end do ! ---------------------------------------------------------------
 
             ! loop over all degrees of freedom
-if (Lflags(3).eq.5 .OR. Lflags(3).eq.1) then
-	    RHS=0.d0
-            do ip=1,KGP ! ----------------------------------------------------------
-        
-                ! Electric Field
-                E = 0.d0
-                do ni=1,KNODE
-                    E = E - U(ni)*( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/) )
-                end do
-!		WRITE(*,*) E
-		CoNODE = predef(1,2,:)
-		kCo = dot(kNN(ip,:),CoNODE)
-            	Qf = kF*((kZ*kCo)+(kSat*1.d0))
-!		Qf = kF*((kZ*CoNODE)+( kSat*(/1.d0,1.d0,1.d0,1.d0/) ))
-
-                ! Electric displacement field
-                D = kEpZero*kEpR*E 
-!		write(*,*) "D", D
-		! Free charge density
-		if (jElem==41151 .OR. jElem==46798) then
-!			open(unit=103, file='/home/cerecam/Desktop/GPG_Cube/Resultscheck.txt', status="old", position="append", action="write")!	
-!			write(*,*) "jElem", jElem
-!			write(103,*) "jElem", jElem
-!			write(103,*) "U", U	
-!			write(103,*) "predef(1,2,:)", predef(1,2,:)	
-!!			write(103,*) "Qf", Qf
-!			write(103,*) "D", D
-!			write(103,*) ""
-!			close(103)
-		end if		
-!		write(*,*) "CoNODE",CoNODE
-!		write(*,*) "Qf",Qf
-
-		
-                do ni=1,KNODE !-----------------------------loop-i------------------
-                    ! internal residual force vector
-!                    RHS(ni) = RHS(ni) - (KQUAD*KWT(ip)*detJ(ip)*( Qf(ni)*kNN(1,ni)))
-!                    RHS(ni) = RHS(ni) + KQUAD*KWT(ip)*detJ(ip)*dot(D,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))*1.E-3+KQUAD*KWT(ip)*detJ(ip)*Qf*1.E-3
-                    RHS(ni) = RHS(ni) + KQUAD*KWT(ip)*detJ(ip)*dot(D,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))+KQUAD*KWT(ip)*detJ(ip)*Qf*kNN(ip,ni)
-!                    RHS(ni) = RHS(ni) + KQUAD*KWT(ip)*detJ(ip)*dot(D,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))
-!			if (jelem==1) then
-!				write(*,*) "ERROR: RHS", dot(D,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))
-!			end if 
-                end do !------------------------------end-loop-i--------------------
-!		if (jElem==56618) then	
-!			write(*,*) "RHS", RHS
-!		end if
-            end do ! ----------------------------end-loop-ip------------------------
-end if
-	    !write(*,*) "D", D
-if (Lflags(3).eq.2 .OR. Lflags(3).eq.1) then
-	RHS_test=0.d0
-            do ip=1,KGP ! ----------------------------------------------------------
-                        
-		! Electric Field
-                E = 0.d0
-                do ni=1,KNODE
-                    E = E - U(ni)*( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/) )
-                end do
-
-                D = kEpZero*kEpR*E
-	
-                do ni=1,KNODE !-----------------------------loop-i------------------
-                    ! internal residual force vector
-                    RHS_test(ni) = RHS_test(ni) + KQUAD*KWT(ip)*detJ(ip)*dot(D,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))
-
-                end do !------------------------------end-loop-i--------------------
-!		if (jElem==56618) then	
-!			write(*,*) "RHS_test", RHS_test	
-!		end if
-!        	write(*,*) "U:	",U
-            end do ! ----------------------------end-loop-ip------------------------
- 	AMATRX=0.d0
-            do dof=1,NDOFEL ! ------------------------------------------------------
-            ! loop over all integration points (computation of residuum)                
-                RHS_num=0.d0
-                U_NUM = U(1:NDOFEL)
-                U_NUM(dof) = U_NUM(dof)+KVNTG
-!                DU_NUM = U_NUM(U(1:NDOFEL)-DU(1:NDOFEL))
-                ! loop over all integration points (computation of disturbed residuum)
-                do ip=1,KGP ! ------------------------------------------------------
-        
-	                ! Electric Field
-        	        E = 0.d0
-        	        do ni=1,KNODE
-        	            E = E - U_NUM(ni)*( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/) )
-        	        end do
-        	        ! Electric displacement field
-        	        D = kEpZero*kEpR*E
-
-        	            ! summation over node_i
-        	            do ni=1,KNODE !-----------------------------loop-i------------------
-        	                ! internal residual force vector
-        	                RHS_num(ni) = RHS_num(ni) + KQUAD*KWT(ip)*detJ(ip)*dot(D,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))
-        	
-        	            end do !------------------------------end-loop-i--------------------
-!		if (jElem==56618) then	
-!			write(*,*) "RHS_num", RHS_num
-!		end if
-        	
+            if (Lflags(3).eq.5 .OR. Lflags(3).eq.1) then
+                RHS=0.d0
+                do ip=1,KGP ! ----------------------------------------------------------
+            
+                    ! Electric Field
+                    E = 0.d0
+                    do ni=1,KNODE
+                        E = E - U(ni)*( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/) )
+                    end do
+!            		WRITE(*,*) E
+                    CoNODE = predef(1,2,:)
+                    kCo = dot(kNN(ip,:),CoNODE)
+                    Qf = kF*((kZ*kCo)+(kSat*1.d0))
+!            		Qf = kF*((kZ*CoNODE)+( kSat*(/1.d0,1.d0,1.d0,1.d0/) ))
+            
+                    ! Electric displacement field
+                    D = kEpZero*kEpR*E 
+!            		write(*,*) "D", D
+!                   ! Free charge density
+!                    if (jElem==41151 .OR. jElem==46798) then
+!            			open(unit=103, file='/home/cerecam/Desktop/GPG_Cube/Resultscheck.txt', status="old", position="append", action="write")!	
+!            			write(*,*) "jElem", jElem
+!            			write(103,*) "jElem", jElem
+!            			write(103,*) "U", U	
+!            			write(103,*) "predef(1,2,:)", predef(1,2,:)	
+!            			write(103,*) "Qf", Qf
+!            			write(103,*) "D", D
+!            			write(103,*) ""
+!            			close(103)
+!                    end if		
+            
+                    
+                    do ni=1,KNODE !-----------------------------loop-i------------------
+                        ! internal residual force vector
+!                        RHS(ni) = RHS(ni) + KQUAD*KWT(ip)*detJ(ip)*dot(D,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))
+!                        RHS(ni) = RHS(ni) - (KQUAD*KWT(ip)*detJ(ip)*( Qf(ni)*kNN(1,ni)))
+                        RHS(ni) = RHS(ni) + KQUAD*KWT(ip)*detJ(ip)*dot(D,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))+KQUAD*KWT(ip)*detJ(ip)*Qf*kNN(ip,ni)
+                    end do !------------------------------end-loop-i--------------------
+!            		if (jElem==56618) then	
+!            			write(*,*) "RHS", RHS
+!            		end if
                 end do ! ----------------------------end-loop-ip------------------------
-
-		if ((RHS_num(1)-RHS_test(1)).ne.0) then
-!			write(*,*) "RHS_test:	",RHS_test(1:NDOFEL)
-!			write(*,*) "RHS_num:	",RHS_num(1:NDOFEL)
-!			write(*,*) "RHS_diff:	",RHS_num(1:NDOFEL)-RHS_test(1:NDOFEL)
-		end if
-
-               AMATRX(:,dof) = - (RHS_num(1:NDOFEL)-RHS_test(1:NDOFEL))/KVNTG
-!		write(*,*) "RHS_num:	",RHS_num(1:NDOFEL)
-!		write(*,*) "RHS_diff:	",RHS_num(1:NDOFEL)-RHS_test(1:NDOFEL)
+            end if
+                    !write(*,*) "D", D
+            if (Lflags(3).eq.2 .OR. Lflags(3).eq.1) then
+                RHS_test=0.d0
+                do ip=1,KGP ! ----------------------------------------------------------
+                                    
+                    ! Electric Field
+                    E = 0.d0
+                    do ni=1,KNODE
+                        E = E - U(ni)*( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/) )
+                    end do
+    
+                    D = kEpZero*kEpR*E
         
-            end do ! ----------------------------end-loop-dof---------------------------
-!		if (jElem==56618) then	
-!			write(*,*) "AMATRX", AMATRX
-!		end if 
-	if(jelem==56618) then
-		if (kinc==1) then			
-!			write(*,*) "AMATRX", AMATRX
-!			write(*,*) "RHS:	",RHS(1:NDOFEL)
-!			write(*,*) "RHS_test:	",RHS_test(1:NDOFEL)
-!			write(*,*) "RHS_num:	",RHS_num(1:NDOFEL)
-!			write(*,*) "RHS_diff:	",RHS_num(1:NDOFEL)-RHS_test(1:NDOFEL)
-!			write(*,*)
-		end if
-	end if
-	end if
-!	end if
-            ! ============================================
-            ! element outgoing note
-            !write(*,*)" "
-            !write(*,*)"UEL out - ELEMNO",jELEM
-            !write(*,*)" "
-            ! ============================================
-!	if (JELEM == 1) then
-!		write(*,*)" OUTGOING"
-!           	write(*,*)"element no: ",JELEM
-!            	write(*,*)" "
-!	    	write(*,*)"NODAL TEMPS ", U
-!	    	write(*,*)"PREDEF ", predef(2,2,:)
-!	    	write(*,*)"RHS ", RHS
-!	    	write(*,*)"AMATRX ", AMATRX
-!	    end if
-
+                    do ni=1,KNODE !-----------------------------loop-i------------------
+                        ! internal residual force vector
+                        RHS_test(ni) = RHS_test(ni) + KQUAD*KWT(ip)*detJ(ip)*dot(D,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))
+    
+                    end do !------------------------------end-loop-i--------------------
+    !        		if (jElem==56618) then	
+    !        			write(*,*) "RHS_test", RHS_test	
+    !        		end if
+    !               write(*,*) "U:	",U
+                end do ! ----------------------------end-loop-ip------------------------
+                AMATRX=0.d0
+                do dof=1,NDOFEL ! ------------------------------------------------------
+                    ! loop over all integration points (computation of residuum)                
+                    RHS_num=0.d0
+                    U_NUM = U(1:NDOFEL)
+                    U_NUM(dof) = U_NUM(dof)+KVNTG
+!                   DU_NUM = U_NUM(U(1:NDOFEL)-DU(1:NDOFEL))
+                    ! loop over all integration points (computation of disturbed residuum)
+                    do ip=1,KGP ! ------------------------------------------------------
+                
+                        ! Electric Field
+                        E = 0.d0
+                        do ni=1,KNODE
+                            E = E - U_NUM(ni)*( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/) )
+                        end do
+                        ! Electric displacement field
+                        D = kEpZero*kEpR*E
+    
+                        ! summation over node_i
+                        do ni=1,KNODE !-----------------------------loop-i------------------
+                            ! internal residual force vector
+                            RHS_num(ni) = RHS_num(ni) + KQUAD*KWT(ip)*detJ(ip)*dot(D,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))
+            
+                        end do !------------------------------end-loop-i--------------------
+!                		if (jElem==56618) then	
+!                			write(*,*) "RHS_num", RHS_num
+!                		end if
+                        
+                    end do ! ----------------------------end-loop-ip------------------------
+            
+!                    if ((RHS_num(1)-RHS_test(1)).ne.0) then
+!            			write(*,*) "RHS_test:	",RHS_test(1:NDOFEL)
+!            			write(*,*) "RHS_num:	",RHS_num(1:NDOFEL)
+!            			write(*,*) "RHS_diff:	",RHS_num(1:NDOFEL)-RHS_test(1:NDOFEL)
+!                    end if
+            
+                    AMATRX(:,dof) = - (RHS_num(1:NDOFEL)-RHS_test(1:NDOFEL))/KVNTG
+!            		write(*,*) "RHS_num:	",RHS_num(1:NDOFEL)
+!            		write(*,*) "RHS_diff:	",RHS_num(1:NDOFEL)-RHS_test(1:NDOFEL)
+                    
+                end do ! ----------------------------end-loop-dof---------------------------
+!            		if (jElem==56618) then	
+!            			write(*,*) "AMATRX", AMATRX
+!            		end if 
+!                    if(jelem==56618) then
+!                        if (kinc==1) then			
+!                			write(*,*) "AMATRX", AMATRX
+!                			write(*,*) "RHS:	",RHS(1:NDOFEL)
+!                			write(*,*) "RHS_test:	",RHS_test(1:NDOFEL)
+!                			write(*,*) "RHS_num:	",RHS_num(1:NDOFEL)
+!                			write(*,*) "RHS_diff:	",RHS_num(1:NDOFEL)-RHS_test(1:NDOFEL)
+!                			write(*,*)
+!                    end if
+            end if
+            
         return
         end subroutine UEL
         !-------------------------------------------------------------------------------
         !===============================================================================
+            
