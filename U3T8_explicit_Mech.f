@@ -604,7 +604,7 @@
             !write(*,*)" "
             ! ============================================
             
-                        
+            
             if (jtype.eq.38 .and. lflags(iProcedure).eq.jDynExplicit) then 
                 
                 pEM  = props(1)
@@ -630,9 +630,9 @@
                     pQUAD = one
                         
                 else
-        
-                    stop "Error in computation of integration point coordinates. The number of IPs does not conform with the element type (4 node tetrahedral element with 4 integratin points)."
-        
+
+                    write(*,*) "Error in computation of integration point coordinates. The number of IPs does not conform with the element type (4 node tetrahedral element with 4 integratin points)."
+                    stop
                 end if
                 !---------------------------------------------------------------------------
                     
@@ -666,8 +666,7 @@
                 ! identity matrix ----------------------------------------------------------
                 pID=zero
                 forall(i=1:iCORD) pID(i,i)=one
-                !---------------------------------------------------------------------------
-                    
+                !---------------------------------------------------------------------------   
                 ! loop over element block
                 do kblock=1,nblock ! ---------------------------------------------------
             
@@ -799,12 +798,13 @@
                 
                         rhs(kblock,1:ndofel)=zero
                         ! loop over all integration points (computation of residuum)
+                        
+                        Ux = u(kblock,1:iCORD*iNODE:iCORD)
+                        Uy = u(kblock,2:iCORD*iNODE:iCORD)
+                        Uz = u(kblock,3:iCORD*iNODE:iCORD)
                         do ip=1,iGP ! ------------------------------------------------------
             
                             ! displacement gradient
-                            Ux = u(kblock,1:iCORD*iNODE:iCORD)
-                            Uy = u(kblock,2:iCORD*iNODE:iCORD)
-                            Uz = u(kblock,3:iCORD*iNODE:iCORD)
                             H = zero
                             do ni=1,iNODE
                                 H = H + dya( (/Ux(ni),Uy(ni),Uz(ni)/),(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/) )
@@ -832,14 +832,7 @@
                         volume = detJ(1)+detJ(2)+detJ(3)+detJ(4)+detJ(5)+detJ(6)+detJ(7)+detJ(8)
                         pd_min = volume**(one/three)
                         dtimeStable(kblock) = factorStable*(pd_min/cd)
-                        !dtimeStable(kblock) = 2.143102d-06
-                        
-                        !if (kblock==1) then
-                        !    write(*,*)"dtimeStable(kblock)"
-                        !    write(*,*)dtimeStable(kblock)
-                        !    write(*,*)"rhs(kblock=1,:)"
-                        !    write(*,*)rhs(kblock,:)
-                        !end if
+
                                         
                     end if
                 end do !----------------------------------------------------------------
