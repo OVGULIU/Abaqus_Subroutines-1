@@ -55,6 +55,21 @@
                 
                 KQUAD = 1.d0/6.d0
         
+            elseif (KGP==8) then
+                Abcissa=SQRT(1.d0/3.d0)
+
+                KGPCORD(1,:) = (/ -Abcissa, -Abcissa, -Abcissa /)
+                KGPCORD(2,:) = (/  Abcissa, -Abcissa, -Abcissa /)
+                KGPCORD(3,:) = (/  Abcissa,  Abcissa, -Abcissa /)
+                KGPCORD(4,:) = (/ -Abcissa,  Abcissa, -Abcissa /)
+                KGPCORD(5,:) = (/ -Abcissa, -Abcissa,  Abcissa /)
+                KGPCORD(6,:) = (/  Abcissa, -Abcissa,  Abcissa /)
+                KGPCORD(7,:) = (/  Abcissa,  Abcissa,  Abcissa /)
+                KGPCORD(8,:) = (/ -Abcissa,  Abcissa,  Abcissa /)
+                    
+                kWT(:) = (/ one, one, one, one, one, one, one, one /)
+            
+                KQUAD = 1.0
             else
         
                 stop "Error in computation of integration point coordinates. The number of IPs does not conform with the element type (4 node tetrahedral element with 4 integratin points)."
@@ -77,6 +92,15 @@
                     KNN(ip,3) = xi2
                     KNN(ip,4) = xi3
         
+                else if (KNODE==8) then
+                    KNN(ip,1) = one/eight*(1-xi1)*(1-xi2)*(1-xi3)
+                    KNN(ip,2) = one/eight*(1+xi1)*(1-xi2)*(1-xi3)
+                    KNN(ip,3) = one/eight*(1+xi1)*(1+xi2)*(1-xi3)
+                    KNN(ip,4) = one/eight*(1-xi1)*(1+xi2)*(1-xi3)
+                    KNN(ip,5) = one/eight*(1-xi1)*(1-xi2)*(1+xi3)
+                    KNN(ip,6) = one/eight*(1+xi1)*(1-xi2)*(1+xi3)
+                    KNN(ip,7) = one/eight*(1+xi1)*(1+xi2)*(1+xi3)
+                    KNN(ip,8) = one/eight*(1-xi1)*(1+xi2)*(1+xi3)
                 else
                     stop "Error in computation of shape functions. The number of nodes does not conform with the element type (4 node tetrahedral element)."
                 end if
