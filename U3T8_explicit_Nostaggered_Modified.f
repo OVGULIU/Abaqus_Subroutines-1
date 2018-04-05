@@ -817,7 +817,19 @@
             double precision :: Elesize		! Element size in veocity field direction (Radius of equivalent volume circle)
             double precision :: pCoTotal	! integration within domain
             double precision :: pStability(iCORD)	! stability
-                
+            
+!--------------------------Constants used in modified PNP model-------------------------------------
+
+            double precision :: pV_i		! Volume concentration of any mole of a species
+            double precision :: pV_ges      ! Maximum volume concentration allowed
+            double precision :: pDensVolFrac! Total density volume fraction of mobile species
+            double precision :: pGradRho	! Grad of total volume
+            double precision :: pNa		    ! Avogadro's constant
+            double precision :: pPi		    ! Constant of pi
+            double precision :: pRi		    ! Radius of concentration molecules
+            double precision :: pImmobileConc		    ! Radius of concentration molecules
+            
+!--------------------------Constants used in modified PNP model-------------------------------------                
             
             ! integer
             integer :: kblock,ip,nn,ni,nj,i
@@ -847,8 +859,17 @@
             pa2 = props(13)
             
             pGM  = half*pEM/(one+pNU)
-            pLAM = (pEM*pNU)/((one+pNU)*(one-two*pNU))    
-            	
+            pLAM = (pEM*pNU)/((one+pNU)*(one-two*pNU)) 
+               
+!--------------------------Parameters used in modified PNP model-------------------------------------
+            pNa = 602.2140857
+            pPi = 3.14159265358979311
+            pRi = 0.502
+            pV_ges = 4.0
+            pImmobileConc = pV_ges / (4.0d0/3.0d0*pPi*(pRi**3)*pNa)        
+!--------------------------Parameters used in modified PNP model-------------------------------------
+
+	
             ! integration point coordinates and weights --------------------------------
             if (iGP==8) then ! HUGHES - The Finite Element Method 1987 (p. 174)
     
@@ -1010,6 +1031,7 @@
                 Thermaltime = (pd_min*pd_min)/(2*cdT)
                 TimeMin = minval( (/Mechtime,Thermaltime/) )
                 dtimeStable(kblock) = factorStable*TimeMin		
+                
 !    !===================================================================================================================================
 !    !--------------------------------------------------------RHS CALCULATION------------------------------------------------------------
 !    !===================================================================================================================================
@@ -1054,6 +1076,16 @@
                         ! Electrical Displacement given by -(minus).epsilon0.epsilonr.Elecfield
                         ElecDisp = pEPSILONZERO*pEPSILONR*pELECFIELD
                         
+                        pV_i = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*pCo
+                        
+                        pDensVolFrac = pV_i/pV_ges
+                        if (pDensVolFrac>1.0) then
+                            write(*,*) "rho exceeds to 1.0"
+                        end if
+                        if (pDensVolFrac<0.0) then
+                            write(*,*) "rho is less than 0.0"
+                        end if
+                
                         ! Internal energy Calculation							
                         pSED = ( ( pGM*ddot(Ee,Ee)+half*pLAM*trace(Ee)*trace(Ee)) )            
                         energy(kblock,iElIe)= energy(kblock,iElIe) + (detJ(ip))*pSED
@@ -1082,10 +1114,19 @@
                             rhs(kblock,dofni) = rhs(kblock,dofni) 	+ pQUAD*pWT(ip)*detJ(ip)*(matvec(S,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))) 
     !											- pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),((pEMCoup/pZ)*pQf*pID))
                     !--------------------------------------Concentration RHS--------------------------------------
-                            rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
-                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD))) &
-                        + (pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+                        if (pDensVolFrac>0.1) then
+                                    rhs(kblock,dofniT) = rhs(kblock,dofniT) &
+                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
+                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pDif*pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))&
+                            + (pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+                        else
+                                    rhs(kblock,dofniT) = rhs(kblock,dofniT) &
+                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
+                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*(one-pDensVolFrac)*pELECFIELD))) &
+                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pDif*pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))&
+                            + (pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+                        
+                        end if
     !					+ pDif*(pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,((/1.0d0, 1.0d0, 1.0d0/)*pa1))))
     !                   
     !         				rhs(kblock,dofniT) = rhs(kblock,dofniT) &
