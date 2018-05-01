@@ -13,7 +13,7 @@
 
         implicit none
         !---------------------------------------------------------------------------          
-        public :: sgn,norm,trace,det,inv,dot,ddot,dya,cross,matvec,matmat
+        public :: sgn,norm,trace,det,inv,dot,ddot,dya,cross,matvec,matmat,vec_sum
         
         contains
     
@@ -346,8 +346,26 @@
             end if
 
         end function matmat
+        
         !===========================================================================
+        ! sign function of a scalar
+        function vec_sum(vec) 
+       
+            !-----------------------------------------------------------------------  
+            ! declaration
     
+            double precision, dimension(:) :: vec  
+            double precision  ::  vec_sum 
+            integer :: i
+            !-----------------------------------------------------------------------
+            vec_sum = 0.0d0
+            do i=1,size(vec)
+                vec_sum = vec_sum+ vec(i)
+            end do
+    
+        end function vec_sum
+        
+        !===========================================================================
     end module functions
     !===============================================================================
     
@@ -638,6 +656,7 @@
             
             ! parameters - problem specification
             integer, parameter :: iGP=8		!Number of Gauss Points
+            integer, parameter :: iGPquad=1		!Number of Gauss Points for boundary 2D elements
             integer, parameter :: iCORD=3	!Degrees of freedom (mechanical)
             integer, parameter :: ICORDTOTAL=4  !Degrees of freedom (total per node (3 mech; 1 temp))
             integer, parameter :: iNODE=8	!Number of nodes per element
@@ -658,7 +677,7 @@
             
             !  predefined parameters - procedure flags (Explicit Dynamic)
             integer, parameter :: jDynExplicit = 17
-	    !  predefined parameters - procedure flags
+            !  predefined parameters - procedure flags
             integer, parameter :: jDynThermalStressExplicit = 74
             
             ! predefined parameters - energy array indices
@@ -698,8 +717,8 @@
             integer, intent(in ) :: ncrd                                ! max. number of user-defined coordinates at any nodal point
             integer, intent(in ) :: nnode                               ! user-defined number of nodes on the element
             integer, intent(in ) :: jtype                               ! integer defining the element type
-            integer, intent(in ) :: kstep 	                        ! current step number
-            integer, intent(in ) :: kinc 	                        ! current increment number
+            integer, intent(in ) :: kstep 	                            ! current step number
+            integer, intent(in ) :: kinc 	                            ! current increment number
             integer, intent(in ) :: npredef                             ! number of predefined field variables (incl. temperature)
             integer, intent(in ) :: jdltyp                              ! specifies the load type
             
@@ -734,6 +753,17 @@
             double precision :: pNN(iGP,iNODE)      ! shape function matrix (interpolation matrix)
             double precision :: pID(iCORD,iCORD)    ! identity tensor
             
+            ! user variables- For quadrilateral elements
+            ! ==================
+            
+            double precision :: pGPCORDquad(iGPquad,iCORD-1)  ! integration point coordinates
+            double precision :: pQUADquad               ! factor for quadrature rule
+            double precision :: pWTquad(iGPquad)            ! integration point weights
+            double precision :: pNNquad(iGPquad,4)      ! shape function matrix (interpolation matrix)
+            
+            ! Other variables  
+            ! ==================
+                      
             double precision :: amass_row_sum       ! sum of array row
             double precision :: cd,pd,pd_min,cdT, pd_min_Jelem
             double precision ::	Mechtime,Thermaltime,TimeMin
@@ -829,9 +859,45 @@
             double precision :: pRi		    ! Radius of concentration molecules
             double precision :: pImmobileConc		    ! Radius of concentration molecules
             
-!--------------------------Constants used in modified PNP model-------------------------------------                
+!--------------------------Constants used Robin Boundary Conditions -------------------------------------                
+
+            double precision :: xi1quad,xi2quad         ! natural coordinates
+            double precision :: QuadNodes(4)
+            double precision :: Jquad(iGPquad,2,2)           ! Jacobian matrix quad faces (reference)
+            double precision :: Detjquad(iGPquad)           ! Jacobi-determinant quad faces (reference)
+            double precision :: F1(iCORD)    ! Centroid of element
+            double precision :: F2(iCORD)    ! Centroid of element
+            double precision :: F3(iCORD)    ! Centroid of element
+            double precision :: F4(iCORD)    ! Centroid of element
+            double precision :: F5(iCORD)    ! Centroid of element
+            double precision :: F6(iCORD)    ! Centroid of element
+            double precision :: F_all(6)    ! Centroid of element
+            double precision :: coordquad(4,2)    ! Centroid of element
             
-            ! integer
+!            double precision :: N_all(6)           ! Normals described by different faces
+!            double precision :: N_all(6)           ! Normals described by different faces
+!            double precision :: N_all(6)           ! Normals described by different faces
+!            double precision :: N_all(6)           ! Normals described by different faces
+!            double precision :: N_all(6)           ! Normals described by different faces
+            
+!                      5____________8
+!                      /|          /|
+!                     / |         / |   
+!                   6/__|________/7 |
+!                    |  |        |  |
+!                    | 1|________|__|4
+!                    | /         | /
+!                   2|/__________|/3
+                    
+!            Where:  face 1 nodes = 1234
+!                    face 2 nodes = 5678                
+!                    face 3 nodes = 7348
+!                    face 4 nodes = 6215
+!                    face 5 nodes = 6237
+!                    face 6 nodes = 5148 
+
+!--------------------------Integers -------------------------------------           
+
             integer :: kblock,ip,nn,ni,nj,i
 
 
@@ -843,7 +909,8 @@
 !===============================================================================================================================================
 
                       
-        if (jtype.eq.38) then        
+        if (jtype.eq.38) then    
+
             pEM  = props(1)
             pNU  = props(2)
             pRHO = props(3)
@@ -1020,7 +1087,7 @@
                
                 end do ! -------------------ip-loop------------------------------- 
 !    !===================================================================================================================================
-!    !----------------------------------------------ELEMENT LENGTH CALCULATION----------------------------------------------------
+!    !-----------------------------------ELEMENT LENGTH CALCULATION & STABLE TIME INCREMENT CALCULATION----------------------------------
 !    !===================================================================================================================================
                 
                 pVolume = detJ(1)+detJ(2)+detJ(3)+detJ(4)+detJ(5)+detJ(6)+detJ(7)+detJ(8)
@@ -1147,6 +1214,121 @@
                         end do !------------------------------end-loop-ni----------------
     
                     end do ! -------------------- ip loop  ------------------------
+!    !===================================================================================================================================
+!    !--------------------------------------------------------ROBIN BC: RHS ADDITION------------------------------------------------------------
+!    !===================================================================================================================================
+!                    checkZERO = coord(kblock,:,:).eq.0.0d0
+!                    checkONE = coord(kblock,:,:).eq.1.0d0
+!                    if (ANY(coord(kblock,:,:).eq.0.0d0) .OR. ANY(coord(kblock,:,:).eq.1.0d0)) then
+                        
+!!                      5____________8
+!!                      /|          /|
+!!                     / |         / |         Y
+!!                   6/__|________/7 |         ^
+!!                    |  |        |  |         | 
+!!                    | 1|________|__|4        |____>X 
+!!                    | /         | /         /
+!!                   2|/__________|/3        /Z
+                        
+!!            Where:  face 1 nodes = 5148
+!!                    face 2 nodes = 6237                
+!!                    face 3 nodes = 1234
+!!                    face 4 nodes = 7348
+!!                    face 5 nodes = 5678
+!!                    face 6 nodes = 6215 
+
+!                        F2 = cross((coords(kblock,5,:)-coords(kblock,6,:),(coords(kblock,6,:)-coords(kblock,7,:)))
+!                        F2 = F2/NORM(F2)
+!                        F3 = cross((coords(kblock,7,:)-coords(kblock,3,:),(coords(kblock,3,:)-coords(kblock,4,:)))
+!                        F3 = F3/NORM(F3)
+!                        F4 = cross((coords(kblock,6,:)-coords(kblock,2,:),(coords(kblock,2,:)-coords(kblock,1,:)))
+!                        F4 = F4/NORM(F4)
+!                        F5 = cross((coords(kblock,6,:)-coords(kblock,2,:),(coords(kblock,2,:)-coords(kblock,3,:)))
+!                        F5 = F5/NORM(F5)
+!                        F6 = cross((coords(kblock,5,:)-coords(kblock,1,:),(coords(kblock,1,:)-coords(kblock,4,:)))
+!                        F6 = F6/NORM(F6)                 
+                        
+                        if (ANY(jElem(kblock).eq.Z0_Poly)) then
+!                            F1 = cross((coords(kblock,5,:)-coords(kblock,1,:),(coords(kblock,1,:)-coords(kblock,4,:)))
+!                            F1 = F1/NORM(F1)
+!                            F2 = cross((coords(kblock,6,:)-coords(kblock,2,:),(coords(kblock,2,:)-coords(kblock,3,:)))
+!                            F2 = F2/NORM(F2)
+!                            F3 = cross((coords(kblock,1,:)-coords(kblock,2,:),(coords(kblock,2,:)-coords(kblock,3,:)))
+!                            F3 = F3/NORM(F3)
+!                            F4 = cross((coords(kblock,7,:)-coords(kblock,3,:),(coords(kblock,3,:)-coords(kblock,4,:)))
+!                            F4 = F4/NORM(F4)
+!                            F5 = cross((coords(kblock,5,:)-coords(kblock,6,:),(coords(kblock,6,:)-coords(kblock,7,:)))
+!                            F5 = F5/NORM(F5)
+!                            F6 = cross((coords(kblock,6,:)-coords(kblock,2,:),(coords(kblock,2,:)-coords(kblock,1,:)))
+!                            F6 = F6/NORM(F6)
+
+!                            Face_nodes(1) = (/5,1,4,8/)
+!                            Face_nodes(2) = (/6,2,3,7/)
+!                            Face_nodes(3) = (/1,2,3,4/)
+!                            Face_nodes(4) = (/7,3,4,8/)
+!                            Face_nodes(5) = (/5,6,7,8/)
+!                            Face_nodes(6) = (/6,2,1,5/)
+                            
+!                            F_ALL(1,:) = F1
+!                            F_ALL(2,:) = F2
+!                            F_ALL(3,:) = F3
+!                            F_ALL(4,:) = F4
+!                            F_ALL(5,:) = F5
+!                            F_ALL(6,:) = F6
+                            
+!                            do i=1,6
+!                                if ABS(F_ALL(i,3).eq.1) then
+!                                    Nodes = Face_nodes(i)
+!                                    do j = 1,4
+!                                        coordquad(i,1)= coords(kblock,Nodes(j),1
+!                                    end do
+                                    
+!                            end do
+
+!                           FOR Z0_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F2 (i.e. nodes 6,2,3,7)
+                            
+                            
+                            QuadNodes = (/6,2,3,7/)
+                            do i=1,size(QuadNodes)
+                                coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                            end do
+
+                            pGPCORDquad(1,:) = (/ zero, zero/)
+                	        
+	                	    pWTquad = (/ two, two/)
+        	
+	                        do ipquad=1,iGPquad
+        	
+        	            		xi1quad=pGPCORDquad(ipquad,1)
+        	            		xi2quad=pGPCORDquad(ipquad,2)
+        		      	
+                                pNNquad(ipqaud,1) = 1/four*(1-xi1quad)(1-xi2quad)
+        	              		pNNquad(ipquad,2) = 1/four*(1-xi1quad)(1+xi2quad)
+        	               		pNNquad(ipquad,3) = 1/four*(1+xi1quad)(1+xi2quad)
+        	               		pNNquad(ipquad,4) = 1/four*(1+xi1quad)(1-xi2quad)
+                                
+                                Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
+                                Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
+                                Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1-xi2quad) + coordquad(4,1)*(1-xi2quad))
+                                Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1-xi2quad) + coordquad(4,2)*(1-xi2quad))
+        	
+                                detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+!                                do ni=1,4
+!                                    nj = QuadNodes(ni)
+!                                    do i=1,iCORD
+!                                        dofni(i) = nj*iCORD-(iCORD-1)+(i-1)
+!                                    end do
+!                                    RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad(ipquad)*ABS(detJquad)*pNNQuad(ipQuad,ni)*(/0.d0,0.d0,0.1d0/)
+                    
+!                                END DO ! ------------------------ ni-loop ------------------------
+                            end do
+                        end if
+                        
+                        
+                        
+!    !===================================================================================================================================
+!    !--------------------------------------------------------MASS MATRIX CALCULATION------------------------------------------------------------
+!    !===================================================================================================================================
                 else if (lflags(iOpCode).eq.jMassCalc) then
                     !amass(kblock,:,:)= zero
                     do ip=1,iGP ! ---------------------- loop over all integration points (computation of mass matrix)--------------------------------
@@ -1183,14 +1365,6 @@
                         amass(kblock,i,i) = amass_row_sum
                     end do
                 end if ! ----------------------------jMassCalc--------------------
-    
-                               
-    !===================================================================================================================================
-    !----------------------------------------------STABLE TIME INCREMENT CALCULATION----------------------------------------------------
-    !===================================================================================================================================
-    
-                
-                            
                            
     !===============================================================================================================================================
                                                     
