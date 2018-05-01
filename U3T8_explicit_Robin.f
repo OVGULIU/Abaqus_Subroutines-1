@@ -873,28 +873,10 @@
             double precision :: F6(iCORD)    ! Centroid of element
             double precision :: F_all(6)    ! Centroid of element
             double precision :: coordquad(4,2)    ! Centroid of element
-            
-!            double precision :: N_all(6)           ! Normals described by different faces
-!            double precision :: N_all(6)           ! Normals described by different faces
-!            double precision :: N_all(6)           ! Normals described by different faces
-!            double precision :: N_all(6)           ! Normals described by different faces
-!            double precision :: N_all(6)           ! Normals described by different faces
-            
-!                      5____________8
-!                      /|          /|
-!                     / |         / |   
-!                   6/__|________/7 |
-!                    |  |        |  |
-!                    | 1|________|__|4
-!                    | /         | /
-!                   2|/__________|/3
-                    
-!            Where:  face 1 nodes = 1234
-!                    face 2 nodes = 5678                
-!                    face 3 nodes = 7348
-!                    face 4 nodes = 6215
-!                    face 5 nodes = 6237
-!                    face 6 nodes = 5148 
+            ! integer
+            integer :: ipquad,Filesize
+            ! Allocatable arrays
+            integer, DIMENSION(:), ALLOCATABLE :: Z0_poly
 
 !--------------------------Integers -------------------------------------           
 
@@ -989,7 +971,12 @@
             pID=zero
             forall(i=1:iCORD) pID(i,i)=one
             !---------------------------------------------------------------------------
-
+            
+            Filesize = 589
+    
+            open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/Z0_poly.csv',status='old')!
+            READ(107,*) Z0_Poly
+            close(107)
     !===============================================================================================================================================
             
             ! loop over element block
@@ -1235,19 +1222,8 @@
 !!                    face 3 nodes = 1234
 !!                    face 4 nodes = 7348
 !!                    face 5 nodes = 5678
-!!                    face 6 nodes = 6215 
+!!                    face 6 nodes = 6215                 
 
-!                        F2 = cross((coords(kblock,5,:)-coords(kblock,6,:),(coords(kblock,6,:)-coords(kblock,7,:)))
-!                        F2 = F2/NORM(F2)
-!                        F3 = cross((coords(kblock,7,:)-coords(kblock,3,:),(coords(kblock,3,:)-coords(kblock,4,:)))
-!                        F3 = F3/NORM(F3)
-!                        F4 = cross((coords(kblock,6,:)-coords(kblock,2,:),(coords(kblock,2,:)-coords(kblock,1,:)))
-!                        F4 = F4/NORM(F4)
-!                        F5 = cross((coords(kblock,6,:)-coords(kblock,2,:),(coords(kblock,2,:)-coords(kblock,3,:)))
-!                        F5 = F5/NORM(F5)
-!                        F6 = cross((coords(kblock,5,:)-coords(kblock,1,:),(coords(kblock,1,:)-coords(kblock,4,:)))
-!                        F6 = F6/NORM(F6)                 
-                        
                         if (ANY(jElem(kblock).eq.Z0_Poly)) then
 !                            F1 = cross((coords(kblock,5,:)-coords(kblock,1,:),(coords(kblock,1,:)-coords(kblock,4,:)))
 !                            F1 = F1/NORM(F1)
@@ -1313,14 +1289,14 @@
                                 Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1-xi2quad) + coordquad(4,2)*(1-xi2quad))
         	
                                 detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
-!                                do ni=1,4
-!                                    nj = QuadNodes(ni)
-!                                    do i=1,iCORD
-!                                        dofni(i) = nj*iCORD-(iCORD-1)+(i-1)
-!                                    end do
-!                                    RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad(ipquad)*ABS(detJquad)*pNNQuad(ipQuad,ni)*(/0.d0,0.d0,0.1d0/)
+                                do ni=1,4
+                                    nj = QuadNodes(ni)
+                                    do i=1,iCORD
+                                        dofni(i) = nj*iCORD-(iCORD-1)+(i-1)
+                                    end do
+                                    RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad(ipquad)*ABS(detJquad)*pNNQuad(ipQuad,ni)*(/0.d0,0.d0,0.0d0/)
                     
-!                                END DO ! ------------------------ ni-loop ------------------------
+                                end do ! ------------------------ ni-loop ------------------------
                             end do
                         end if
                         
