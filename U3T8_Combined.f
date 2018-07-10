@@ -1366,7 +1366,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         end if
                         if (pmod.eq.1.0) then
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))
+                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pNN(ip,ni)*pCo*(pImmobileConc)*gCo))
                         else
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
                         - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
@@ -1379,7 +1379,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
                         - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
                         - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*(one-pDensVolFrac)*pELECFIELD))) &
-                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))&
+                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pNN(ip,ni)*pCo*(pImmobileConc)*gCo))&
                         + (pDif)*(pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
                         else
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
@@ -1580,7 +1580,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         elseif (ANY(jElem(kblock).eq.Z1_Poly) ) then ! Front Face
                                
                         ! CONCENTRATION !
-                            if ((pDensVolFrac<0.3d0)) then
+                            if ((pDensVolFrac<1.0d0)) then
 !                            write(*,*) "temp3/((0.9375*0.9375)*Influx_ele)", temp3/((0.9375*0.9375)*Influx_ele)
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
                                 RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
@@ -1597,7 +1597,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         end if  
 !                        RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
                     end do ! ------------------------ ni-loop ------------------------
-                    if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<0.3d0)) then
+                    if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<1.0d0)) then
                         if (kInc.gt.0) then
                             svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*3.1E-04*(-1.0d0/15.0d0)*detJquad(ipquad)
                             if (ISNAN(pDif*(pF*pZ)/(pRTHETA)*pCo*detJquad(ipquad))) then
@@ -1609,7 +1609,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     end if
                 end do ! ------------------------ ipquad-loop ------------------------
                 
-                if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<0.1d0)) then
+                if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<1.0d0)) then
                     Influx_ele_int = Influx_ele_int+1
                 end if
             end if ! ------------------------ jElem z0 Poly-loop ------------------------
