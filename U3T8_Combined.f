@@ -1114,7 +1114,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         pPi = 3.14159265358979311
         pRi = 0.502
         pV_ges = 4.0
-        pImmobileConc = pV_ges / (4.0d0/3.0d0*pPi*(pRi**3)*pNa)        
+        pImmobileConc = 1 / (4.0d0/3.0d0*pPi*(pRi**3)*pNa)        
     !--------------------------Parameters used in modified PNP model-------------------------------------
     
     !===============================================================================================================================================
