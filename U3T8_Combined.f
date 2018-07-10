@@ -1289,7 +1289,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     write(*,*) "detJ(ip)",detJ(ip)
                     write(*,*) "dtimeCur",dtimeCur
                 end if
-                if (kInc.gt.0) then
+                if (kInc.gt.1) then
                     svars(kblock,1) = svars(kblock,1) + pNDu*detJ(ip)/dtimeCur
                 ELSE
                     svars(kblock,1) = 0.0d0
