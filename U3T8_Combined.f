@@ -1523,15 +1523,15 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 else
                     open(unit=106,file=fname, status='new',action='write')
                 end if
-                if ((MOD(kInc,101).eq.0) .AND. ANY((jElem(:).eq.18945))) then
+                if ((MOD(kInc,1).eq.0) .AND. ANY((jElem(:).eq.18945))) then
                     write(106,*) "Increment_int:", temp1
                     write(106,*) "Total_int: ", temp2
-                    write(106,*) "pbeta", pbeta
-                    write(106,*) "palpha", palpha
+                    write(106,*) "pInflux", pbeta/((0.9375*0.9375)*Influx_ele)
+                    write(106,*) "Outflux", palpha
                     write(106,*) "# Elements upon which Influx applied: ",Influx_ele
                 end if
                 close(106)
-                do ipquad=1,iGPquad
+                do ipquad=1,4
 
                     xi1quad=pGPCORDquad(ipquad,1)
                     xi2quad=pGPCORDquad(ipquad,2)
@@ -1677,7 +1677,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             write(106,*) Increment_int
             write(106,*) Total_int      ! Store previous summation values (fully 'summed')
             write(106,*) Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
-            write(*,*) "Total_influx", Total_influx
             write(106,*) Influx_ele     ! Store previous summation values (fully 'summed')  
             close(106)
             Total_int = sum(svars(:,1)) ! New summation values (starting at at nblock==1)
