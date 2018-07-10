@@ -1288,7 +1288,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 if (kInc.gt.0) then
                     svars(kblock,1) = svars(kblock,1) + pNDu*detJ(ip)/dtimeCur
                     if (ISNAN(pNDu*detJ(ip)/dtimeCur)) then
-                        write(*,*) "pNDu",pNDu                    
+                        write(*,*) "DuCo",DuCo                   
                         write(*,*) "pNN(ip,:)",pNN(ip,:)
                     end if
                 ELSE
