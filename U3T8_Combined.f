@@ -1576,11 +1576,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                             if ((pDensVolFrac<0.1d0)) then
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
                                 RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(pbeta/((0.9375*0.9375)*Influx_ele))
-                                if (kInc.gt.0) then
-                                    svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*pCo*(-1.0d0/15.0d0)*detJquad(ipquad)
-                                ELSE
-                                    svars(kblock,2) = 0.0d0
-                                end if
+                                
                             end if
                             
                         ! DISPLACEMENT !                 
@@ -1595,6 +1591,11 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 
                 if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<0.1d0)) then
                     Influx_ele_int = Influx_ele_int+1
+                    if (kInc.gt.0) then
+                        svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*pCo*(-1.0d0/15.0d0)*detJquad(ipquad)
+                    ELSE
+                        svars(kblock,2) = 0.0d0
+                    end if
                 end if
             end if ! ------------------------ jElem z0 Poly-loop ------------------------
             
