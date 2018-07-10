@@ -454,6 +454,48 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
         close(UNIT=107,STATUS='DELETE')
         write(*,*) " !!! LimitReached"// trim(JOBNAME) // ".inp Deleted !!"
     end if
+    filename = '/home/cerecam/Desktop/Du_results_'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " -- ", filename, " Deleted"
+    end if
+    filename = '/home/cerecam/Desktop/Du_results_Prev'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " -- ", filename, " Deleted"
+    end if
+    filename = '/home/cerecam/Desktop/Du_results_full'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " -- ", filename, " Deleted"
+    end if
+!    filename = '/home/cerecam/Desktop/Check_results'// trim(JOBNAME) // '.inp'
+!    INQUIRE(FILE=filename,EXIST=I_EXIST)
+!    if (I_EXIST) then
+!        open(unit=107, file=filename)            
+!        close(UNIT=107,STATUS='DELETE')
+!        write(*,*) " -- " // filename // " Deleted"
+!    end if
+    filename = '/home/cerecam/Desktop/Check_Element14194'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " -- ", filename, " Deleted"
+    end if
+    filename = '/home/cerecam/Desktop/Check_Element18945'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " -- ", filename, " Deleted"
+    end if
     ! ------ Start of the step ------
     else if (lOp .eq. j_int_StartStep) then
     ! ------ Setup the increment ------
@@ -478,7 +520,21 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
     !			write(*,*)
     !			write(*,*) "----------------- VEXTERNALDB at Increment:",int(i_Array(i_int_kInc)),"-----------------",int(i_Array(i_int_kInc))
     !			write(*,*)
-    
+    call VGETJOBNAME(JOBNAME,LENJOBNAME)
+    filename = '/home/cerecam/Desktop/Du_results_'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " -- ", filename, " Deleted"
+    end if
+    filename = '/home/cerecam/Desktop/Du_results_Prev'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " -- ", filename, " Deleted"
+    end if
     end if
     
     return
@@ -488,106 +544,106 @@ end subroutine VEXTERNALDB
     !-------------------------------------------------------------------------------
     !
     ! USER SUBROUTINE - VUFIELD:UPDATES PREDEFINED FIELD
-SUBROUTINE VUFIELD(FIELD, NBLOCK, NFIELD, KFIELD, NCOMP, &
-           KSTEP, JFLAGS, JNODEID, TIME, &
-           COORDS, U, V, A)
-    include 'vaba_param.inc'	
-    ! indices for the time array 
-    integer, parameter :: i_ufld_Current = 1 
-    integer, parameter :: i_ufld_Increment = 2 
-    integer, parameter :: i_ufld_Period = 3 
-    integer, parameter :: i_ufld_Total = 4
+!SUBROUTINE VUFIELD(FIELD, NBLOCK, NFIELD, KFIELD, NCOMP, &
+!           KSTEP, JFLAGS, JNODEID, TIME, &
+!           COORDS, U, V, A)
+!!    include 'vaba_param.inc'	
+!    ! indices for the time array 
+!    integer, parameter :: i_ufld_Current = 1 
+!    integer, parameter :: i_ufld_Increment = 2 
+!    integer, parameter :: i_ufld_Period = 3 
+!    integer, parameter :: i_ufld_Total = 4
     
-    ! indices for the coordinate array COORDS 
-    integer, parameter :: i_ufld_CoordX = 1 
-    integer, parameter :: i_ufld_CoordY = 2 
-    integer, parameter :: i_ufld_CoordZ = 3
+!    ! indices for the coordinate array COORDS 
+!    integer, parameter :: i_ufld_CoordX = 1 
+!    integer, parameter :: i_ufld_CoordY = 2 
+!    integer, parameter :: i_ufld_CoordZ = 3
     
-    ! indices for the displacement array U 
-    integer, parameter :: i_ufld_SpaDisplX = 1 
-    integer, parameter :: i_ufld_SpaDislY = 2 
-    integer, parameter :: i_ufld_SpaDisplz = 3 
-    integer, parameter :: i_ufld_RotDisplX = 4 
-    integer, parameter :: i_ufld_RotDisplY = 5 
-    integer, parameter :: i_ufld_RotDisplZ = 6 
-    integer, parameter :: i_ufld_AcoPress = 7 
-    integer, parameter :: i_ufld_Temp = 8
+!    ! indices for the displacement array U 
+!    integer, parameter :: i_ufld_SpaDisplX = 1 
+!    integer, parameter :: i_ufld_SpaDislY = 2 
+!    integer, parameter :: i_ufld_SpaDisplz = 3 
+!    integer, parameter :: i_ufld_RotDisplX = 4 
+!    integer, parameter :: i_ufld_RotDisplY = 5 
+!    integer, parameter :: i_ufld_RotDisplZ = 6 
+!    integer, parameter :: i_ufld_AcoPress = 7 
+!    integer, parameter :: i_ufld_Temp = 8
     
-    !indices for velocity array V 
-    integer, parameter :: i_ufld_SpaVelX = 1 
-    integer, parameter :: i_ufld_SpaVelY = 2 
-    integer, parameter :: i_ufld_SpaVelZ = 3 
-    integer, parameter :: i_ufld_RotVelX = 4 
-    integer, parameter :: i_ufld_RotVelY = 5 
-    integer, parameter :: i_ufld_RotVelZ = 6 
-    integer, parameter :: i_ufld_DAcoPress = 7 
-    integer, parameter :: i_ufld_DTemp = 8
+!    !indices for velocity array V 
+!    integer, parameter :: i_ufld_SpaVelX = 1 
+!    integer, parameter :: i_ufld_SpaVelY = 2 
+!    integer, parameter :: i_ufld_SpaVelZ = 3 
+!    integer, parameter :: i_ufld_RotVelX = 4 
+!    integer, parameter :: i_ufld_RotVelY = 5 
+!    integer, parameter :: i_ufld_RotVelZ = 6 
+!    integer, parameter :: i_ufld_DAcoPress = 7 
+!    integer, parameter :: i_ufld_DTemp = 8
     
-    ! indicies for the acceleration array A 
-    integer, parameter :: i_ufld_SpaAccelX = 1 
-    integer, parameter :: i_ufld_SpaAccelY = 2 
-    integer, parameter :: i_ufld_SpaAccelZ = 3 
-    integer, parameter :: i_ufld_RotAccelX = 4 
-    integer, parameter :: i_ufld_RotAccelY = 5 
-    integer, parameter :: i_ufld_RotAccelZ = 6 
-    integer, parameter :: i_ufld_DDAcoPress = 7 
-    integer, parameter :: i_ufld_DDTemp = 8
+!    ! indicies for the acceleration array A 
+!    integer, parameter :: i_ufld_SpaAccelX = 1 
+!    integer, parameter :: i_ufld_SpaAccelY = 2 
+!    integer, parameter :: i_ufld_SpaAccelZ = 3 
+!    integer, parameter :: i_ufld_RotAccelX = 4 
+!    integer, parameter :: i_ufld_RotAccelY = 5 
+!    integer, parameter :: i_ufld_RotAccelZ = 6 
+!    integer, parameter :: i_ufld_DDAcoPress = 7 
+!    integer, parameter :: i_ufld_DDTemp = 8
     
-    ! indices for JFLAGS 
-    integer, parameter :: i_ufld_kInc = 1 
-    integer, parameter :: i_ufld_kPass = 2
+!    ! indices for JFLAGS 
+!    integer, parameter :: i_ufld_kInc = 1 
+!    integer, parameter :: i_ufld_kPass = 2
     
-    ! Variables passed in for information
-        integer, intent(in) :: NBLOCK
-    integer, intent(in) :: NFIELD
-    integer, intent(in) :: KFIELD
-    integer, intent(in) :: NCOMP
-    integer, intent(in) :: KSTEP
-    integer, intent(in), dimension(i_ufld_kPass) :: JFLAGS
-    integer, intent(in), dimension(NBLOCK) :: JNODEID
-    double precision, intent(in), dimension(4) :: TIME
-    double precision, intent(in), dimension(3,NBLOCK) :: COORDS
-    double precision, intent(in), dimension(8,NBLOCK) :: U,V,A
-    double precision, dimension(NBLOCK) :: data_arr
+!    ! Variables passed in for information
+!        integer, intent(in) :: NBLOCK
+!    integer, intent(in) :: NFIELD
+!    integer, intent(in) :: KFIELD
+!    integer, intent(in) :: NCOMP
+!    integer, intent(in) :: KSTEP
+!    integer, intent(in), dimension(i_ufld_kPass) :: JFLAGS
+!    integer, intent(in), dimension(NBLOCK) :: JNODEID
+!    double precision, intent(in), dimension(4) :: TIME
+!    double precision, intent(in), dimension(3,NBLOCK) :: COORDS
+!    double precision, intent(in), dimension(8,NBLOCK) :: U,V,A
+!    double precision, dimension(NBLOCK) :: data_arr
     
     
-    ! Dimensioned arrays
-    double precision, intent(inout), dimension(NBLOCK,NCOMP,NFIELD) :: FIELD
+!    ! Dimensioned arrays
+!    double precision, intent(inout), dimension(NBLOCK,NCOMP,NFIELD) :: FIELD
     
-!    write(*,*) "TIME(i_ufld_Current)",TIME(i_ufld_Current)
-!    write(*,*) "MOD(TIME(i_ufld_Current),0.05d0)",MOD(TIME(i_ufld_Current),0.05d0)
-!    write(*,*) "MOD(TIME(i_ufld_Current),0.05d0).eq.0.0d0", MOD(TIME(i_ufld_Current),0.05d0).eq.0.0d0
-!    write(*,*) "TIME(i_ufld_Current).ne.0",TIME(i_ufld_Current).ne.0
-!    write(*,*)
+!!    write(*,*) "TIME(i_ufld_Current)",TIME(i_ufld_Current)
+!!    write(*,*) "MOD(TIME(i_ufld_Current),0.05d0)",MOD(TIME(i_ufld_Current),0.05d0)
+!!    write(*,*) "MOD(TIME(i_ufld_Current),0.05d0).eq.0.0d0", MOD(TIME(i_ufld_Current),0.05d0).eq.0.0d0
+!!    write(*,*) "TIME(i_ufld_Current).ne.0",TIME(i_ufld_Current).ne.0
+!!    write(*,*)
     
-!    write(*,*) "NCOMP", NCOMP, "NFIELD", NFIELD
-!    write(*,*) "NBLOCK", NBLOCK
-!    write(*,*) "KSTEP", KSTEP
-!    write(*,*) "JFLAGS", JFLAGS
-!    write(*,*) "JNODEID(1)", JNODEID(1)
-!    write(*,*) "JNODEID(15)", JNODEID(15)
-!    write(*,*) "JNODEID(55)", JNODEID(55)
-!    write(*,*) "JFLAGS",JFLAGS
-!    write(*,*) "U(all,1)", U(:,kblock)
-!    write(*,*) "FIELD",FIELD(:,NCOMP,NFIELD)
-    !	if (MOD(JFLAGS(i_ufld_kInc),1).eq.0d0) then
-    if (JFLAGS(i_ufld_kInc).eq.1d0 .OR. JFLAGS(i_ufld_kInc).eq.0d0) then				
-    elseif (MOD(int(JFLAGS(i_ufld_kInc)),17000000).eq.0d0) then
-        write(*,*) "----------------- VUFIELD at increment:",JFLAGS(i_ufld_kInc)," -----------------"	
-        open(unit=105, file='/home/cerecam/Desktop/GPG_Cube/ElecPotentialsSandwich.csv',status='old')!
-        READ(105,*) data_arr
-        do kblock=1,nblock
-            FIELD(kblock,NCOMP,NFIELD) = data_arr(kblock)
-        end do
-!				write(*,*) "********* New field written **********"
-!				write(*,*)
-        close(105)
-    end if
-    !	end if
-    !		write(*,*) "VUFIELD"
+!!    write(*,*) "NCOMP", NCOMP, "NFIELD", NFIELD
+!!    write(*,*) "NBLOCK", NBLOCK
+!!    write(*,*) "KSTEP", KSTEP
+!!    write(*,*) "JFLAGS", JFLAGS
+!!    write(*,*) "JNODEID(1)", JNODEID(1)
+!!    write(*,*) "JNODEID(15)", JNODEID(15)
+!!    write(*,*) "JNODEID(55)", JNODEID(55)
+!!    write(*,*) "JFLAGS",JFLAGS
+!!    write(*,*) "U(all,1)", U(:,kblock)
+!!    write(*,*) "FIELD",FIELD(:,NCOMP,NFIELD)
+!    !	if (MOD(JFLAGS(i_ufld_kInc),1).eq.0d0) then
+!    if (JFLAGS(i_ufld_kInc).eq.1d0 .OR. JFLAGS(i_ufld_kInc).eq.0d0) then				
+!    elseif (MOD(int(JFLAGS(i_ufld_kInc)),17000000).eq.0d0) then
+!        write(*,*) "----------------- VUFIELD at increment:",JFLAGS(i_ufld_kInc)," -----------------"	
+!        open(unit=105, file='/home/cerecam/Desktop/GPG_Cube/ElecPotentialsSandwich.csv',status='old')!
+!        READ(105,*) data_arr
+!        do kblock=1,nblock
+!            FIELD(kblock,NCOMP,NFIELD) = data_arr(kblock)
+!        end do
+!!				write(*,*) "********* New field written **********"
+!!				write(*,*)
+!        close(105)
+!    end if
+!    !	end if
+!    !		write(*,*) "VUFIELD"
     
-    return
-end subroutine VUFIELD
+!    return
+!end subroutine VUFIELD
 
 !===============================================================================================================================================
 
@@ -629,7 +685,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     double precision, parameter :: six=6.d0
     double precision, parameter :: eight=8.d0
     double precision, parameter :: Abcissa=SQRT(1.d0/3.d0)
-    double precision, parameter :: factorStable=0.33d0
+    double precision, parameter :: factorStable=0.75d0
     double precision, parameter :: pi=3.1415926535897932
     
     ! parameters - problem specification
@@ -831,6 +887,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     
 !--------------------------Constants used in modified PNP model-------------------------------------
 
+    double precision :: pCo_central ! Concentration at centroid of element
     double precision :: pV_i		! Volume concentration of any mole of a species
     double precision :: pV_ges      ! Maximum volume concentration allowed
     double precision :: pDensVolFrac! Total density volume fraction of mobile species
@@ -854,26 +911,45 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     double precision :: F_all(6)    ! Centroid of element
     double precision :: coordquad(4,2)    ! Centroid of element
     ! integer
-    integer :: ipquad,Filesize
+    integer :: ipquad,Filesize, factor
     integer :: QuadNodes(4)
+    
     ! Allocatable arrays
+    integer, DIMENSION(:), ALLOCATABLE :: X0_poly
+    integer, DIMENSION(:), ALLOCATABLE :: X1_poly
+    integer, DIMENSION(:), ALLOCATABLE :: Y0_poly
+    integer, DIMENSION(:), ALLOCATABLE :: Y1_poly
     integer, DIMENSION(:), ALLOCATABLE :: Z0_poly
     integer, DIMENSION(:), ALLOCATABLE :: Z1_poly
+    integer, DIMENSION(:), ALLOCATABLE :: X0_GOLD
+    integer, DIMENSION(:), ALLOCATABLE :: X1_GOLD
+    integer, DIMENSION(:), ALLOCATABLE :: Y0_GOLD
+    integer, DIMENSION(:), ALLOCATABLE :: Y1_GOLD
+    integer, DIMENSION(:), ALLOCATABLE :: Z0_GOLD
+    integer, DIMENSION(:), ALLOCATABLE :: Z1_GOLD
+    
+!-------------------------- Constants for exiting flux calculation -----------------------------------------
+    double precision :: pNDu
+    double precision :: DuCo(iNODE)
     
     logical :: I_EXIST        
     character*256 :: JOBNAME
     character*256 :: filename
+    character*256 :: filename2, fname
     integer :: LENJOBNAME
+    CHARACTER(len=255) :: cwd
 !--------------------------Integers -------------------------------------           
 
     integer :: iCORDTOTAL
-    integer :: kblock,ip,nn,ni,nj,i,pmod
-    double precision :: palpha,pbeta
+    integer :: kblock,ip,nn,ni,nj,i,pmod,total,Increment_int, temp1
+    double precision :: palpha,pbeta,Total_int, temp2, area, Ele_temp,pkback,pkfront, Influx_ele, Influx_ele_int
 
+    double precision :: AREA_X0, AREA_X1, AREA_Y0, AREA_Y1, AREA_Z0, AREA_Z1
 
     integer :: CordRange(iCORD) = (/(i, i=1,iCORD, 1)/)
     integer :: NODERange(iNODE) = (/(i, i=1,iNODE, 1)/)
     
+    CALL VGETJOBNAME( JOBNAME,LENJOBNAME)
         
     ! identity matrix ----------------------------------------------------------
     pID=zero
@@ -928,179 +1004,256 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     end do
     
     !-------------------------------------------------------------------------------
-    
-    if (jtype.eq.48) then 
-    iCORDTOTAL=4
-!!    if (kblock==1) then
-!        write(*,*) "Element VU48"
-!        write(*,*) "Element number", jElem(kblock)
-!        write(*,*) "Ndofel", ndofel
-!        write(*,*)  "Number of properties", nprops
-!    end if
-    pEM  = props(1)
-    pNU  = props(2)
-    pRHO = props(3)
-    pEPSILONR  = props(4)
-    pEPSILONZERO  = props(5)
-    pRTHETA = props(6)
-    pF = props(7)
-    pZ = props(8)
-    pEMCoup = props(9)
-    pDif = props(10)
-    cSat = props(11)
-    pa1 = props(12)
-    palpha = props(13)
-    pbeta = props(14)
-    pmod = props(15)
-    
-    pGM  = half*pEM/(one+pNU)
-    pLAM = (pEM*pNU)/((one+pNU)*(one-two*pNU)) 
-       
-!--------------------------Parameters used in modified PNP model-------------------------------------
-    pNa = 602.2140857
-    pPi = 3.14159265358979311
-    pRi = 0.502
-    pV_ges = 4.0
-    pImmobileConc = pV_ges / (4.0d0/3.0d0*pPi*(pRi**3)*pNa)        
-!--------------------------Parameters used in modified PNP model-------------------------------------
-                        
-    !---------------------------------------------------------------------------
-    
-    Filesize = 618
-    
+        open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/X0_POLY.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( X0_Poly(Filesize) )
+    Read(107,*) X0_POLY
+    close(107)
+    AREA_X0 = FILESIZE*(0.9375*0.9375)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/X1_POLY.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( X1_Poly(Filesize) )
+    Read(107,*) X1_POLY
+    close(107)
+    AREA_X1 = FILESIZE*(0.9375*0.9375)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Y0_POLY.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( Y0_Poly(Filesize) )
+    Read(107,*) Y0_POLY
+    close(107)
+    AREA_Y0 = FILESIZE*(0.9375*0.9375)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Y1_POLY.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( Y1_Poly(Filesize) )
+    Read(107,*) Y1_POLY
+    close(107)
+    AREA_Y1 = FILESIZE*(0.9375*0.9375)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Z0_POLY.csv',status='old')!
+    READ(107,*) Filesize
     Allocate ( Z0_Poly(Filesize) )
-    open(unit=107, file='/home/cerecam/Desktop/GP_BoundaryConditionTests/InputFiles/Z0_POLY.csv',status='old')!
-    READ(107,*) Z0_Poly
+    Read(107,*) Z0_POLY
     close(107)
-    
-    Filesize = 589
-    
+    AREA_Z0 = FILESIZE*(0.9375*0.9375)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Z1_POLY.csv',status='old')!
+    READ(107,*) Filesize
     Allocate ( Z1_Poly(Filesize) )
-    open(unit=107, file='/home/cerecam/Desktop/GP_BoundaryConditionTests/InputFiles/Z1_POLY.csv',status='old')!
-    READ(107,*) Z1_Poly
+    Read(107,*) Z1_POLY
     close(107)
-!===============================================================================================================================================
+    AREA_Z1 = FILESIZE*(0.9375*0.9375)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/X0_GOLD.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( X0_GOLD(Filesize) )
+    Read(107,*) X0_GOLD
+    close(107)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/X1_GOLD.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( X1_GOLD(Filesize) )
+    Read(107,*) X1_GOLD
+    close(107)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Y0_GOLD.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( Y0_GOLD(Filesize) )
+    Read(107,*) Y0_GOLD
+    close(107)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Y1_GOLD.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( Y1_GOLD(Filesize) )
+    Read(107,*) Y1_GOLD
+    close(107)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Z0_GOLD.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( Z0_GOLD(Filesize) )
+    Read(107,*) Z0_GOLD
+    close(107)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Z1_GOLD.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( Z1_GOLD(Filesize) )
+    Read(107,*) Z1_GOLD
+    close(107)
+        
+    if (jtype.eq.48) then 
+        if (kInc ==0.0) then
+            svars(:,1) = 0.0d0
+        end if
+        iCORDTOTAL=4
+    !!    if (kblock==1) then
+    !        write(*,*) "Element VU48"
+    !        write(*,*) "Element number", jElem(kblock)
+    !        write(*,*) "Ndofel", ndofel
+    !        write(*,*)  "Number of properties", nprops
+    !    end if
+        pEM  = props(1)
+        pNU  = props(2)
+        pRHO = props(3)
+        pEPSILONR  = props(4)
+        pEPSILONZERO  = props(5)
+        pRTHETA = props(6)
+        pF = props(7)
+        pZ = props(8)
+        pEMCoup = props(9)
+        pDif = props(10)
+        cSat = props(11)
+        pa1 = props(12)
+        palpha = props(13)
+        pbeta = props(14)
+        pmod = props(15)
+        pkback = props(16)
+        pkfront = props(17)
+        
+        pGM  = half*pEM/(one+pNU)
+        pLAM = (pEM*pNU)/((one+pNU)*(one-two*pNU)) 
+           
+    !--------------------------Parameters used in modified PNP model-------------------------------------
+        pNa = 602.2140857
+        pPi = 3.14159265358979311
+        pRi = 0.502
+        pV_ges = 4.0
+        pImmobileConc = pV_ges / (4.0d0/3.0d0*pPi*(pRi**3)*pNa)        
+    !--------------------------Parameters used in modified PNP model-------------------------------------
     
-    ! loop over element block
-    do kblock=1,nblock ! ---------------------------------------------------
-        ! loop over all integration points (computation of FE variables)
-        do ip=1,iGP ! ------------------------------------------------------
-
-
-            ! natural coordinates of current ip
-            xi1 = pGPCORD(ip,1)
-            xi2 = pGPCORD(ip,2)
-            xi3 = pGPCORD(ip,3)
-            if (iNODE==8) then
+    !===============================================================================================================================================
         
-                ! derivatives of shape functions with respect to natural coordinates                
-                dNdXi1(1) = -one/eight*(1-xi2)*(1-xi3)
-                dNdXi2(1) = -one/eight*(1-xi1)*(1-xi3)
-                dNdXi3(1) = -one/eight*(1-xi1)*(1-xi2)
-            
-                dNdXi1(2) =  one/eight*(1-xi2)*(1-xi3)
-                dNdXi2(2) =  -one/eight*(1+xi1)*(1-xi3)
-                dNdXi3(2) =  -one/eight*(1+xi1)*(1-xi2)
-            
-                dNdXi1(3) =  one/eight*(1+xi2)*(1-xi3)
-                dNdXi2(3) =  one/eight*(1+xi1)*(1-xi3)
-                dNdXi3(3) =  -one/eight*(1+xi1)*(1+xi2)
-            
-                dNdXi1(4) =  -one/eight*(1+xi2)*(1-xi3)
-                dNdXi2(4) =  one/eight*(1-xi1)*(1-xi3)
-                dNdXi3(4) =  -one/eight*(1-xi1)*(1+xi2)
-            
-                dNdXi1(5) =  -one/eight*(1-xi2)*(1+xi3)
-                dNdXi2(5) =  -one/eight*(1-xi1)*(1+xi3)
-                dNdXi3(5) =  one/eight*(1-xi1)*(1-xi2)
-            
-                dNdXi1(6) =  one/eight*(1-xi2)*(1+xi3)
-                dNdXi2(6) =  -one/eight*(1+xi1)*(1+xi3)
-                dNdXi3(6) =  one/eight*(1+xi1)*(1-xi2)
-            
-                dNdXi1(7) =  one/eight*(1+xi2)*(1+xi3)
-                dNdXi2(7) =  one/eight*(1+xi1)*(1+xi3)
-                dNdXi3(7) =  one/eight*(1+xi1)*(1+xi2)
-            
-                dNdXi1(8) =  -one/eight*(1+xi2)*(1+xi3)
-                dNdXi2(8) =  one/eight*(1-xi1)*(1+xi3)
-                dNdXi3(8) =  one/eight*(1-xi1)*(1+xi2)
-     
-            else  
-                write(*,*) "Error in computation of shape function derivatives. The number of nodes does not conform with the element type (4 node tetrahedral element)." 
-                CALL XPLB_EXIT    
-            end if
-            ! coordinate vectors of current element
-            X1 = coords(kblock,:,1)
-            X2 = coords(kblock,:,2)
-            X3 = coords(kblock,:,3)
+        filename2 = '/home/cerecam/Desktop/Du_results_Prev' // trim(JOBNAME) // '.inp'
+        INQUIRE(FILE= filename2 ,EXIST=I_EXIST)
+        if (I_Exist) then
+            open(unit=106, file=filename2)
+            read(106,*) temp1 
+            read(106,*) temp2
+            read(106,*) Influx_ele
+            close(106) 
+!            
+        end if 
+        
+        Influx_ele_int = 0
+        ! loop over element block
+        do kblock=1,nblock ! ---------------------------------------------------
+            ! loop over all integration points (computation of FE variables)
+            do ip=1,iGP ! ------------------------------------------------------
     
-            ! derivatives of physical coordinates with respect to natural coordinates                
-            dX1dxi1=dot(X1,dNdXi1)
-            dX1dxi2=dot(X1,dNdXi2)
-            dX1dxi3=dot(X1,dNdXi3)
-
-            dX2dxi1=dot(X2,dNdXi1)
-            dX2dxi2=dot(X2,dNdXi2)
-            dX2dxi3=dot(X2,dNdXi3)
-
-            dX3dxi1=dot(X3,dNdXi1)
-            dX3dxi2=dot(X3,dNdXi2)
-            dX3dxi3=dot(X3,dNdXi3)
-
-            ! Jacobian determinant (detJ = 6V)
-            JJ(1,:) = (/dX1dxi1, dX2dxi1, dX3dxi1/)
-            JJ(2,:) = (/dX1dxi2, dX2dxi2, dX3dxi2/)
-            JJ(3,:) = (/dX1dxi3, dX2dxi3, dX3dxi3/)
+    
+                ! natural coordinates of current ip
+                xi1 = pGPCORD(ip,1)
+                xi2 = pGPCORD(ip,2)
+                xi3 = pGPCORD(ip,3)
+                if (iNODE==8) then
             
-            detJ(ip) = det(JJ)
+                    ! derivatives of shape functions with respect to natural coordinates                
+                    dNdXi1(1) = -one/eight*(1-xi2)*(1-xi3)
+                    dNdXi2(1) = -one/eight*(1-xi1)*(1-xi3)
+                    dNdXi3(1) = -one/eight*(1-xi1)*(1-xi2)
+                
+                    dNdXi1(2) =  one/eight*(1-xi2)*(1-xi3)
+                    dNdXi2(2) =  -one/eight*(1+xi1)*(1-xi3)
+                    dNdXi3(2) =  -one/eight*(1+xi1)*(1-xi2)
+                
+                    dNdXi1(3) =  one/eight*(1+xi2)*(1-xi3)
+                    dNdXi2(3) =  one/eight*(1+xi1)*(1-xi3)
+                    dNdXi3(3) =  -one/eight*(1+xi1)*(1+xi2)
+                
+                    dNdXi1(4) =  -one/eight*(1+xi2)*(1-xi3)
+                    dNdXi2(4) =  one/eight*(1-xi1)*(1-xi3)
+                    dNdXi3(4) =  -one/eight*(1-xi1)*(1+xi2)
+                
+                    dNdXi1(5) =  -one/eight*(1-xi2)*(1+xi3)
+                    dNdXi2(5) =  -one/eight*(1-xi1)*(1+xi3)
+                    dNdXi3(5) =  one/eight*(1-xi1)*(1-xi2)
+                
+                    dNdXi1(6) =  one/eight*(1-xi2)*(1+xi3)
+                    dNdXi2(6) =  -one/eight*(1+xi1)*(1+xi3)
+                    dNdXi3(6) =  one/eight*(1+xi1)*(1-xi2)
+                
+                    dNdXi1(7) =  one/eight*(1+xi2)*(1+xi3)
+                    dNdXi2(7) =  one/eight*(1+xi1)*(1+xi3)
+                    dNdXi3(7) =  one/eight*(1+xi1)*(1+xi2)
+                
+                    dNdXi1(8) =  -one/eight*(1+xi2)*(1+xi3)
+                    dNdXi2(8) =  one/eight*(1-xi1)*(1+xi3)
+                    dNdXi3(8) =  one/eight*(1-xi1)*(1+xi2)
+         
+                else  
+                    write(*,*) "Error in computation of shape function derivatives. The number of nodes does not conform with the element type (4 node tetrahedral element)." 
+                    CALL XPLB_EXIT    
+                end if
+                ! coordinate vectors of current element
+                X1 = coords(kblock,:,1)
+                X2 = coords(kblock,:,2)
+                X3 = coords(kblock,:,3)
+        
+                ! derivatives of physical coordinates with respect to natural coordinates                
+                dX1dxi1=dot(X1,dNdXi1)
+                dX1dxi2=dot(X1,dNdXi2)
+                dX1dxi3=dot(X1,dNdXi3)
+    
+                dX2dxi1=dot(X2,dNdXi1)
+                dX2dxi2=dot(X2,dNdXi2)
+                dX2dxi3=dot(X2,dNdXi3)
+    
+                dX3dxi1=dot(X3,dNdXi1)
+                dX3dxi2=dot(X3,dNdXi2)
+                dX3dxi3=dot(X3,dNdXi3)
+    
+                ! Jacobian determinant (detJ = 6V)
+                JJ(1,:) = (/dX1dxi1, dX2dxi1, dX3dxi1/)
+                JJ(2,:) = (/dX1dxi2, dX2dxi2, dX3dxi2/)
+                JJ(3,:) = (/dX1dxi3, dX2dxi3, dX3dxi3/)
+                
+                detJ(ip) = det(JJ)
+                
+                ! derivatives of shape functions with respect to physical coordinates  
+                do nn=1,iNODE
+                    dNdX1(ip,nn) = one/detJ(ip)*( (dX2dxi2*dX3dxi3-dX3dxi2*dX2dxi3)*dNdXi1(nn) &
+                                                + (dX3dxi1*dX2dxi3-dX2dxi1*dX3dxi3)*dNdXi2(nn) &
+                                                + (dX2dxi1*dX3dxi2-dX3dxi1*dX2dxi2)*dNdXi3(nn) )
+                    dNdX2(ip,nn) = one/detJ(ip)*( (dX3dxi2*dX1dxi3-dX1dxi2*dX3dxi3)*dNdXi1(nn) &
+                                                + (dX1dxi1*dX3dxi3-dX3dxi1*dX1dxi3)*dNdXi2(nn) &
+                                                + (dX3dxi1*dX1dxi2-dX1dxi1*dX3dxi2)*dNdXi3(nn) )
+                    dNdX3(ip,nn) = one/detJ(ip)*( (dX1dxi2*dX2dxi3-dX2dxi2*dX1dxi3)*dNdXi1(nn) &
+                                                + (dX2dxi1*dX1dxi3-dX1dxi1*dX2dxi3)*dNdXi2(nn) &
+                                                + (dX1dxi1*dX2dxi2-dX2dxi1*dX1dxi2)*dNdXi3(nn) )
+    
+                end do !----------------nn-loop --------------------
+    
+           
+            end do ! -------------------ip-loop------------------------------- 
+    !    !===================================================================================================================================
+    !    !-----------------------------------ELEMENT LENGTH CALCULATION & STABLE TIME INCREMENT CALCULATION----------------------------------
+    !    !===================================================================================================================================
             
-            ! derivatives of shape functions with respect to physical coordinates  
-            do nn=1,iNODE
-                dNdX1(ip,nn) = one/detJ(ip)*( (dX2dxi2*dX3dxi3-dX3dxi2*dX2dxi3)*dNdXi1(nn) &
-                                            + (dX3dxi1*dX2dxi3-dX2dxi1*dX3dxi3)*dNdXi2(nn) &
-                                            + (dX2dxi1*dX3dxi2-dX3dxi1*dX2dxi2)*dNdXi3(nn) )
-                dNdX2(ip,nn) = one/detJ(ip)*( (dX3dxi2*dX1dxi3-dX1dxi2*dX3dxi3)*dNdXi1(nn) &
-                                            + (dX1dxi1*dX3dxi3-dX3dxi1*dX1dxi3)*dNdXi2(nn) &
-                                            + (dX3dxi1*dX1dxi2-dX1dxi1*dX3dxi2)*dNdXi3(nn) )
-                dNdX3(ip,nn) = one/detJ(ip)*( (dX1dxi2*dX2dxi3-dX2dxi2*dX1dxi3)*dNdXi1(nn) &
-                                            + (dX2dxi1*dX1dxi3-dX1dxi1*dX2dxi3)*dNdXi2(nn) &
-                                            + (dX1dxi1*dX2dxi2-dX2dxi1*dX1dxi2)*dNdXi3(nn) )
-
-            end do !----------------nn-loop --------------------
-
-       
-        end do ! -------------------ip-loop------------------------------- 
-!    !===================================================================================================================================
-!    !-----------------------------------ELEMENT LENGTH CALCULATION & STABLE TIME INCREMENT CALCULATION----------------------------------
-!    !===================================================================================================================================
-        
-        pVolume = detJ(1)+detJ(2)+detJ(3)+detJ(4)+detJ(5)+detJ(6)+detJ(7)+detJ(8)
-        pd_min = pvolume**(one/three)
-        cd = sqrt( (pEM*(one-pNU))/(pRHO*(one+pNU)*(one-two*pNU)) )
-        cdT = (pDif)
-        Mechtime = (pd_min/cd)
-        Thermaltime = (pd_min*pd_min)/(2*cdT)
-        TimeMin = minval( (/Mechtime,Thermaltime/) )
-        dtimeStable(kblock) = factorStable*TimeMin		
-        
+            pVolume = detJ(1)+detJ(2)+detJ(3)+detJ(4)+detJ(5)+detJ(6)+detJ(7)+detJ(8)
+            pd_min = pvolume**(one/three)
+            cd = sqrt( (pEM*(one-pNU))/(pRHO*(one+pNU)*(one-two*pNU)) )
+            cdT = (pDif)
+            Mechtime = (pd_min/cd)
+            Thermaltime = (pd_min*pd_min)/(2*cdT)
+            TimeMin = minval( (/Mechtime,Thermaltime/) )
+            dtimeStable(kblock) = factorStable*TimeMin		
+            
 !    !===================================================================================================================================
 !    !--------------------------------------------------------RHS CALCULATION------------------------------------------------------------
 !    !===================================================================================================================================
 
         energy(kblock,iElIe)=zero
         energy(kblock,iElTh)=zero
-!        rhs(kblock,1:ndofel)=zero
+        rhs(kblock,1:ndofel)=zero
         !energy(kblock,iElKe)=zero
             
         if (lflags(iOpCode).eq.jIntForceAndDtStable) then
+            svars(kblock,1) = 0.0d0
+            Ele_temp = 0.0d0
+!            pCo_central = 0.0d0
+!            do ni=1,iNODE 
+!                pCo_central = pCo_central + u(kblock, (iCORDTOTAL*ni))
+!            end do
+!            pCo_central = pCo_central/iNODE
+!            pV_i = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*pCo_central
+!            pDensVolFrac = pV_i/pV_ges
+            
             do ip=1,iGP ! ---------------------- loop over all integration points (computation of residuum)--------------------------------
             
                 H = zero
                 pQf = zero
                 pCo = zero
                 gCo = zero
-                gCo2 = zero
                 pELECFIELD= zero
                 Elesize = zero
                 do ni=1,iNODE
@@ -1112,19 +1265,28 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     
                     ! Concentration and Concentration gradient
                     CoNODE(ni) = u(kblock, (iCORDTOTAL*ni))
+                    DuCo(ni) = du(kblock, (iCORDTOTAL*ni))
                     gCo = gCo + ( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/) )*CoNODE(ni)
                     
                     !Electric Field
                     pELECFIELD = pELECFIELD - ((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))*predef(kblock,ni,2,1)	
                 end do
-       
                 ! small strain tensor
                 Ee = half*(transpose(H) + H)
 
                 ! Elemental concentration and charge carrier density
                 pCo = dot(pNN(ip,:),CoNODE)
                 pQf = pF*((pZ*pCo)+(cSat*(1.d0)))
-
+                
+                Ele_temp = Ele_temp+pCo*detJ(ip)
+                
+                pNDu = dot(pnn(ip,:),DuCo)
+                
+                if (kInc.gt.0) then
+                    svars(kblock,1) = svars(kblock,1) + pNDu*detJ(ip)/dtimePrev
+                ELSE
+                    svars(kblock,1) = 0.0d0
+                end if
                 ! Electrical Displacement given by -(minus).epsilon0.epsilonr.Elecfield
                 ElecDisp = pEPSILONZERO*pEPSILONR*pELECFIELD
                 
@@ -1173,6 +1335,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 do ni=1,iNODE !-----------------------------loop-i--------------
 
                     call STRESSES_CONCEN_COUPLED(S,Ee,ElecDisp,pQf,pID,pGM,pLAM,pEPSILONZERO,pEPSILONR,pEMCoup, pZ, cSat)
+!                    call STRESSES_lin_elastic(SIG,P,S,F,Ee,pID,pGM,pLAM)
                     
                     dofni(1:iCORD) = 1+iCORDTOTAL*((ni*1)-1)+(CordRange-1)
                     dofniT = iCORDTOTAL*ni
@@ -1182,39 +1345,39 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !											
             !--------------------------------------Concentration RHS--------------------------------------
                     if (pDensVolFrac>0.1) then
-                        CALL VGETJOBNAME( JOBNAME,LENJOBNAME)
                         filename = '/home/cerecam/Desktop/LimitReached' // trim(JOBNAME) // '.inp'
                         INQUIRE(FILE= filename ,EXIST=I_EXIST)
                         if (.NOT. I_Exist) then                                
                             WRITE(*,*) "Limit has been reached in ",jelem(kblock)," at concentration of ", pCo,"kinc: ", kInc
                             open(unit=107, file=filename)
-                            WRITE(107,*) "Limit has been reached in ",jelem(kblock)," at concentration of ", pCo," kinc: ", kInc, " for job: ", trim(JOBNAME)
+                                WRITE(107,*) "Limit reached in element: ",jelem(kblock),"; at concentration: ", pCo,"; kinc: ", kInc, "; time: ",kInc*dtimeCur, "; job: ", trim(JOBNAME)
+                                WRITE(107,*) "The properties used in this simulation are: ", props
                             close(107)
                         end if
-                        if (pmod.eq.1) then
+                        if (pmod.eq.1.0) then
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
-                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))&
-                        + (pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
+                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))&
+                        + (pDif)*(pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
                         else
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
-                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD))) &
-                        + (pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
+                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD))) &
+                        + (pDif)*(pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
                         endif
                         
                     else
-                        if (pmod.eq.1) then
+                        if (pmod.eq.1.0) then
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
-                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*(one-pDensVolFrac)*pELECFIELD))) &
-                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))&
-                        + (pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
+                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*(one-pDensVolFrac)*pELECFIELD))) &
+                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))&
+                        + (pDif)*(pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
                         else
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
-                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD))) &
-                        + (pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
+                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD))) &
+                        + (pDif)*(pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
                         endif
                     
                     end if
@@ -1235,9 +1398,31 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     !	dofnj(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)
                     !	energy(kblock,iElKe)= energy(kblock,iElKe) + half*dot(v(kblock,dofni),matvec(amass(kblock,dofni,dofnj),v(kblock,dofnj)))
                     !end do !------------------------------end-loop-nj----------------
-                    end do !------------------------------end-loop-ni----------------
+                end do !------------------------------end-loop-ni----------------
 
-                end do ! -------------------- ip loop  ------------------------
+            end do ! -------------------- ip loop  ------------------------
+!            if ((jelem(kblock)==14194) .AND. (MOD(kInc,2).eq.0)) then
+!                fname = '/home/cerecam/Desktop/Temp_Element14194' // trim(JOBNAME) // '.inp'
+!                INQUIRE(FILE= fname ,EXIST=I_EXIST)
+!                if (I_Exist) then
+!                    open(unit=106,file=fname, status='old', action='write', position='append')
+!                else
+!                    open(unit=106,file=fname, status='new',action='write')
+!                end if
+!                    write(106,*) Ele_temp
+!                close(106)
+!            end if
+!            if ((jelem(kblock)==18945) .AND. (MOD(kInc,2).eq.0)) then
+!                fname = '/home/cerecam/Desktop/Temp_Element18945' // trim(JOBNAME) // '.inp'
+!                INQUIRE(FILE= fname ,EXIST=I_EXIST)
+!                if (I_Exist) then
+!                    open(unit=106,file=fname, status='old', action='write', position='append')
+!                else
+!                    open(unit=106,file=fname, status='new',action='write')
+!                end if
+!                    write(106,*) Ele_temp
+!                close(106)
+!            end if       
 !    !===================================================================================================================================
 !    !--------------------------------------------------------ROBIN BC: RHS ADDITION------------------------------------------------------------
 !    !===================================================================================================================================
@@ -1261,7 +1446,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !!                    face 5 nodes = 4873
 !!                    face 6 nodes = 1584                 
 
-                if (ANY(jElem(kblock).eq.Z0_Poly) .OR. ANY(jElem(kblock).eq.Z1_Poly)) then
+            if (ANY(jElem(kblock).eq.Z0_Poly) .OR. ANY(jElem(kblock).eq.Z1_Poly)) then
 !                            if (kInc.eq.1) then
 !                    write(*,*) "Robin element: ", jElem(kblock)
 !                    end if
@@ -1284,129 +1469,209 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !                    Face_nodes(4) = (/7,3,4,8/)
 !                    Face_nodes(5) = (/5,6,7,8/)
 !                    Face_nodes(6) = (/6,2,1,5/)
-            
+        
 !                    F_ALL(1,:) = F1
 !                    F_ALL(2,:) = F2
 !                    F_ALL(3,:) = F3
 !                    F_ALL(4,:) = F4
 !                    F_ALL(5,:) = F5
 !                    F_ALL(6,:) = F6
-            
+        
 !                    do i=1,6
 !                        if ABS(F_ALL(i,3).eq.1) then
 !                            Nodes = Face_nodes(i)
 !                            do j = 1,4
 !                                coordquad(i,1)= coords(kblock,Nodes(j),1
 !                            end do
-                    
+                
 !                    end do
 
 !                   FOR Z0_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F1 (i.e. nodes 1,2,3,4)
 !                   FOR Z1_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F2 (i.e. nodes 5,6,7,8)
-                    
-                    
-                    if (ANY(jElem(kblock).eq.Z0_Poly)) then
-                        QuadNodes = (/1,2,3,4/)
-                        do i=1,size(QuadNodes)
-                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
-                        end do
-                    elseif (ANY(jElem(kblock).eq.Z1_Poly)) then
-                        QuadNodes = (/5,6,7,8/)
-                        do i=1,size(QuadNodes)
-                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
-                        end do
-                    end if
+                
+                
+                
+                if (ANY(jElem(kblock).eq.Z0_Poly)) then
+                    QuadNodes = (/1,2,3,4/)
+                    do i=1,size(QuadNodes)
+                        coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                    end do
+                elseif (ANY(jElem(kblock).eq.Z1_Poly)) then
+                    QuadNodes = (/5,6,7,8/)
+                    do i=1,size(QuadNodes)
+                        coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                    end do
+                end if
 
-                    pGPCORDquad(1,:) = (/ 1.0d0/SQRT(3.0d0), 1.0d0/SQRT(3.0d0)/)
-                    pGPCORDquad(2,:) = (/ 1.0d0/SQRT(3.0d0), -1.0d0/SQRT(3.0d0)/)
-                    pGPCORDquad(3,:) = (/-1.0d0/SQRT(3.0d0), 1.0d0/SQRT(3.0d0)/)
-                    pGPCORDquad(4,:) = (/-1.0d0/SQRT(3.0d0), -1.0d0/SQRT(3.0d0)/)
+                pGPCORDquad(1,:) = (/ 1.0d0/SQRT(3.0d0), 1.0d0/SQRT(3.0d0)/)
+                pGPCORDquad(2,:) = (/ 1.0d0/SQRT(3.0d0), -1.0d0/SQRT(3.0d0)/)
+                pGPCORDquad(3,:) = (/-1.0d0/SQRT(3.0d0), 1.0d0/SQRT(3.0d0)/)
+                pGPCORDquad(4,:) = (/-1.0d0/SQRT(3.0d0), -1.0d0/SQRT(3.0d0)/)
+                
+                pWTquad = 1.0d0
+                pCo = zero
+                do ni=1,QuadNODE
+    
+                    ! Concentration and Concentration gradient
+                    CoNODE(ni) = u(kblock, (iCORDTOTAL*ni))
+                    	
+                end do
+                pCo = dot(pNNquad(ip,:),CoNODE)
+                pbeta = pDif*(pF*pZ)/(pRTHETA)*Csat*dot((/ zero, zero, -1.0d0*one /),pELECFIELD)
+
+                palpha = (temp2-(pbeta*(0.9375*0.9375)*Influx_ele))/AREA_Z0
+                fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
+                INQUIRE(FILE= fname ,EXIST=I_EXIST)
+                if (I_Exist) then
+                    open(unit=106,file=fname, status='old', action='write', position='append')
+                else
+                    open(unit=106,file=fname, status='new',action='write')
+                end if
+                if ((MOD(kInc,863).eq.0) .AND. ANY((jElem(:).eq.18945))) then
+                    write(106,*) "Increment_int:", temp1
+                    write(106,*) "Total_int: ", temp2
+                    write(106,*) "pbeta", pbeta
+                    write(106,*) "palpha", palpha
+                    write(106,*) "# Elements upon which Influx applied: ",Influx_ele
+                end if
+                close(106)
+                do ipquad=1,iGPquad
+
+                    xi1quad=pGPCORDquad(ipquad,1)
+                    xi2quad=pGPCORDquad(ipquad,2)
+            
+                    pNNquad(ipquad,1) = 1.0d0/four*(1-xi1quad)*(1-xi2quad)
+                    pNNquad(ipquad,2) = 1.0d0/four*(1-xi1quad)*(1+xi2quad)
+                    pNNquad(ipquad,3) = 1.0d0/four*(1+xi1quad)*(1+xi2quad)
+                    pNNquad(ipquad,4) = 1.0d0/four*(1+xi1quad)*(1-xi2quad)
                     
-                    pWTquad = 1.0d0
-    
-                    do ipquad=1,iGPquad
-    
-                        xi1quad=pGPCORDquad(ipquad,1)
-                        xi2quad=pGPCORDquad(ipquad,2)
-                
-                        pNNquad(ipquad,1) = 1.0d0/four*(1-xi1quad)*(1-xi2quad)
-                        pNNquad(ipquad,2) = 1.0d0/four*(1-xi1quad)*(1+xi2quad)
-                        pNNquad(ipquad,3) = 1.0d0/four*(1+xi1quad)*(1+xi2quad)
-                        pNNquad(ipquad,4) = 1.0d0/four*(1+xi1quad)*(1-xi2quad)
+                    
+                    Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
+                    Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
+                    Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
+                    Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad))
+
+                    detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+                    do ni=1,size(QuadNodes)
+                        nj = QuadNodes(ni)
+                        dofniT = iCORDTOTAL*nj
+                        dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)
+
+                        if (ANY(jElem(kblock).eq.Z0_Poly)) then ! Back Face
                         
-                        Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
-                        Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
-                        Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
-                        Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad))
-    
-                        detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
-                        do ni=1,size(QuadNodes)
-                            nj = QuadNodes(ni)
-                            dofniT = iCORDTOTAL*nj
-                            if (ANY(jElem(kblock).eq.Z0_Poly)) then
-!                                if (kblock==1) then
-!                                    write(*,*) jElem(kblock)
-!                                    write(*,*) detJquad(ipquad)
-!                                end if
+                        ! CONCENTRATION !
 !                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(1.0d0)*palpha 
-                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*(-1.0d0)*palpha 
-                            elseif (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<0.1d0)) then   
-!                            elseif (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac>0.0d0)) then                             
-!                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
-                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(1.0d0)*pbeta
-!                            RHS(kblock,1) = RHS(kblock,1)     
-                            end if  
-                        end do ! ------------------------ ni-loop ------------------------
-                    end do ! ------------------------ ipquad-loop ------------------------
-                end if ! ------------------------ jElem z0 Poly-loop ------------------------
-                
+                            RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*palpha
+                             
+                        ! DISPLACEMENT !
+                            RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
+                        elseif (ANY(jElem(kblock).eq.Z1_Poly) ) then ! Front Face
+                               
+                        ! CONCENTRATION !
+                            if ((pDensVolFrac<0.1d0)) then
+!                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
+                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*pbeta
+                            end if
+                            
+                        ! DISPLACEMENT !                 
+                            RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkFront
+!                        else 
+!                            RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkFront*1000
+                           
+                        end if  
+!                        RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
+                    end do ! ------------------------ ni-loop ------------------------
+                end do ! ------------------------ ipquad-loop ------------------------
+                if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<0.1d0)) then
+                    Influx_ele_int = Influx_ele_int+1
+                end if
+            end if ! ------------------------ jElem z0 Poly-loop ------------------------
+            
                 
                 
 !    !===================================================================================================================================
 !    !--------------------------------------------------------MASS MATRIX CALCULATION------------------------------------------------------------
 !    !===================================================================================================================================
-            else if (lflags(iOpCode).eq.jMassCalc) then
-                !amass(kblock,:,:)= zero
-                do ip=1,iGP ! ---------------------- loop over all integration points (computation of mass matrix)--------------------------------
-                    ! summation over node_i
-                    do ni=1,iNODE !-----------------------------loop-i--------------
-                        
+        else if (lflags(iOpCode).eq.jMassCalc) then
+            !amass(kblock,:,:)= zero
+            do ip=1,iGP ! ---------------------- loop over all integration points (computation of mass matrix)--------------------------------
+                ! summation over node_i
+                do ni=1,iNODE !-----------------------------loop-i--------------
+                    
+                    ! current node dof
+                    dofni(1:iCORD) = 1+iCORDTOTAL*((ni*1)-1)+(CordRange-1)
+                    dofniT = iCORDTOTAL*ni
+                    ! summation over node_ic
+                    do nj=1,iNODE !-------------------------loop-j--------------
+            
                         ! current node dof
-                        dofni(1:iCORD) = 1+iCORDTOTAL*((ni*1)-1)+(CordRange-1)
-                        dofniT = iCORDTOTAL*ni
-                        ! summation over node_icerecam
-                        
-                        do nj=1,iNODE !-------------------------loop-j--------------
+                        dofnj(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)
+                        dofnjT = iCORDTOTAL*nj
+
+                        ! regular mass matrix
+                        amass(kblock,dofni,dofnj) = amass(kblock,dofni,dofnj) &
+                                                    + pQUAD*pWT(ip)*detJ(ip)*pRHO*matmat(pNN(ip,ni)*Pid,pNN(ip,nj)*Pid)
+                        ! Capacitence matrix calculation
+                        amass(kblock,dofniT,dofnjT) = amass(kblock,dofniT,dofnjT) &
+                                                    + pQUAD*pWT(ip)*detJ(ip)*pNN(ip,ni)*pNN(ip,nj)
+                                
+                    end do !--------------------------end-loop-j----------------
                 
-                            ! current node dof
-                            dofnj(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)
-                            dofnjT = iCORDTOTAL*nj
-    
-                            ! regular mass matrix
-                            amass(kblock,dofni,dofnj) = amass(kblock,dofni,dofnj) &
-                                                        + pQUAD*pWT(ip)*detJ(ip)*pRHO*matmat(pNN(ip,ni)*Pid,pNN(ip,nj)*Pid)
-                            ! Capacitence matrix calculation
-                            amass(kblock,dofniT,dofnjT) = amass(kblock,dofniT,dofnjT) &
-                                                        + (1.0d0/pDif)*pQUAD*pWT(ip)*detJ(ip)*pNN(ip,ni)*pNN(ip,nj)
-                                    
-                        end do !--------------------------end-loop-j----------------
-                    
-                    end do !------------------------------end-loop-i----------------
-                    ! mass lumping
-                    
-                end do ! --------------------- end-loop-ip -----------------------
+                end do !------------------------------end-loop-i----------------
+                ! mass lumping
                 
-                do i=1,ndofel
-                    amass_row_sum = sum(amass(kblock,i,:))
-                    amass(kblock,i,:) = zero
-                    amass(kblock,i,i) = amass_row_sum
-                end do
-            end if ! ----------------------------jMassCalc--------------------
+            end do ! --------------------- end-loop-ip -----------------------
+            
+            do i=1,ndofel
+                amass_row_sum = sum(amass(kblock,i,:))
+                amass(kblock,i,:) = zero
+                amass(kblock,i,i) = amass_row_sum
+            end do
+        end if ! ----------------------------jMassCalc--------------------
                    
 !===============================================================================================================================================
                                             
         end do !-----------------------nblock-----------------------------------
-
+        filename = '/home/cerecam/Desktop/Du_results_' // trim(JOBNAME) // '.inp'
+        INQUIRE(FILE= filename ,EXIST=I_EXIST)
+        if (I_Exist) then ! Read most recent summation value (from previous nblocks) from this file
+            open(unit=107, file=filename,status="old",action="read")
+            read(107,*) Increment_int
+            read(107,*) Total_int   ! Current total of dc/dt            (**)
+            read(107,*) Influx_ele  ! Current total of influx elements  (**)
+            close(107)
+            open(unit=107, file=filename, status="old", action="write")
+        else ! The file will onlt not exist in the 1st increment (kInc=0)
+            open(unit=107, file=filename, status="new", action="write")
+            Total_int=0
+            Increment_int=0 ! Initialization of dc/dt
+            Influx_ele = 0  ! Initialization of no. of elements experiencing influx
+        end if
+        
+        if (Increment_int.eq.kInc) then ! If on the same increment (i.e. only on a different nblock) add to previous summation values (**)
+            Total_int = sum(svars(:,1))+Total_int
+            Influx_ele = Influx_ele_int + Influx_ele
+        else    ! If this increment is new (i.e. on the first nblock again)
+            filename2 = '/home/cerecam/Desktop/Du_results_Prev' // trim(JOBNAME) // '.inp'
+            INQUIRE(FILE= filename2 ,EXIST=I_EXIST)
+            if (I_Exist) then
+                open(unit=106, file=filename2, status="old", action="write")
+            else
+                open(unit=106, file=filename2, status="new", action="write")
+            end if 
+            write(106,*) Increment_int
+            write(106,*) Total_int      ! Store previous summation values (fully 'summed')
+            write(106,*) Influx_ele     ! Store previous summation values (fully 'summed')  
+            close(106)
+            Total_int = sum(svars(:,1)) ! New summation values (starting at at nblock==1)
+            Influx_ele = Influx_ele_int
+            
+        end if 
+        Increment_int=kInc
+        write(107,*) kinc
+        write(107,*) Total_int
+        write(107,*) Influx_ele
+        close(107)
     end if ! ------------------------ type.eq.48 loop ---------------------------
     
     if (jtype.eq.38) then  
@@ -1414,6 +1679,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         pEM  = props(1)
         pNU  = props(2)
         pRHO = props(3)
+        pkback = props(4)
+        pkFront = props(5)
         
         pGM  = half*pEM/(one+pNU)
         pLAM = (pEM*pNU)/((one+pNU)*(one-two*pNU)) 
@@ -1426,19 +1693,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         pImmobileConc = pV_ges / (4.0d0/3.0d0*pPi*(pRi**3)*pNa)        
     !--------------------------Parameters used in modified PNP model-------------------------------------
                                
-    !    Filesize = 618
-        
-    !    Allocate ( Z0_Poly(Filesize) )
-    !    open(unit=107, file='/home/cerecam/Desktop/GP_BoundaryConditionTests/InputFiles/Z0_POLY.csv',status='old')!
-    !    READ(107,*) Z0_Poly
-    !    close(107)
-        
-    !    Filesize = 589
-        
-    !    Allocate ( Z1_Poly(Filesize) )
-    !    open(unit=107, file='/home/cerecam/Desktop/GP_BoundaryConditionTests/InputFiles/Z1_POLY.csv',status='old')!
-    !    READ(107,*) Z1_Poly
-    !    close(107)
     !===============================================================================================================================================
         
         ! loop over element block
@@ -1559,7 +1813,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     
             energy(kblock,iElIe)=zero
             energy(kblock,iElTh)=zero
-    !        rhs(kblock,1:ndofel)=zero
+            rhs(kblock,1:ndofel)=zero
             !energy(kblock,iElKe)=zero
                 
             if (lflags(iOpCode).eq.jIntForceAndDtStable) then
@@ -1594,10 +1848,94 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     end do !------------------------------end-loop-ni----------------
     
                 end do ! -------------------- ip loop  ------------------------
-    !    !===================================================================================================================================
-    !    !--------------------------------------------------------ROBIN BC: RHS ADDITION------------------------------------------------------------
-    !    !===================================================================================================================================
+!        ===================================================================================================================================
+!        --------------------------------------------------------ROBIN BC: RHS ADDITION------------------------------------------------------------
+!        ===================================================================================================================================
+!                        4____________3
+!!                      /|          /|
+!!                     / |         / |         Y
+!!                   8/__|________/7 |         ^
+!!                    |  |        |  |         | 
+!!                    | 1|________|__|2        |____>X 
+!!                    | /         | /         /
+!!                   5|/__________|/6        /Z
+                
+!!            Where:  face 1 nodes = 1234
+!!                    face 2 nodes = 5678                
+!!                    face 3 nodes = 1562
+!!                    face 4 nodes = 6237
+!!                    face 5 nodes = 4873
+!!                    face 6 nodes = 1584
+                if (ANY(jElem(kblock).eq.Z0_gold) .OR. ANY(jElem(kblock).eq.Z1_gold)) then
+!                   X0 = F6 (i.e. nodes 1,5,6,2)
+!                   X1 = F4 (i.e. nodes 6,2,3,7)
+!                   Y0 = F5 (i.e. nodes 4,8,7,3)
+!                   Y1 = F3 (i.e. nodes 1,5,8,4)
+!                   Z0 = F1 (i.e. nodes 1,2,3,4)
+!                   Z1 = F2 (i.e. nodes 5,6,7,8)
+                    
+                    
+                    if (ANY(jElem(kblock).eq.Z0_gold)) then
+                        QuadNodes = (/1,2,3,4/)
+                        do i=1,size(QuadNodes)
+                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                        end do
+                    elseif (ANY(jElem(kblock).eq.Z1_gold)) then
+                        QuadNodes = (/5,6,7,8/)
+                        do i=1,size(QuadNodes)
+                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                        end do
+                    end if
+
+                    pGPCORDquad(1,:) = (/ 1.0d0/SQRT(3.0d0), 1.0d0/SQRT(3.0d0)/)
+                    pGPCORDquad(2,:) = (/ 1.0d0/SQRT(3.0d0), -1.0d0/SQRT(3.0d0)/)
+                    pGPCORDquad(3,:) = (/-1.0d0/SQRT(3.0d0), 1.0d0/SQRT(3.0d0)/)
+                    pGPCORDquad(4,:) = (/-1.0d0/SQRT(3.0d0), -1.0d0/SQRT(3.0d0)/)
+                    
+                    pWTquad = 1.0d0
     
+                    do ipquad=1,iGPquad
+    
+                        xi1quad=pGPCORDquad(ipquad,1)
+                        xi2quad=pGPCORDquad(ipquad,2)
+                
+                        pNNquad(ipquad,1) = 1.0d0/four*(1-xi1quad)*(1-xi2quad)
+                        pNNquad(ipquad,2) = 1.0d0/four*(1-xi1quad)*(1+xi2quad)
+                        pNNquad(ipquad,3) = 1.0d0/four*(1+xi1quad)*(1+xi2quad)
+                        pNNquad(ipquad,4) = 1.0d0/four*(1+xi1quad)*(1-xi2quad)
+                        
+                        Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
+                        Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
+                        Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
+                        Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad))
+    
+                        detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+                        do ni=1,size(QuadNodes)
+                            nj = QuadNodes(ni)
+                            dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1) 
+                            if ((COORDS(kblock,nj,1).eq.30.0 .OR. COORDS(kblock,nj,1).eq.0.0) .AND. ((COORDS(kblock,nj,2).eq.30.0) .OR. COORDS(kblock,nj,2).eq.0.0)) then
+                                factor=4
+                            elseif ((COORDS(kblock,nj,1).eq.30.0) .OR. (COORDS(kblock,nj,1).eq.0.0)) then
+                                factor = 2
+                            elseif ((COORDS(kblock,nj,2).eq.30.0) .OR. (COORDS(kblock,nj,2).eq.0.0)) then
+                                factor = 2
+                            else 
+                                factor =1
+                            end if
+                            if (ANY(jElem(kblock).eq.Z0_gold)) then ! Back Face
+                            ! DISPLACEMENT !
+                                RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock, dofni)*pkBack
+                            elseif (ANY(jElem(kblock).eq.Z1_Gold)) then ! Front Face
+                            ! DISPLACEMENT !  
+                                RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock, dofni)*pkFront
+!                            elseif ((ANY(jElem(kblock).eq.X0_gold)) .OR. (ANY(jElem(kblock).eq.Y0_gold)) & 
+!                                    .OR. (ANY(jElem(kblock).eq.X1_gold)) .OR. (ANY(jElem(kblock).eq.Y1_gold))) then 
+                                    
+!                                    RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock, dofni)*pkFront*1000 
+                            end if  
+                        end do ! ------------------------ ni-loop ------------------------
+                    end do ! ------------------------ ipquad-loop ------------------------
+                end if ! ------------------------ jElem Z0 or Z1 Poly-loop ------------------------
     !    !===================================================================================================================================
     !    !--------------------------------------------------------MASS MATRIX CALCULATION------------------------------------------------------------
     !    !===================================================================================================================================
@@ -1608,16 +1946,12 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     do ni=1,iNODE !-----------------------------loop-i--------------
                         
                         ! current node dof
-                        do i=1,iCORD
-                            dofni(i) = ni*iCORD-(iCORD-1)+(i-1)
-                        end do
+                        dofni(1:iCORD) = 1+iCORDTOTAL*((ni*1)-1)+(CordRange-1) 
                         ! summation over node_i
                         do nj=1,iNODE !-------------------------loop-j--------------
                 
                             ! current node dof
-                            do i=1,iCORD
-                                dofnj(i) = nj*iCORD-(iCORD-1)+(i-1)
-                            end do
+                            dofnj(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1) 
     
                             ! regular mass matrix
                             amass(kblock,dofni,dofnj) = amass(kblock,dofni,dofnj) &
