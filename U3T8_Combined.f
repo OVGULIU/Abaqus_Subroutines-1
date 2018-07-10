@@ -1570,7 +1570,9 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         
                         ! CONCENTRATION !
 !                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(1.0d0)*palpha 
-                            RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*palpha
+                            RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
+                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*0.0d0
+!                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*palpha
                              
                         ! DISPLACEMENT !
                             RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
@@ -1579,7 +1581,9 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         ! CONCENTRATION !
                             if ((pDensVolFrac<0.1d0)) then
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
-                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(temp3/((0.9375*0.9375)*Influx_ele))
+                                RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
+                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*0.0d0
+!                                pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(temp3/((0.9375*0.9375)*Influx_ele))
                                 
                             end if
                             
