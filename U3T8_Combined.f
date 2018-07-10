@@ -520,21 +520,21 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
     !			write(*,*)
     !			write(*,*) "----------------- VEXTERNALDB at Increment:",int(i_Array(i_int_kInc)),"-----------------",int(i_Array(i_int_kInc))
     !			write(*,*)
-    call VGETJOBNAME(JOBNAME,LENJOBNAME)
-    filename = '/home/cerecam/Desktop/Du_results_'// trim(JOBNAME) // '.inp'
-    INQUIRE(FILE=filename,EXIST=I_EXIST)
-    if (I_EXIST) then
-        open(unit=107, file=filename)            
-        close(UNIT=107,STATUS='DELETE')
-        write(*,*) " -- ", filename, " Deleted"
-    end if
-    filename = '/home/cerecam/Desktop/Du_results_Prev'// trim(JOBNAME) // '.inp'
-    INQUIRE(FILE=filename,EXIST=I_EXIST)
-    if (I_EXIST) then
-        open(unit=107, file=filename)            
-        close(UNIT=107,STATUS='DELETE')
-        write(*,*) " -- ", filename, " Deleted"
-    end if
+!    call VGETJOBNAME(JOBNAME,LENJOBNAME)
+!    filename = '/home/cerecam/Desktop/Du_results_'// trim(JOBNAME) // '.inp'
+!    INQUIRE(FILE=filename,EXIST=I_EXIST)
+!    if (I_EXIST) then
+!        open(unit=107, file=filename)            
+!        close(UNIT=107,STATUS='DELETE')
+!        write(*,*) " -- ", filename, " Deleted"
+!    end if
+!    filename = '/home/cerecam/Desktop/Du_results_Prev'// trim(JOBNAME) // '.inp'
+!    INQUIRE(FILE=filename,EXIST=I_EXIST)
+!    if (I_EXIST) then
+!        open(unit=107, file=filename)            
+!        close(UNIT=107,STATUS='DELETE')
+!        write(*,*) " -- ", filename, " Deleted"
+!    end if
     end if
     
     return
@@ -1077,6 +1077,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         if (kInc ==0.0) then
             svars(:,1) = 0.0d0
             svars(:,2) = 0.0d0
+            temp2 = 0.0d0
             temp3 = 0.0d0
             Influx_ele = 589
         end if
@@ -1126,9 +1127,9 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             read(106,*) temp2   ! Total flux within RVE from previous step
             read(106,*) temp3   ! Total influx calculated from the previous step
             read(106,*) Influx_ele
-            close(106) 
-           palpha = (temp2-temp3)/AREA_Z0 
+            close(106)  
         end if 
+        palpha = (temp2-temp3)/AREA_Z0
         Influx_ele_int = 0
         ! loop over element block
         do kblock=1,nblock ! ---------------------------------------------------
@@ -1294,6 +1295,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !                    end if
                 ELSE
                     svars(kblock,1) = 0.0d0
+                    svars(kblock,2) = 0.0d0
                 end if
                 ! Electrical Displacement given by -(minus).epsilon0.epsilonr.Elecfield
                 ElecDisp = pEPSILONZERO*pEPSILONR*pELECFIELD
@@ -1535,6 +1537,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     write(106,*) "# Elements upon which Influx applied: ",Influx_ele
                 end if
                 close(106)
+                svars(kblock,2) = zero
                 do ipquad=1,4
 
                     xi1quad=pGPCORDquad(ipquad,1)
@@ -1596,18 +1599,20 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         end if  
 !                        RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
                     end do ! ------------------------ ni-loop ------------------------
+                    if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<0.1d0)) then
+                        if (kInc.gt.0) then
+                            svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*3.1E-04*(-1.0d0/15.0d0)*detJquad(ipquad)
+                            if (ISNAN(pDif*(pF*pZ)/(pRTHETA)*pCo*detJquad(ipquad))) then
+                                write(*,*) "pDif*(pF*pZ)/(pRTHETA)*pCo*detJquad(ipquad)",pDif*(pF*pZ)/(pRTHETA)*3.1E-04*detJquad(ipquad)
+                            end if
+                        ELSE
+                            svars(kblock,2) = 0.0d0
+                        end if
+                    end if
                 end do ! ------------------------ ipquad-loop ------------------------
                 
                 if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<0.1d0)) then
                     Influx_ele_int = Influx_ele_int+1
-                    if (kInc.gt.0) then
-                        svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*3.1E-04*(-1.0d0/15.0d0)*(0.9375*0.9375)
-                        if (ISNAN(pDif*(pF*pZ)/(pRTHETA)*pCo*detJquad(ipquad))) then
-                            write(*,*) "pDif*(pF*pZ)/(pRTHETA)*pCo*detJquad(ipquad)",pDif*(pF*pZ)/(pRTHETA)*3.1E-04*detJquad(ipquad)
-                        end if
-                    ELSE
-                        svars(kblock,2) = 0.0d0
-                    end if
                 end if
             end if ! ------------------------ jElem z0 Poly-loop ------------------------
             
