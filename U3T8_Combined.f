@@ -475,13 +475,13 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
         close(UNIT=107,STATUS='DELETE')
         write(*,*) " -- ", filename, " Deleted"
     end if
-!    filename = '/home/cerecam/Desktop/Check_results'// trim(JOBNAME) // '.inp'
-!    INQUIRE(FILE=filename,EXIST=I_EXIST)
-!    if (I_EXIST) then
-!        open(unit=107, file=filename)            
-!        close(UNIT=107,STATUS='DELETE')
-!        write(*,*) " -- " // filename // " Deleted"
-!    end if
+    filename = '/home/cerecam/Desktop/Check_results'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " -- " // filename // " Deleted"
+    end if
     filename = '/home/cerecam/Desktop/Check_Element14194'// trim(JOBNAME) // '.inp'
     INQUIRE(FILE=filename,EXIST=I_EXIST)
     if (I_EXIST) then
@@ -1526,6 +1526,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 if ((MOD(kInc,1).eq.0) .AND. ANY((jElem(:).eq.18945))) then
                     write(106,*) "Increment_int:", temp1
                     write(106,*) "Total_int: ", temp2
+                    write(106,*) "Total_int_inc: ", sum(svars(:,1))
                     write(106,*) "pInflux", pbeta/((0.9375*0.9375)*Influx_ele)
                     write(106,*) "Outflux", palpha
                     write(106,*) "# Elements upon which Influx applied: ",Influx_ele
