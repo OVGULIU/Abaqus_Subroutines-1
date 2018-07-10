@@ -1511,15 +1511,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 pGPCORDquad(4,:) = (/-1.0d0/SQRT(3.0d0), -1.0d0/SQRT(3.0d0)/)
                 
                 pWTquad = 1.0d0
-                pCo = zero
-                do ni=1,QuadNODE
-    
-                    ! Concentration and Concentration gradient
-                    CoNODE(ni) = u(kblock, (iCORDTOTAL*ni))
-                    	
-                end do
                 
-                pCo = dot(pNNquad(ip,:),CoNODE)
                 pbeta = temp3
 
                 palpha = (temp2-pbeta)/AREA_Z0
@@ -1530,7 +1522,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 else
                     open(unit=106,file=fname, status='new',action='write')
                 end if
-                if ((MOD(kInc,863).eq.0) .AND. ANY((jElem(:).eq.18945))) then
+                if ((MOD(kInc,101).eq.0) .AND. ANY((jElem(:).eq.18945))) then
                     write(106,*) "Increment_int:", temp1
                     write(106,*) "Total_int: ", temp2
                     write(106,*) "pbeta", pbeta
@@ -1555,7 +1547,15 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad))
 
                     detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
-                    
+                    pCo = zero
+                    do ni=1,QuadNODEs
+        
+                        ! Concentration and Concentration gradient
+                        CoNODE(ni) = u(kblock, (iCORDTOTAL*ni))
+                            
+                    end do
+                
+                    pCo = dot(pNNquad(ipquad,:),CoNODE)
                     do ni=1,size(QuadNodes)
                         nj = QuadNodes(ni)
                         dofniT = iCORDTOTAL*nj
@@ -1576,7 +1576,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
                                 RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(pbeta/((0.9375*0.9375)*Influx_ele))
                                 if (kInc.gt.0) then
-                                    svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*Csat*(-1.0do/15.0d0)*detJquad(ipquad)
+                                    svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*pCo*(-1.0do/15.0d0)*detJquad(ipquad)
                                 ELSE
                                     svars(kblock,2) = 0.0d0
                                 end if
