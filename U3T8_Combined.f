@@ -942,7 +942,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 
     integer :: iCORDTOTAL
     integer :: kblock,ip,nn,ni,nj,i,pmod,total,Increment_int, temp1
-    double precision :: palpha,pbeta,Total_int, temp2, area, Ele_temp,pkback,pkfront, Influx_ele, Influx_ele_int
+    double precision :: palpha,pbeta,Total_int, temp2, temp3, area, Ele_temp,pkback,pkfront, Influx_ele, Influx_ele_int, Total_influx
 
     double precision :: AREA_X0, AREA_X1, AREA_Y0, AREA_Y1, AREA_Z0, AREA_Z1
 
@@ -1074,6 +1074,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     if (jtype.eq.48) then 
         if (kInc ==0.0) then
             svars(:,1) = 0.0d0
+            svars(:,2) = 0.0d0
         end if
         iCORDTOTAL=4
     !!    if (kblock==1) then
@@ -1117,8 +1118,9 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         INQUIRE(FILE= filename2 ,EXIST=I_EXIST)
         if (I_Exist) then
             open(unit=106, file=filename2)
-            read(106,*) temp1 
-            read(106,*) temp2
+            read(106,*) temp1   ! Increment number
+            read(106,*) temp2   ! Total flux within RVE from previous step
+            read(106,*) temp3   ! Total influx calculated from the previous step
             read(106,*) Influx_ele
             close(106) 
 !            
@@ -1128,8 +1130,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         ! loop over element block
         do kblock=1,nblock ! ---------------------------------------------------
             ! loop over all integration points (computation of FE variables)
-            do ip=1,iGP ! ------------------------------------------------------
-    
+            do ip=1,iGP ! ------------------------------------------------------    
     
                 ! natural coordinates of current ip
                 xi1 = pGPCORD(ip,1)
@@ -1239,6 +1240,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             
         if (lflags(iOpCode).eq.jIntForceAndDtStable) then
             svars(kblock,1) = 0.0d0
+            svars(kblock,2) = 0.0d0
             Ele_temp = 0.0d0
 !            pCo_central = 0.0d0
 !            do ni=1,iNODE 
@@ -1516,10 +1518,11 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     CoNODE(ni) = u(kblock, (iCORDTOTAL*ni))
                     	
                 end do
+                
                 pCo = dot(pNNquad(ip,:),CoNODE)
-                pbeta = pDif*(pF*pZ)/(pRTHETA)*Csat*dot((/ zero, zero, -1.0d0*one /),pELECFIELD)
+                pbeta = temp3
 
-                palpha = (temp2-(pbeta*(0.9375*0.9375)*Influx_ele))/AREA_Z0
+                palpha = (temp2-pbeta)/AREA_Z0
                 fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
                 INQUIRE(FILE= fname ,EXIST=I_EXIST)
                 if (I_Exist) then
@@ -1552,6 +1555,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad))
 
                     detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+                    
                     do ni=1,size(QuadNodes)
                         nj = QuadNodes(ni)
                         dofniT = iCORDTOTAL*nj
@@ -1570,7 +1574,12 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         ! CONCENTRATION !
                             if ((pDensVolFrac<0.1d0)) then
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
-                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*pbeta
+                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(pbeta/((0.9375*0.9375)*Influx_ele))
+                                if (kInc.gt.0) then
+                                    svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*Csat*(-1.0do/15.0d0)*detJquad(ipquad)
+                                ELSE
+                                    svars(kblock,2) = 0.0d0
+                                end if
                             end if
                             
                         ! DISPLACEMENT !                 
@@ -1582,6 +1591,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !                        RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
                     end do ! ------------------------ ni-loop ------------------------
                 end do ! ------------------------ ipquad-loop ------------------------
+                
                 if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<0.1d0)) then
                     Influx_ele_int = Influx_ele_int+1
                 end if
@@ -1638,18 +1648,21 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             open(unit=107, file=filename,status="old",action="read")
             read(107,*) Increment_int
             read(107,*) Total_int   ! Current total of dc/dt            (**)
+            read(107,*) Total_influx ! Current total of influx
             read(107,*) Influx_ele  ! Current total of influx elements  (**)
             close(107)
             open(unit=107, file=filename, status="old", action="write")
         else ! The file will onlt not exist in the 1st increment (kInc=0)
             open(unit=107, file=filename, status="new", action="write")
-            Total_int=0
-            Increment_int=0 ! Initialization of dc/dt
+            Total_int=0.0d0
+            Increment_int=0.0d0 ! Initialization of dc/dt
+            Total_influx = 0.0d0 ! Initialization of dc/dx for influx
             Influx_ele = 0  ! Initialization of no. of elements experiencing influx
         end if
         
         if (Increment_int.eq.kInc) then ! If on the same increment (i.e. only on a different nblock) add to previous summation values (**)
             Total_int = sum(svars(:,1))+Total_int
+            Total_influx = sum(svars(:,2) + Total_influx
             Influx_ele = Influx_ele_int + Influx_ele
         else    ! If this increment is new (i.e. on the first nblock again)
             filename2 = '/home/cerecam/Desktop/Du_results_Prev' // trim(JOBNAME) // '.inp'
@@ -1661,15 +1674,18 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             end if 
             write(106,*) Increment_int
             write(106,*) Total_int      ! Store previous summation values (fully 'summed')
+            write(106,*) Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
             write(106,*) Influx_ele     ! Store previous summation values (fully 'summed')  
             close(106)
             Total_int = sum(svars(:,1)) ! New summation values (starting at at nblock==1)
+            Total_influx = sum(svars(:,2)) ! New summation values (starting new increment at nblock=1)
             Influx_ele = Influx_ele_int
             
         end if 
         Increment_int=kInc
         write(107,*) kinc
         write(107,*) Total_int
+        write(107,*) Total_influx ! Writing current summation of influx elements (any nblock, if nblock ==1, is a new summation, else if a incremental summation)
         write(107,*) Influx_ele
         close(107)
     end if ! ------------------------ type.eq.48 loop ---------------------------
