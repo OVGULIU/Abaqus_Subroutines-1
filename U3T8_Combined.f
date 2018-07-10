@@ -1300,9 +1300,9 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 ! Electrical Displacement given by -(minus).epsilon0.epsilonr.Elecfield
                 ElecDisp = pEPSILONZERO*pEPSILONR*pELECFIELD
                 
-                pV_i = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*pCo
+                pDensVolFrac = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*pCo +0.7d0
                 
-                pDensVolFrac = pV_i/pV_ges
+!                pDensVolFrac = pV_i/pV_ges
                 if (pDensVolFrac>1.0) then
 !                    write(*,*) "rho exceeds to 1.0"
                 end if
@@ -1354,7 +1354,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     rhs(kblock,dofni) = rhs(kblock,dofni) 	+ pQUAD*pWT(ip)*detJ(ip)*(matvec(S,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))) 
 !											
             !--------------------------------------Concentration RHS--------------------------------------
-                    if (pDensVolFrac>0.3) then
+                    if (pDensVolFrac>1.0) then
                         filename = '/home/cerecam/Desktop/LimitReached' // trim(JOBNAME) // '.inp'
                         INQUIRE(FILE= filename ,EXIST=I_EXIST)
                         if (.NOT. I_Exist) then                                
@@ -1366,9 +1366,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         end if
                         if (pmod.eq.1.0) then
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
-                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))&
-                        + (pDif)*(pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))
                         else
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
                         - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
