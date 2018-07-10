@@ -1526,7 +1526,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 if ((MOD(kInc,1).eq.0) .AND. ANY((jElem(:).eq.18945))) then
                     write(106,*) "Increment_int:", temp1
                     write(106,*) "Total_int: ", temp2
-                    write(106,*) "Total_int_inc: ", sum(svars(:,1))
                     write(106,*) "pInflux", pbeta/((0.9375*0.9375)*Influx_ele)
                     write(106,*) "Outflux", palpha
                     write(106,*) "# Elements upon which Influx applied: ",Influx_ele
@@ -1680,9 +1679,19 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             write(106,*) Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
             write(106,*) Influx_ele     ! Store previous summation values (fully 'summed')  
             close(106)
+            write(*,*)  " pree recalc"
+            write(*,*) "Increment_int",Increment_int
+            write(*,*) "Total_int",Total_int      ! Store previous summation values (fully 'summed')
+            write(*,*) "Total_influx",Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
+            write(*,*) "Influx_ele",Influx_ele
             Total_int = sum(svars(:,1)) ! New summation values (starting at at nblock==1)
             Total_influx = sum(svars(:,2)) ! New summation values (starting new increment at nblock=1)
             Influx_ele = Influx_ele_int
+            write(*,*) "after re-calc"
+            write(*,*) "Increment_int",Increment_int
+            write(*,*) "Total_int",Total_int      ! Store previous summation values (fully 'summed')
+            write(*,*) "Total_influx",Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
+            write(*,*) "Influx_ele",Influx_ele
             
         end if 
         Increment_int=kInc
