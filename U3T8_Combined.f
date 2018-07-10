@@ -943,7 +943,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 
     integer :: iCORDTOTAL
     integer :: kblock,ip,nn,ni,nj,i,pmod,total,Increment_int, temp1
-    double precision :: palpha,pbeta,Total_int, temp2, temp3, area, Ele_temp,pkback,pkfront, Influx_ele, Influx_ele_int, Total_influx
+    double precision :: palpha,pbeta,Total_int, temp2, temp3, area, Ele_temp,pkback
+    double precision :: pkfront, Influx_ele, Influx_ele_int, Total_influx
 
     double precision :: AREA_X0, AREA_X1, AREA_Y0, AREA_Y1, AREA_Z0, AREA_Z1
 
@@ -1076,6 +1077,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         if (kInc ==0.0) then
             svars(:,1) = 0.0d0
             svars(:,2) = 0.0d0
+            temp3 = 0.0d0
         end if
         iCORDTOTAL=4
     !!    if (kblock==1) then
@@ -1517,9 +1519,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 
                 pWTquad = 1.0d0
                 
-                pbeta = temp3
-
-                palpha = (temp2-pbeta)/AREA_Z0
+                palpha = (temp2-temp3)/AREA_Z0
                 fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
                 INQUIRE(FILE= fname ,EXIST=I_EXIST)
                 if (I_Exist) then
@@ -1579,7 +1579,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         ! CONCENTRATION !
                             if ((pDensVolFrac<0.1d0)) then
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
-                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(pbeta/((0.9375*0.9375)*Influx_ele))
+                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(temp3/((0.9375*0.9375)*Influx_ele))
                                 
                             end if
                             
