@@ -1221,17 +1221,12 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
            
             end do ! -------------------ip-loop------------------------------- 
     !    !===================================================================================================================================
-    !    !-----------------------------------ELEMENT LENGTH CALCULATION & STABLE TIME INCREMENT CALCULATION----------------------------------
+    !    !-----------------------------------ELEMENT LENGTH CALCULATION----------------------------------
     !    !===================================================================================================================================
             
             pVolume = detJ(1)+detJ(2)+detJ(3)+detJ(4)+detJ(5)+detJ(6)+detJ(7)+detJ(8)
             pd_min = pvolume**(one/three)
-            cd = sqrt( (pEM*(one-pNU))/(pRHO*(one+pNU)*(one-two*pNU)) )
-            cdT = (pDif)
-            Mechtime = (pd_min/cd)
-            Thermaltime = (pd_min*pd_min)/(2*cdT)
-            TimeMin = minval( (/Mechtime,Thermaltime/) )
-            dtimeStable(kblock) = factorStable*TimeMin		
+
             
 !    !===================================================================================================================================
 !    !--------------------------------------------------------RHS CALCULATION------------------------------------------------------------
@@ -1354,7 +1349,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     rhs(kblock,dofni) = rhs(kblock,dofni) 	+ pQUAD*pWT(ip)*detJ(ip)*(matvec(S,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))) 
 !											
             !--------------------------------------Concentration RHS--------------------------------------
-                    if (pDensVolFrac>1.0) then
+                    if (pDensVolFrac>=1.0) then
                         filename = '/home/cerecam/Desktop/LimitReached' // trim(JOBNAME) // '.inp'
                         INQUIRE(FILE= filename ,EXIST=I_EXIST)
                         if (.NOT. I_Exist) then                                
@@ -1366,7 +1361,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         end if
                         if (pmod.eq.1.0) then
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pCo*(pImmobileConc)*gCo))
+                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pCo*(1/(pImmobileConc))*gCo))
                         else
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
                         - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
@@ -1379,7 +1374,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
                         - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
                         - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*(one-pDensVolFrac)*pELECFIELD))) &
-                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pCo*(pImmobileConc)*gCo))&
+                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pCo*(1/(pImmobileConc))*gCo))&
                         + (pDif)*(pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
                         else
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
@@ -1614,8 +1609,17 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 end if
             end if ! ------------------------ jElem z0 Poly-loop ------------------------
             
-                
-                
+    !    !===================================================================================================================================
+    !    !-----------------------------------STABLE TIME INCREMENT CALCULATION----------------------------------
+    !    !===================================================================================================================================
+            
+            cd = sqrt( (pEM*(one-pNU))/(pRHO*(one+pNU)*(one-two*pNU)) )
+            cdT = (4.0d0/3.0d0*pPi*(pRi**3)*pNa*EleTemp +0.7d0)*pDif
+            Mechtime = (pd_min/cd)
+            Thermaltime = (pd_min*pd_min)/(2*cdT)
+            TimeMin = minval( (/Mechtime,Thermaltime/) )
+            dtimeStable(kblock) = factorStable*TimeMin		
+            
 !    !===================================================================================================================================
 !    !--------------------------------------------------------MASS MATRIX CALCULATION------------------------------------------------------------
 !    !===================================================================================================================================
