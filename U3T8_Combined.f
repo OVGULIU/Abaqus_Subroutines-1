@@ -1548,7 +1548,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 
                     detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
                     pCo = zero
-                    do ni=1,QuadNODEs
+                    do ni=1,size(QuadNODEs)
         
                         ! Concentration and Concentration gradient
                         CoNODE(ni) = u(kblock, (iCORDTOTAL*ni))
@@ -1576,7 +1576,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
                                 RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(pbeta/((0.9375*0.9375)*Influx_ele))
                                 if (kInc.gt.0) then
-                                    svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*pCo*(-1.0do/15.0d0)*detJquad(ipquad)
+                                    svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*pCo*(-1.0d0/15.0d0)*detJquad(ipquad)
                                 ELSE
                                     svars(kblock,2) = 0.0d0
                                 end if
@@ -1662,7 +1662,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         
         if (Increment_int.eq.kInc) then ! If on the same increment (i.e. only on a different nblock) add to previous summation values (**)
             Total_int = sum(svars(:,1))+Total_int
-            Total_influx = sum(svars(:,2) + Total_influx
+            Total_influx = sum(svars(:,2)) + Total_influx
             Influx_ele = Influx_ele_int + Influx_ele
         else    ! If this increment is new (i.e. on the first nblock again)
             filename2 = '/home/cerecam/Desktop/Du_results_Prev' // trim(JOBNAME) // '.inp'
