@@ -1681,7 +1681,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             close(106)
             write(*,*)  " pree recalc"
             write(*,*) "Increment_int",Increment_int
-            write(*,*) "svars(1,1)",svars(1,1)      ! Store previous summation values (fully 'summed')
+            write(*,*) "svars(:,1)",svars(:,1)      ! Store previous summation values (fully 'summed')
             write(*,*) "Total_influx",Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
             write(*,*) "Influx_ele",Influx_ele
             Total_int = sum(svars(:,1)) ! New summation values (starting at at nblock==1)
@@ -1689,7 +1689,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             Influx_ele = Influx_ele_int
             write(*,*) "after re-calc"
             write(*,*) "Increment_int",Increment_int
-            write(*,*) "svars(1,1)",svars(1,1)       ! Store previous summation values (fully 'summed')
+            write(*,*) "svars(:,1)",svars(:,1)       ! Store previous summation values (fully 'summed')
             write(*,*) "Total_influx",Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
             write(*,*) "Influx_ele",Influx_ele
             
