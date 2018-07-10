@@ -1284,13 +1284,14 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 Ele_temp = Ele_temp+pCo*detJ(ip)
                 
                 pNDu = dot(pnn(ip,:),DuCo)
-                if (ISNAN(pNDu*detJ(ip)/dtimeCur)) then
+                
+                if (kInc.gt.0) then
+                    svars(kblock,1) = svars(kblock,1) + pNDu*detJ(ip)/dtimeCur
+                    if (ISNAN(pNDu*detJ(ip)/dtimeCur)) then
                     write(*,*) "pNDu",pNDu
                     write(*,*) "detJ(ip)",detJ(ip)
                     write(*,*) "dtimeCur",dtimeCur
                 end if
-                if (kInc.gt.1) then
-                    svars(kblock,1) = svars(kblock,1) + pNDu*detJ(ip)/dtimeCur
                 ELSE
                     svars(kblock,1) = 0.0d0
                 end if
