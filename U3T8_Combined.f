@@ -910,6 +910,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     double precision :: F6(iCORD)    ! Centroid of element
     double precision :: F_all(6)    ! Centroid of element
     double precision :: coordquad(4,2)    ! Centroid of element
+    double precision :: CoNODEQuad(4) ! Concentration on face of boundary element
     ! integer
     integer :: ipquad,Filesize, factor
     integer :: QuadNodes(4)
@@ -1549,13 +1550,13 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
                     pCo = zero
                     do ni=1,size(QuadNODEs)
-        
+                        nj = QuadNodes(ni)
                         ! Concentration and Concentration gradient
-                        CoNODE(ni) = u(kblock, (iCORDTOTAL*ni))
+                        CoNODEQuad(ni) = u(kblock, (iCORDTOTAL*nj))
                             
                     end do
                 
-                    pCo = dot(pNNquad(ipquad,:),CoNODE)
+                    pCo = dot(pNNquad(ipquad,:),CoNODEQuad)
                     do ni=1,size(QuadNodes)
                         nj = QuadNodes(ni)
                         dofniT = iCORDTOTAL*nj
@@ -1675,6 +1676,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             write(106,*) Increment_int
             write(106,*) Total_int      ! Store previous summation values (fully 'summed')
             write(106,*) Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
+            write(*,*) "Total_influx", Total_influx
             write(106,*) Influx_ele     ! Store previous summation values (fully 'summed')  
             close(106)
             Total_int = sum(svars(:,1)) ! New summation values (starting at at nblock==1)
