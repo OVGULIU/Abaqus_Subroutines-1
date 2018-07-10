@@ -1078,6 +1078,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             svars(:,1) = 0.0d0
             svars(:,2) = 0.0d0
             temp3 = 0.0d0
+            Influx_ele = 589
         end if
         iCORDTOTAL=4
     !!    if (kblock==1) then
@@ -1098,8 +1099,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         pDif = props(10)
         cSat = props(11)
         pa1 = props(12)
-        palpha = props(13)
-        pbeta = props(14)
+!        palpha = props(13)
+!        pbeta = props(14)
         pmod = props(15)
         pkback = props(16)
         pkfront = props(17)
@@ -1126,9 +1127,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             read(106,*) temp3   ! Total influx calculated from the previous step
             read(106,*) Influx_ele
             close(106) 
-!            
+           palpha = (temp2-temp3)/AREA_Z0 
         end if 
-        
         Influx_ele_int = 0
         ! loop over element block
         do kblock=1,nblock ! ---------------------------------------------------
@@ -1288,11 +1288,10 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 pNDu = dot(pnn(ip,:),DuCo)
                 
                 if (kInc.gt.0) then
-                    svars(kblock,1) = svars(kblock,1) + pNDu*detJ(ip)/dtimeCur
-                    if (ISNAN(pNDu*detJ(ip)/dtimeCur)) then
-                        write(*,*) "DuCo",DuCo                   
-                        write(*,*) "pNN(ip,:)",pNN(ip,:)
-                    end if
+                    svars(kblock,1) = svars(kblock,1) + pNDu*detJ(ip)/dtimePrev
+!                    if (ISNAN(pNDu*detJ(ip)/dtimeCur)) then
+!                        write(*,*) "pNDu*detJ(ip)/dtimeCur",pNDu*detJ(ip)/dtimeCur
+!                    end if
                 ELSE
                     svars(kblock,1) = 0.0d0
                 end if
@@ -1519,7 +1518,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 
                 pWTquad = 1.0d0
                 
-                palpha = (temp2-temp3)/AREA_Z0
+                !palpha = (temp2-temp3)/AREA_Z0
                 fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
                 INQUIRE(FILE= fname ,EXIST=I_EXIST)
                 if (I_Exist) then
@@ -1530,7 +1529,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 if ((MOD(kInc,1).eq.0) .AND. ANY((jElem(:).eq.18945))) then
                     write(106,*) "Increment_int:", temp1
                     write(106,*) "Total_int: ", temp2
-                    write(106,*) "pInflux", pbeta/((0.9375*0.9375)*Influx_ele)
+                    write(106,*) "temp3", temp3
+                    write(106,*) "pInflux", temp3/((0.9375*0.9375)*Influx_ele)
                     write(106,*) "Outflux", palpha
                     write(106,*) "# Elements upon which Influx applied: ",Influx_ele
                 end if
@@ -1571,8 +1571,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         ! CONCENTRATION !
 !                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(1.0d0)*palpha 
                             RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
-                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*0.0d0
-!                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*palpha
+!                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*0.0d0
+                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*(-7.8108557636741719E-005)
                              
                         ! DISPLACEMENT !
                             RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
@@ -1580,10 +1580,11 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                                
                         ! CONCENTRATION !
                             if ((pDensVolFrac<0.1d0)) then
+!                            write(*,*) "temp3/((0.9375*0.9375)*Influx_ele)", temp3/((0.9375*0.9375)*Influx_ele)
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
                                 RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
-                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*0.0d0
-!                                pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(temp3/((0.9375*0.9375)*Influx_ele))
+                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*temp3/((0.9375*0.9375)*Influx_ele)
+!                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(temp3/((0.9375*0.9375)*Influx_ele))
                                 
                             end if
                             
@@ -1600,7 +1601,10 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<0.1d0)) then
                     Influx_ele_int = Influx_ele_int+1
                     if (kInc.gt.0) then
-                        svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*pCo*(-1.0d0/15.0d0)*detJquad(ipquad)
+                        svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*3.1E-04*(-1.0d0/15.0d0)*(0.9375*0.9375)
+                        if (ISNAN(pDif*(pF*pZ)/(pRTHETA)*pCo*detJquad(ipquad))) then
+                            write(*,*) "pDif*(pF*pZ)/(pRTHETA)*pCo*detJquad(ipquad)",pDif*(pF*pZ)/(pRTHETA)*3.1E-04*detJquad(ipquad)
+                        end if
                     ELSE
                         svars(kblock,2) = 0.0d0
                     end if
