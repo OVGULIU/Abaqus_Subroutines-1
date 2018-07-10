@@ -374,8 +374,8 @@
 
 !                S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID - (pEMCoup/pZ)*pQf*pID
 		!write(*,*)"S",S
-		S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID + (1.d0/(pEPSILONZERO*pEPSILONR))*(dya(ElecDisp,ElecDisp) - 0.5d0*(dot(ElecDisp,ElecDisp))*pID)- (pEMCoup/pZ)*pQf*pID
-!		S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID
+!		S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID + (1.d0/(pEPSILONZERO*pEPSILONR))*(dya(ElecDisp,ElecDisp) - 0.5d0*(dot(ElecDisp,ElecDisp))*pID)- (pEMCoup/pZ)*pQf*pID
+		S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID
 !		S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID + (1.d0/(pEPSILONZERO*pEPSILONR))*(dya(ElecDisp,ElecDisp) - 0.5d0*(dot(ElecDisp,ElecDisp))*pID)
             
                 !---------------------------------------------------------------------------       
@@ -1114,9 +1114,13 @@
 !                        write(*,*) "Element size (h): ", (Elesize), "at ", jElem(kblock)
 !                        write(*,*) "A vector value (ZF/Rtheta Norm(elecfield)): ", NORM((pZ*pF/pRTHETA*pELECFIELD))
 !                    end if
-
+!				Elesize = pd_min
 				Elesize = (((3.0d0/(pi*4.0d0))*(detJ(1)/6.0d0))**(one/3.0d0))*2
-                Pe = NORM((pZ*pF/pRTHETA*pELECFIELD*(Elesize)))/2
+                    if (ALL(pELECFIELD.eq.0.0d0)) then
+                        Pe = 0.0d0
+                    else
+                        Pe = NORM((pZ*pF/pRTHETA*pELECFIELD*(Elesize)))/2
+                    end if
                 Courant = NORM((pDif*pZ*pF/pRTHETA*pELECFIELD))*dtimeCur/Elesize
 !                if (Pe>1.0) then
 !                    if (jElem(kblock)==3222) then
@@ -1128,7 +1132,7 @@
 !                    end if
 !                end if
                 if (Courant>0.1)   then
-                    write(*,*) "Courant number: ", Courant, "at ", jElem(kblock)
+!                    write(*,*) "Courant number: ", Courant, "at ", jElem(kblock)
                 end if
                 
 !                if (kblock==1) then
@@ -1143,7 +1147,7 @@
 
 				! Electrical Displacement given by -(minus)X epsilon0 Xepsilonr XElecfield
 				ElecDisp = pEPSILONZERO*pEPSILONR*pELECFIELD
-!				Elesize = pd_min
+
 				rhs(kblock,1:ndofel)=zero
 				if (lflags(iOpCode).eq.jIntForceAndDtStable) then
 !										
@@ -1155,13 +1159,6 @@
 					pSED = ( ( pGM*ddot(Ee,Ee)+half*pLAM*trace(Ee)*trace(Ee)) )
 		
 					energy(kblock,iElIe)= energy(kblock,iElIe) + (detJ(ip)/6.0d0)*pSED
-		
-  					VonMisS = sqrt( half*( (S(1,1)- S(2,2))**(two) + (S(2,2)- S(3,3))**(two) + (S(3,3)- S(1,1))**(two) &
-        		                        + six*(S(1,2)*S(1,2) + S(2,3)*S(2,3) + S(3,1)*S(3,1)) ) )
-					if (VonMisS<0.d0) then
-						write(*,*) "VonMises",VonMisS
-					end if
-					svars(kblock,1) = VonMisS
 
 					pQf = pF*((pZ*pCo)+(cSat*(1.d0)))
 					if (jElem(kblock)==54945 .OR. jElem(kblock)==54747) then 
@@ -1174,8 +1171,13 @@
                         Pe = 1.0d0
                     end if
                     
-                    pA_Vector = pDif*pZ*pF/pRTHETA*pELECFIELD                    
-                    sigma_k = (Elesize/(2*NORM(pA_Vector)))*Pe
+                    pA_Vector = pDif*pZ*pF/pRTHETA*pELECFIELD
+                    
+                    if (ALL(pELECFIELD.eq.0.0d0)) then
+                        sigma_k = 0.0d0
+                    else
+                        sigma_k = (Elesize/(2*NORM(pA_Vector)))*Pe
+                    end if
 					do ni=1,iNODE !-----------------------------loop-i--------------
 						pQf = pF*((pZ*pCo)+(cSat*(1.d0)))
 !						pQf = 0.0d0
@@ -1191,7 +1193,7 @@
          					rhs(kblock,dofniT) = rhs(kblock,dofniT) &
 					- pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
 					- pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD))) &
-					+ (pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+					- (pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
 !					+ pDif*(pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,((/1.0d0, 1.0d0, 1.0d0/)*pa1))))
 !                        do nj=1,iNODE ! ------------------------------- loop-j-----------------------------------------
 !                            dofnjT = iCORDTOTAL*nj
