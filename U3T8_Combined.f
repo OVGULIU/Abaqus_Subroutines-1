@@ -520,21 +520,21 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
     !			write(*,*)
     !			write(*,*) "----------------- VEXTERNALDB at Increment:",int(i_Array(i_int_kInc)),"-----------------",int(i_Array(i_int_kInc))
     !			write(*,*)
-!    call VGETJOBNAME(JOBNAME,LENJOBNAME)
-!    filename = '/home/cerecam/Desktop/Du_results_'// trim(JOBNAME) // '.inp'
-!    INQUIRE(FILE=filename,EXIST=I_EXIST)
-!    if (I_EXIST) then
-!        open(unit=107, file=filename)            
-!        close(UNIT=107,STATUS='DELETE')
-!        write(*,*) " -- ", filename, " Deleted"
-!    end if
-!    filename = '/home/cerecam/Desktop/Du_results_Prev'// trim(JOBNAME) // '.inp'
-!    INQUIRE(FILE=filename,EXIST=I_EXIST)
-!    if (I_EXIST) then
-!        open(unit=107, file=filename)            
-!        close(UNIT=107,STATUS='DELETE')
-!        write(*,*) " -- ", filename, " Deleted"
-!    end if
+    call VGETJOBNAME(JOBNAME,LENJOBNAME)
+    filename = '/home/cerecam/Desktop/Du_results_'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " -- ", filename, " Deleted"
+    end if
+    filename = '/home/cerecam/Desktop/Du_results_Prev'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " -- ", filename, " Deleted"
+    end if
     end if
     
     return
@@ -685,7 +685,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     double precision, parameter :: six=6.d0
     double precision, parameter :: eight=8.d0
     double precision, parameter :: Abcissa=SQRT(1.d0/3.d0)
-    double precision, parameter :: factorStable=0.75d0
+    double precision, parameter :: factorStable=0.99d0
     double precision, parameter :: pi=3.1415926535897932
     
     ! parameters - problem specification
@@ -1344,8 +1344,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 
                 do ni=1,iNODE !-----------------------------loop-i--------------
 
-                    call STRESSES_CONCEN_COUPLED(S,Ee,ElecDisp,pQf,pID,pGM,pLAM,pEPSILONZERO,pEPSILONR,pEMCoup, pZ, cSat)
-!                    call STRESSES_lin_elastic(SIG,P,S,F,Ee,pID,pGM,pLAM)
+!                    call STRESSES_CONCEN_COUPLED(S,Ee,ElecDisp,pQf,pID,pGM,pLAM,pEPSILONZERO,pEPSILONR,pEMCoup, pZ, cSat)
+                    call STRESSES_lin_elastic(SIG,P,S,F,Ee,pID,pGM,pLAM)
                     
                     dofni(1:iCORD) = 1+iCORDTOTAL*((ni*1)-1)+(CordRange-1)
                     dofniT = iCORDTOTAL*ni
@@ -1354,7 +1354,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     rhs(kblock,dofni) = rhs(kblock,dofni) 	+ pQUAD*pWT(ip)*detJ(ip)*(matvec(S,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))) 
 !											
             !--------------------------------------Concentration RHS--------------------------------------
-                    if (pDensVolFrac>0.1) then
+                    if (pDensVolFrac>0.3) then
                         filename = '/home/cerecam/Desktop/LimitReached' // trim(JOBNAME) // '.inp'
                         INQUIRE(FILE= filename ,EXIST=I_EXIST)
                         if (.NOT. I_Exist) then                                
@@ -1521,22 +1521,22 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 pWTquad = 1.0d0
                 
                 !palpha = (temp2-temp3)/AREA_Z0
-                fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
-                INQUIRE(FILE= fname ,EXIST=I_EXIST)
-                if (I_Exist) then
-                    open(unit=106,file=fname, status='old', action='write', position='append')
-                else
-                    open(unit=106,file=fname, status='new',action='write')
-                end if
-                if ((MOD(kInc,1).eq.0) .AND. ANY((jElem(:).eq.18945))) then
-                    write(106,*) "Increment_int:", temp1
-                    write(106,*) "Total_int: ", temp2
-                    write(106,*) "temp3", temp3
-                    write(106,*) "pInflux", temp3/((0.9375*0.9375)*Influx_ele)
-                    write(106,*) "Outflux", palpha
-                    write(106,*) "# Elements upon which Influx applied: ",Influx_ele
-                end if
-                close(106)
+!                fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
+!                INQUIRE(FILE= fname ,EXIST=I_EXIST)
+!                if (I_Exist) then
+!                    open(unit=106,file=fname, status='old', action='write', position='append')
+!                else
+!                    open(unit=106,file=fname, status='new',action='write')
+!                end if
+!                if ((MOD(kInc,1).eq.0) .AND. ANY((jElem(:).eq.18945))) then
+!                    write(106,*) "Increment_int:", temp1
+!                    write(106,*) "Total_int: ", temp2
+!                    write(106,*) "temp3", temp3
+!                    write(106,*) "pInflux", temp3/((0.9375*0.9375)*Influx_ele)
+!                    write(106,*) "Outflux", palpha
+!                    write(106,*) "# Elements upon which Influx applied: ",Influx_ele
+!                end if
+!                close(106)
                 svars(kblock,2) = zero
                 do ipquad=1,4
 
@@ -1574,19 +1574,19 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         ! CONCENTRATION !
 !                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(1.0d0)*palpha 
                             RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
-!                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*0.0d0
-                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*(-7.8108557636741719E-005)
+                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*0.0d0
+!                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*(-7.8108557636741719E-005)
                              
                         ! DISPLACEMENT !
                             RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
                         elseif (ANY(jElem(kblock).eq.Z1_Poly) ) then ! Front Face
                                
                         ! CONCENTRATION !
-                            if ((pDensVolFrac<0.1d0)) then
+                            if ((pDensVolFrac<0.3d0)) then
 !                            write(*,*) "temp3/((0.9375*0.9375)*Influx_ele)", temp3/((0.9375*0.9375)*Influx_ele)
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
                                 RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
-                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*temp3/((0.9375*0.9375)*Influx_ele)
+                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*1.0E-4
 !                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(temp3/((0.9375*0.9375)*Influx_ele))
                                 
                             end if
@@ -1599,7 +1599,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         end if  
 !                        RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
                     end do ! ------------------------ ni-loop ------------------------
-                    if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<0.1d0)) then
+                    if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<0.3d0)) then
                         if (kInc.gt.0) then
                             svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*3.1E-04*(-1.0d0/15.0d0)*detJquad(ipquad)
                             if (ISNAN(pDif*(pF*pZ)/(pRTHETA)*pCo*detJquad(ipquad))) then
