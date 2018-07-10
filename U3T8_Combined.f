@@ -1288,9 +1288,9 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 if (kInc.gt.0) then
                     svars(kblock,1) = svars(kblock,1) + pNDu*detJ(ip)/dtimeCur
                     if (ISNAN(pNDu*detJ(ip)/dtimeCur)) then
-                    write(*,*) "pNDu",pNDu
-                    write(*,*) "detJ(ip)",detJ(ip)
-                    write(*,*) "dtimeCur",dtimeCur
+                    write(*,*) "pNDu",pNDu                    
+                    write(*,*) "pNN(ip,:)",pNN(ip,:)
+                    end if
                 end if
                 ELSE
                     svars(kblock,1) = 0.0d0
@@ -1684,19 +1684,19 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             write(106,*) Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
             write(106,*) Influx_ele     ! Store previous summation values (fully 'summed')  
             close(106)
-            write(*,*)  " pree recalc"
-            write(*,*) "Increment_int",Increment_int
-            write(*,*) "svars(:,1)",svars(:,1)      ! Store previous summation values (fully 'summed')
-            write(*,*) "Total_influx",Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
-            write(*,*) "Influx_ele",Influx_ele
+!            write(*,*)  " pree recalc"
+!            write(*,*) "Increment_int",Increment_int
+!            write(*,*) "svars(:,1)",svars(:,1)      ! Store previous summation values (fully 'summed')
+!            write(*,*) "Total_influx",Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
+!            write(*,*) "Influx_ele",Influx_ele
             Total_int = sum(svars(:,1)) ! New summation values (starting at at nblock==1)
             Total_influx = sum(svars(:,2)) ! New summation values (starting new increment at nblock=1)
             Influx_ele = Influx_ele_int
-            write(*,*) "after re-calc"
-            write(*,*) "Increment_int",Increment_int
-            write(*,*) "svars(:,1)",svars(:,1)       ! Store previous summation values (fully 'summed')
-            write(*,*) "Total_influx",Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
-            write(*,*) "Influx_ele",Influx_ele
+!            write(*,*) "after re-calc"
+!            write(*,*) "Increment_int",Increment_int
+!            write(*,*) "svars(:,1)",svars(:,1)       ! Store previous summation values (fully 'summed')
+!            write(*,*) "Total_influx",Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
+!            write(*,*) "Influx_ele",Influx_ele
             
         end if 
         Increment_int=kInc
