@@ -1284,7 +1284,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 Ele_temp = Ele_temp+pCo*detJ(ip)
                 
                 pNDu = dot(pnn(ip,:),DuCo)
-                if (pNDu*detJ(ip)/dtimePrev.eq.Nan) then
+                if (ISNAN(pNDu*detJ(ip)/dtimePrev)) then
                     write(*,*) "pNDu",pNDu
                     write(*,*) "detJ(ip)",detJ(ip)
                     write(*,*) "dtimePrev",dtimePrev
