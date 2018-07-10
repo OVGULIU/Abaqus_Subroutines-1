@@ -1113,7 +1113,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         pNa = 602.2140857
         pPi = 3.14159265358979311
         pRi = 0.502
-        pV_ges = 4.0
+        pV_ges = 1.0
         pImmobileConc = pV_ges / (4.0d0/3.0d0*pPi*(pRi**3)*pNa)        
     !--------------------------Parameters used in modified PNP model-------------------------------------
     
@@ -1611,7 +1611,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     end if
                 end do ! ------------------------ ipquad-loop ------------------------
                 
-                if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<0.1d0)) then
+                if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<0.3d0)) then
                     Influx_ele_int = Influx_ele_int+1
                 end if
             end if ! ------------------------ jElem z0 Poly-loop ------------------------
