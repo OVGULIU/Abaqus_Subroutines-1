@@ -1571,7 +1571,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         elseif (ANY(jElem(kblock).eq.Z1_Poly) ) then ! Front Face
                                
                         ! CONCENTRATION !
-                            if ((pDensVolFrac<1.0d0)) then
+                            if ((pDensVolFrac<pVsat)) then
 !                            write(*,*) "temp3/((0.9375*0.9375)*Influx_ele)", temp3/((0.9375*0.9375)*Influx_ele)
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
                                 RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
@@ -1600,17 +1600,17 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     end if
                 end do ! ------------------------ ipquad-loop ------------------------
                 
-                if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<1.0d0)) then
+                if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<pVsat)) then
                     Influx_ele_int = Influx_ele_int+1
                 end if
-            end if ! ------------------------ jElem z0 Poly-loop ------------------------
+            end if ! ------------------------ jElem Z0 Poly-loop ------------------------
             
     !    !===================================================================================================================================
     !    !-----------------------------------STABLE TIME INCREMENT CALCULATION----------------------------------
     !    !===================================================================================================================================
             
             cd = sqrt( (pEM*(one-pNU))/(pRHO*(one+pNU)*(one-two*pNU)) )
-            cdT = pDif
+            cdT = (pVpoly)*pDif
             Mechtime = (pd_min/cd)
             Thermaltime = (pd_min*pd_min)/(2*cdT)
             TimeMin = minval( (/Mechtime,Thermaltime/) )
