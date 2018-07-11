@@ -1126,12 +1126,12 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         if (I_Exist) then
             open(unit=106, file=filename2)
             read(106,*) temp1   ! Increment number
-            read(106,*) temp2   ! Total flux within RVE from previous step
-            read(106,*) temp3   ! Total influx calculated from the previous step
-            read(106,*) Influx_ele
+            read(106,*) temp2   ! Total flux within RVE from previous step c_dot integrated over volue of RVE
+            read(106,*) temp3   ! Total integral of influx calculated from the previous step over area applied
+            read(106,*) Influx_ele ! Number of elements upon which an influx is applied (if element saturated no influx applied)
             close(106)  
         end if 
-        palpha = (temp2-temp3)/AREA_Z0
+        palpha = (temp2-temp3)/AREA_Z0  ! Calculation of the required amount of outflux
         Influx_ele_int = 0
         ! loop over element block
         do kblock=1,nblock ! ---------------------------------------------------
@@ -1240,16 +1240,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         !energy(kblock,iElKe)=zero
             
         if (lflags(iOpCode).eq.jIntForceAndDtStable) then
-            svars(kblock,1) = 0.0d0
-            svars(kblock,2) = 0.0d0
-            Ele_temp = 0.0d0
-!            pCo_central = 0.0d0
-!            do ni=1,iNODE 
-!                pCo_central = pCo_central + u(kblock, (iCORDTOTAL*ni))
-!            end do
-!            pCo_central = pCo_central/iNODE
-!            pV_i = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*pCo_central
-!            pDensVolFrac = pV_i/pV_ges
+            svars(kblock,1) = 0.0d0 ! State variable that store cdot*vol
             
             do ip=1,iGP ! ---------------------- loop over all integration points (computation of residuum)--------------------------------
             
@@ -1280,19 +1271,13 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 ! Elemental concentration and charge carrier density
                 pCo = dot(pNN(ip,:),CoNODE)
                 pQf = pF*((pZ*pCo)+(cSat*(1.d0)))
-                
-                Ele_temp = Ele_temp+pCo*detJ(ip)
-                
+                                
                 pNDu = dot(pnn(ip,:),DuCo)
                 
                 if (kInc.gt.0) then
                     svars(kblock,1) = svars(kblock,1) + pNDu*detJ(ip)/dtimePrev
-!                    if (ISNAN(pNDu*detJ(ip)/dtimeCur)) then
-!                        write(*,*) "pNDu*detJ(ip)/dtimeCur",pNDu*detJ(ip)/dtimeCur
-!                    end if
                 ELSE
                     svars(kblock,1) = 0.0d0
-                    svars(kblock,2) = 0.0d0
                 end if
                 ! Electrical Displacement given by -(minus).epsilon0.epsilonr.Elecfield
                 ElecDisp = pEPSILONZERO*pEPSILONR*pELECFIELD
@@ -1302,8 +1287,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !                pDensVolFrac = pV_i/pV_ges
                 if (pDensVolFrac>1.0) then
 !                    write(*,*) "rho exceeds to 1.0"
-                end if
-                if (pDensVolFrac<0.0) then
+                else if (pDensVolFrac<0.0) then
 !                    write(*,*) "rho is less than 0.0"
                 end if
         
@@ -1345,50 +1329,35 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     rhs(kblock,dofni) = rhs(kblock,dofni) 	+ pQUAD*pWT(ip)*detJ(ip)*(matvec(S,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))) 
 !											
             !--------------------------------------Concentration RHS--------------------------------------
-                    if (pDensVolFrac>=pVsat) then
-                        filename = '/home/cerecam/Desktop/LimitReached' // trim(JOBNAME) // '.inp'
-                        INQUIRE(FILE= filename ,EXIST=I_EXIST)
-                        if (.NOT. I_Exist) then                                
-                            WRITE(*,*) "Limit has been reached in ",jelem(kblock)," at concentration of ", pCo,"kinc: ", kInc
-                            open(unit=107, file=filename)
-                                WRITE(107,*) "Limit reached in element: ",jelem(kblock),"; at concentration: ", pCo,"; kinc: ", kInc, "; time: ",kInc*dtimeCur, "; job: ", trim(JOBNAME)
-                                WRITE(107,*) "The properties used in this simulation are: ", props
-                            close(107)
-                        end if
-                        if (pmod.eq.1.0) then
-                                rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-pCo*(1/(pImmobileConc))*gCo))
-                        else
-                                rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
-                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD))) &
-                        + (pDif)*(pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
-                        endif
+                    if (pmod.eq.1.0) then
+                        if (pDensVolFrac>=pVsat) then
                         
-                    else
-                        if (pmod.eq.1.0) then
-                                rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
-                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*(one-pDensVolFrac)*pELECFIELD))) &
-                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-pCo*(1/(pImmobileConc))*gCo))&
-                        + (pDif)*(pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+                            filename = '/home/cerecam/Desktop/LimitReached' // trim(JOBNAME) // '.inp'
+                            INQUIRE(FILE= filename ,EXIST=I_EXIST)
+                            if (.NOT. I_Exist) then                                
+                                WRITE(*,*) "Limit has been reached in ",jelem(kblock)," at concentration of ", pCo,"kinc: ", kInc
+                                open(unit=107, file=filename)
+                                    WRITE(107,*) "Limit reached in element: ",jelem(kblock),"; at concentration: ", pCo,"; kinc: ", kInc, "; time: ",kInc*dtimeCur, "; job: ", trim(JOBNAME)
+                                    WRITE(107,*) "The properties used in this simulation are: ", props
+                                close(107)
+                            end if
+                            
+                            rhs(kblock,dofniT) = rhs(kblock,dofniT) &
+                            - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-pCo*(1/(pImmobileConc))*gCo))
                         else
-                                rhs(kblock,dofniT) = rhs(kblock,dofniT) &
+                            rhs(kblock,dofniT) = rhs(kblock,dofniT) &
+                            - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
+                            - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*(one-pDensVolFrac)*pELECFIELD))) &
+                            - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-pCo*(1/(pImmobileConc))*gCo))&
+                            + (pDif)*(pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+                        end if
+                    else
+                        rhs(kblock,dofniT) = rhs(kblock,dofniT) &
                         - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
                         - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD))) &
                         + (pDif)*(pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
-                        endif
-                    
-                    end if
+                    end if 
 !                   
-!         				rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-!					- pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo))
-! -----------------------------------------------------------------------------------------------------------
-!                                rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-!                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
-!                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD))) &
-!                        + (pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
-
             !--------------------------------------Thermal Energy--------------------------------------
                     energy(kblock,iElTh)= energy(kblock,iElTh) + (pDif*pNN(ip,ni)*u(kblock,dofniT))
                     
@@ -1400,28 +1369,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 end do !------------------------------end-loop-ni----------------
 
             end do ! -------------------- ip loop  ------------------------
-!            if ((jelem(kblock)==14194) .AND. (MOD(kInc,2).eq.0)) then
-!                fname = '/home/cerecam/Desktop/Temp_Element14194' // trim(JOBNAME) // '.inp'
-!                INQUIRE(FILE= fname ,EXIST=I_EXIST)
-!                if (I_Exist) then
-!                    open(unit=106,file=fname, status='old', action='write', position='append')
-!                else
-!                    open(unit=106,file=fname, status='new',action='write')
-!                end if
-!                    write(106,*) Ele_temp
-!                close(106)
-!            end if
-!            if ((jelem(kblock)==18945) .AND. (MOD(kInc,2).eq.0)) then
-!                fname = '/home/cerecam/Desktop/Temp_Element18945' // trim(JOBNAME) // '.inp'
-!                INQUIRE(FILE= fname ,EXIST=I_EXIST)
-!                if (I_Exist) then
-!                    open(unit=106,file=fname, status='old', action='write', position='append')
-!                else
-!                    open(unit=106,file=fname, status='new',action='write')
-!                end if
-!                    write(106,*) Ele_temp
-!                close(106)
-!            end if       
+!              
 !    !===================================================================================================================================
 !    !--------------------------------------------------------ROBIN BC: RHS ADDITION------------------------------------------------------------
 !    !===================================================================================================================================
@@ -1461,13 +1409,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !                    F5 = F5/NORM(F5)
 !                    F6 = cross((coords(kblock,6,:)-coords(kblock,2,:),(coords(kblock,2,:)-coords(kblock,1,:)))
 !                    F6 = F6/NORM(F6)
-
-!                    Face_nodes(1) = (/5,1,4,8/)
-!                    Face_nodes(2) = (/6,2,3,7/)
-!                    Face_nodes(3) = (/1,2,3,4/)
-!                    Face_nodes(4) = (/7,3,4,8/)
-!                    Face_nodes(5) = (/5,6,7,8/)
-!                    Face_nodes(6) = (/6,2,1,5/)
         
 !                    F_ALL(1,:) = F1
 !                    F_ALL(2,:) = F2
@@ -1487,8 +1428,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 
 !                   FOR Z0_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F1 (i.e. nodes 1,2,3,4)
 !                   FOR Z1_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F2 (i.e. nodes 5,6,7,8)
-                
-                
                 
                 if (ANY(jElem(kblock).eq.Z0_Poly)) then
                     QuadNodes = (/1,2,3,4/)
@@ -1510,23 +1449,23 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 pWTquad = 1.0d0
                 
                 !palpha = (temp2-temp3)/AREA_Z0
-!                fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
-!                INQUIRE(FILE= fname ,EXIST=I_EXIST)
-!                if (I_Exist) then
-!                    open(unit=106,file=fname, status='old', action='write', position='append')
-!                else
-!                    open(unit=106,file=fname, status='new',action='write')
-!                end if
-!                if ((MOD(kInc,1).eq.0) .AND. ANY((jElem(:).eq.18945))) then
-!                    write(106,*) "Increment_int:", temp1
-!                    write(106,*) "Total_int: ", temp2
-!                    write(106,*) "temp3", temp3
-!                    write(106,*) "pInflux", temp3/((0.9375*0.9375)*Influx_ele)
-!                    write(106,*) "Outflux", palpha
-!                    write(106,*) "# Elements upon which Influx applied: ",Influx_ele
-!                end if
-!                close(106)
-                svars(kblock,2) = zero
+                fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
+                INQUIRE(FILE= fname ,EXIST=I_EXIST)
+                if (I_Exist) then
+                    open(unit=106,file=fname, status='old', action='write', position='append')
+                else
+                    open(unit=106,file=fname, status='new',action='write')
+                end if
+                if ((MOD(kInc,1).eq.0) .AND. ANY((jElem(:).eq.18945))) then
+                    write(106,*) "Increment_int:", temp1
+                    write(106,*) "Total_int: ", temp2
+                    write(106,*) "temp3", temp3
+                    write(106,*) "pInflux", temp3/((0.9375*0.9375))
+                    write(106,*) "Outflux", palpha
+                    write(106,*) "# Elements upon which Influx applied: ",Influx_ele
+                end if
+                close(106)
+                svars(kblock,2) = 0.0d0 ! State variable that sotres dc/dx*area
                 do ipquad=1,4
 
                     xi1quad=pGPCORDquad(ipquad,1)
@@ -1544,8 +1483,9 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad))
 
                     detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+                    
                     pCo = zero
-                    do ni=1,size(QuadNODEs)
+                    do ni=1,size(QuadNodes)
                         nj = QuadNodes(ni)
                         ! Concentration and Concentration gradient
                         CoNODEQuad(ni) = u(kblock, (iCORDTOTAL*nj))
@@ -1563,8 +1503,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         ! CONCENTRATION !
 !                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(1.0d0)*palpha 
                             RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
-                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pV_i)*0.0d0
-!                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*(-7.8108557636741719E-005)
+!                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pV_i)*0.0d0
+                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pV_i)*(-7.8E-005)
                              
                         ! DISPLACEMENT !
                             RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
@@ -1575,8 +1515,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !                            write(*,*) "temp3/((0.9375*0.9375)*Influx_ele)", temp3/((0.9375*0.9375)*Influx_ele)
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
                                 RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
-                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*5.0E-4
-!                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(temp3/((0.9375*0.9375)*Influx_ele))
+                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*1.0E-4
+!                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(temp3/((0.9375*0.9375)))
                                 
                             end if
                             
@@ -1590,7 +1530,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     end do ! ------------------------ ni-loop ------------------------
                     if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<pVsat)) then
                         if (kInc.gt.0) then
-                            svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*3.1E-04*(-1.0d0/15.0d0)*detJquad(ipquad)
+                            svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*1.3E-04*(-1.0d0/15.0d0)*detJquad(ipquad)
                             if (ISNAN(pDif*(pF*pZ)/(pRTHETA)*pCo*detJquad(ipquad))) then
                                 write(*,*) "pDif*(pF*pZ)/(pRTHETA)*pCo*detJquad(ipquad)",pDif*(pF*pZ)/(pRTHETA)*3.1E-04*detJquad(ipquad)
                             end if
@@ -1671,8 +1611,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             open(unit=107, file=filename, status="old", action="write")
         else ! The file will onlt not exist in the 1st increment (kInc=0)
             open(unit=107, file=filename, status="new", action="write")
-            Total_int=0.0d0
-            Increment_int=0.0d0 ! Initialization of dc/dt
+            Increment_int=0.0d0
+            Total_int=0.0d0 ! Initialization of dc/dt
             Total_influx = 0.0d0 ! Initialization of dc/dx for influx
             Influx_ele = 0  ! Initialization of no. of elements experiencing influx
         end if
