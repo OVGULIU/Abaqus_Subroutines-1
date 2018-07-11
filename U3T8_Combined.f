@@ -1448,7 +1448,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 
                 pWTquad = 1.0d0
                 
-                !palpha = (temp2-temp3)/AREA_Z0
+                
+                pbeta = temp3/((0.9375*0.9375)*Influx_ele)
                 fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
                 INQUIRE(FILE= fname ,EXIST=I_EXIST)
                 if (I_Exist) then
@@ -1456,11 +1457,13 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 else
                     open(unit=106,file=fname, status='new',action='write')
                 end if
-                if ((MOD(kInc,1).eq.0) .AND. ANY((jElem(:).eq.18945))) then
+                if ((MOD(kInc,101).eq.0) .AND. (jElem(kblock).eq.15137)) then
+                    write(106,*) "Element number", jElem(kblock)
+                    write(106,*) "kblock", kblock
                     write(106,*) "Increment_int:", temp1
                     write(106,*) "Total_int: ", temp2
                     write(106,*) "temp3", temp3
-                    write(106,*) "pInflux", temp3/((0.9375*0.9375))
+                    write(106,*) "pInflux", pbeta
                     write(106,*) "Outflux", palpha
                     write(106,*) "# Elements upon which Influx applied: ",Influx_ele
                 end if
@@ -1491,17 +1494,19 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         CoNODEQuad(ni) = u(kblock, (iCORDTOTAL*nj))
                             
                     end do
-                
-                    pCo = dot(pNNquad(ipquad,:),CoNODEQuad)
+                    if (ANY(CoNODEQUAD<=0.0d0)) then
+                        pCo =0
+                    else
+                        pCo = dot(pNNquad(ipquad,:),CoNODEQuad)
+                    end if
+                    pV_i = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*pCo
+                    pDensVolFrac = pV_i +pVpoly
                     do ni=1,size(QuadNodes)
                         nj = QuadNodes(ni)
                         dofniT = iCORDTOTAL*nj
                         dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)
 
                         if (ANY(jElem(kblock).eq.Z0_Poly)) then ! Back Face
-                                if (pCo<=0.0d0) then
-                                    pV_i = 0.0d0
-                                end if
                         ! CONCENTRATION !
 !                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(1.0d0)*palpha 
                             RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
@@ -1510,15 +1515,14 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                              
                         ! DISPLACEMENT !
                             RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
-                        elseif (ANY(jElem(kblock).eq.Z1_Poly) ) then ! Front Face
-                               
+                        elseif (ANY(jElem(kblock).eq.Z1_Poly) ) then ! Front Face   
                         ! CONCENTRATION !
                             if ((pDensVolFrac<pVsat)) then
 !                            write(*,*) "temp3/((0.9375*0.9375)*Influx_ele)", temp3/((0.9375*0.9375)*Influx_ele)
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
                                 RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
 !                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*5.0E-4
-                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(temp3/((0.9375*0.9375)*589.0))
+                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*temp3/((0.9375*0.9375)*589)
                                 
                             end if
                             
@@ -1532,10 +1536,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     end do ! ------------------------ ni-loop ------------------------
                     if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<pVsat)) then
                         if (kInc.gt.0) then
-                            svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*1.3E-04*(-1.0d0/15.0d0)*detJquad(ipquad)
-                            if (ISNAN(pDif*(pF*pZ)/(pRTHETA)*pCo*detJquad(ipquad))) then
-                                write(*,*) "pDif*(pF*pZ)/(pRTHETA)*pCo*detJquad(ipquad)",pDif*(pF*pZ)/(pRTHETA)*3.1E-04*detJquad(ipquad)
-                            end if
+                            svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*pCo*(-1.0d0/15.0d0)*detJquad(ipquad)*10
                         ELSE
                             svars(kblock,2) = 0.0d0
                         end if
