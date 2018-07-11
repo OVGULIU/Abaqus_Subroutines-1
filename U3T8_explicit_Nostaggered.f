@@ -901,8 +901,7 @@
             pID=zero
             forall(i=1:iCORD) pID(i,i)=one
             !---------------------------------------------------------------------------
-            
-            write(*,*) "size of coords"
+
     !===============================================================================================================================================
             
             ! loop over element block
@@ -975,8 +974,6 @@
                     dX3dxi1=dot(X3,dNdXi1)
                     dX3dxi2=dot(X3,dNdXi2)
                     dX3dxi3=dot(X3,dNdXi3)
-                    write(*,*) "size of X1: ", SIZE(X1)
-                    write(*,*) "size of dNdXi1: ", SIZE(dNdXi1)
     
                     ! Jacobian determinant (detJ = 6V)
                     JJ(1,:) = (/dX1dxi1, dX2dxi1, dX3dxi1/)
@@ -985,7 +982,6 @@
                     
                     detJ(ip) = det(JJ)
                     
-                    write(*,*) "-----------------detJ---------------------", detJ
                     ! derivatives of shape functions with respect to physical coordinates  
                     do nn=1,iNODE
                         dNdX1(ip,nn) = one/detJ(ip)*( (dX2dxi2*dX3dxi3-dX3dxi2*dX2dxi3)*dNdXi1(nn) &
@@ -1006,111 +1002,111 @@
 !    !----------------------------------------------ELEMENT LENGTH CALCULATION----------------------------------------------------
 !    !===================================================================================================================================
                 
-!                pVolume = detJ(1)+detJ(2)+detJ(3)+detJ(4)+detJ(5)+detJ(6)+detJ(7)+detJ(8)
-!                pd_min = pvolume**(one/three)
-!                cd = sqrt( (pEM*(one-pNU))/(pRHO*(one+pNU)*(one-two*pNU)) )
-!                cdT = (pDif)
-!                Mechtime = (pd_min/cd)
-!                Thermaltime = (pd_min*pd_min)/(2*cdT)
-!                TimeMin = minval( (/Mechtime,Thermaltime/) )
-!                dtimeStable(kblock) = factorStable*TimeMin		
+                pVolume = detJ(1)+detJ(2)+detJ(3)+detJ(4)+detJ(5)+detJ(6)+detJ(7)+detJ(8)
+                pd_min = pvolume**(one/three)
+                cd = sqrt( (pEM*(one-pNU))/(pRHO*(one+pNU)*(one-two*pNU)) )
+                cdT = (pDif)
+                Mechtime = (pd_min/cd)
+                Thermaltime = (pd_min*pd_min)/(2*cdT)
+                TimeMin = minval( (/Mechtime,Thermaltime/) )
+                dtimeStable(kblock) = factorStable*TimeMin		
 !    !===================================================================================================================================
 !    !--------------------------------------------------------RHS CALCULATION------------------------------------------------------------
 !    !===================================================================================================================================
     
-!                energy(kblock,iElIe)=zero
-!                energy(kblock,iElTh)=zero
+                energy(kblock,iElIe)=zero
+                energy(kblock,iElTh)=zero
+                rhs(kblock,1:ndofel)=zero
                 !energy(kblock,iElKe)=zero
                     
-!!                if (lflags(iOpCode).eq.jIntForceAndDtStable) then
-!                    do ip=1,iGP ! ---------------------- loop over all integration points (computation of residuum)--------------------------------
+                if (lflags(iOpCode).eq.jIntForceAndDtStable) then
+                    do ip=1,iGP ! ---------------------- loop over all integration points (computation of residuum)--------------------------------
                     
-!                        H = zero
-!                        pQf = zero
-!                        pCo = zero
-!                        gCo = zero
-!                        gCo2 = zero
-!                        pELECFIELD= zero
-!                        Elesize = zero
-!                        do ni=1,iNODE
-!                            dofni(1:iCORD) = 1+iCORDTOTAL*((ni*1)-1)+(CordRange-1)
-!                            Uarray(1:iCORD)=u(kblock, dofni)
+                        H = zero
+                        pQf = zero
+                        pCo = zero
+                        gCo = zero
+                        gCo2 = zero
+                        pELECFIELD= zero
+                        Elesize = zero
+                        do ni=1,iNODE
+                            dofni(1:iCORD) = 1+iCORDTOTAL*((ni*1)-1)+(CordRange-1)
+                            Uarray(1:iCORD)=u(kblock, dofni)
         
-!                            ! displacement gradient
-!                            H = H + dya(Uarray,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/) )
+                            ! displacement gradient
+                            H = H + dya(Uarray,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/) )
             
-!                            ! Concentration and Concentration gradient
-!                            CoNODE(ni) = u(kblock, (iCORDTOTAL*ni))
-!                            gCo = gCo + ( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/) )*CoNODE(ni)
+                            ! Concentration and Concentration gradient
+                            CoNODE(ni) = u(kblock, (iCORDTOTAL*ni))
+                            gCo = gCo + ( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/) )*CoNODE(ni)
                             
-!                            !Electric Field
-!                            pELECFIELD = pELECFIELD - ((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))*predef(kblock,ni,2,1)	
-!                        end do
-                        
-!                        Elesize = pd_min
-!                        Pe = NORM((pZ*pF/pRTHETA*pELECFIELD*(Elesize)))/2
-!                        Courant = NORM((pDif*pZ*pF/pRTHETA*pELECFIELD))*dtimeCur/Elesize
-!        !                if (Pe>1.0) then
-!        !                end if
-!        !                if (Courant>0.1)   then
-!        !                    write(*,*) "Courant number: ", Courant, "at ", jElem(kblock)
-!        !                end if
-                        
-!                        pCo = dot(pNN(ip,:),CoNODE)
+                            !Electric Field
+                            pELECFIELD = pELECFIELD - ((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))*predef(kblock,ni,2,1)	
+                        end do
                
-!                        ! small strain tensor
-!                        Ee = half*(transpose(H) + H)
+                        ! small strain tensor
+                        Ee = half*(transpose(H) + H)
         
-!                        ! Electrical Displacement given by -(minus)X epsilon0 Xepsilonr XElecfield
-!                        ElecDisp = pEPSILONZERO*pEPSILONR*pELECFIELD
+                        ! Elemental concentration and charge carrier density
+                        pCo = dot(pNN(ip,:),CoNODE)
+                        pQf = pF*((pZ*pCo)+(cSat*(1.d0)))
         
-!                        rhs(kblock,1:ndofel)=zero
-!    !										
-!                        pSED = ( ( pGM*ddot(Ee,Ee)+half*pLAM*trace(Ee)*trace(Ee)) )
-            
-!                        energy(kblock,iElIe)= energy(kblock,iElIe) + (detJ(ip))*pSED
-            
-!                        pQf = pF*((pZ*pCo)+(cSat*(1.d0)))
+                        ! Electrical Displacement given by -(minus).epsilon0.epsilonr.Elecfield
+                        ElecDisp = pEPSILONZERO*pEPSILONR*pELECFIELD
                         
-!                        pA_Vector = pDif*pZ*pF/pRTHETA*pELECFIELD                    
-!                        sigma_k = (Elesize/(2*NORM(pA_Vector)))*Pe
-!                        do ni=1,iNODE !-----------------------------loop-i--------------
-!                            pQf = pF*((pZ*pCo)+(cSat*(1.d0)))
-    
-!                            call STRESSES_CONCEN_COUPLED(S,Ee,ElecDisp,pQf,pID,pGM,pLAM,pEPSILONZERO,pEPSILONR,pEMCoup, pZ, cSat)
-                            
-!                            dofni(1:iCORD) = 1+iCORDTOTAL*((ni*1)-1)+(CordRange-1)
-!                            dofniT = iCORDTOTAL*ni
+                        ! Internal energy Calculation							
+                        pSED = ( ( pGM*ddot(Ee,Ee)+half*pLAM*trace(Ee)*trace(Ee)) )            
+                        energy(kblock,iElIe)= energy(kblock,iElIe) + (detJ(ip))*pSED
+            
+                        ! Stability calculations
+                        Elesize = pd_min
+                        Pe = NORM((pZ*pF/pRTHETA*pELECFIELD*(Elesize)))/2
+                        Courant = NORM((pDif*pZ*pF/pRTHETA*pELECFIELD))*dtimeCur/Elesize
+                        pA_Vector = pDif*pZ*pF/pRTHETA*pELECFIELD                    
+                        sigma_k = (Elesize/(2*NORM(pA_Vector)))*Pe
                         
-!                    !--------------------------------------Displacement RHS--------------------------------------
-!                            rhs(kblock,dofni) = rhs(kblock,dofni) 	+ pQUAD*pWT(ip)*detJ(ip)*(matvec(S,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))) 
-!    !											- pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),((pEMCoup/pZ)*pQf*pID))
-!                    !--------------------------------------Concentration RHS--------------------------------------
-!                            rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-!                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
-!                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD))) &
-!                        - (pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
-!    !					+ pDif*(pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,((/1.0d0, 1.0d0, 1.0d0/)*pa1))))
-!    !                   
-!    !         				rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-!    !					- pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-pDif*gCo))
+!                        if (Pe>1.0) then
+!                        end if
+!                        if (Courant>0.1)   then
+!                            write(*,*) "Courant number: ", Courant, "at ", jElem(kblock)
+!                        end if
         
-!    !         				rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-!    !					- pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),((pDif*(pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD)))&
-!    !					+ pDif*(pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,((/1.0d0, 1.0d0, 1.0d0/)*pa))))
+                        do ni=1,iNODE !-----------------------------loop-i--------------
     
-!                    !--------------------------------------Thermal Energy--------------------------------------
-!                            energy(kblock,iElTh)= energy(kblock,iElTh) + (pDif*pNN(ip,ni)*u(kblock,dofniT))
+                            call STRESSES_CONCEN_COUPLED(S,Ee,ElecDisp,pQf,pID,pGM,pLAM,pEPSILONZERO,pEPSILONR,pEMCoup, pZ, cSat)
                             
-!                    !--------------------------------------Kinetic Energy--------------------------------------
-!                            !do nj=1,iNODE !-----------------------------loop-i--------------
-!                            !	dofnj(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)
-!                            !	energy(kblock,iElKe)= energy(kblock,iElKe) + half*dot(v(kblock,dofni),matvec(amass(kblock,dofni,dofnj),v(kblock,dofnj)))
-!                            !end do !------------------------------end-loop-nj----------------
-!                        end do !------------------------------end-loop-ni----------------
+                            dofni(1:iCORD) = 1+iCORDTOTAL*((ni*1)-1)+(CordRange-1)
+                            dofniT = iCORDTOTAL*ni
+                        
+                    !--------------------------------------Displacement RHS--------------------------------------
+                            rhs(kblock,dofni) = rhs(kblock,dofni) 	+ pQUAD*pWT(ip)*detJ(ip)*(matvec(S,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))) 
+    !											- pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),((pEMCoup/pZ)*pQf*pID))
+                    !--------------------------------------Concentration RHS--------------------------------------
+                            rhs(kblock,dofniT) = rhs(kblock,dofniT) &
+                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
+                        - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD))) &
+                        + (pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+    !					+ pDif*(pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,((/1.0d0, 1.0d0, 1.0d0/)*pa1))))
+    !                   
+    !         				rhs(kblock,dofniT) = rhs(kblock,dofniT) &
+    !					- pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-pDif*gCo))
+        
+    !         				rhs(kblock,dofniT) = rhs(kblock,dofniT) &
+    !					- pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),((pDif*(pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD)))&
+    !					+ pDif*(pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,((/1.0d0, 1.0d0, 1.0d0/)*pa))))
     
-!                    end do ! -------------------- ip loop  ------------------------
-                if (lflags(iOpCode).eq.jMassCalc) then
+                    !--------------------------------------Thermal Energy--------------------------------------
+                            energy(kblock,iElTh)= energy(kblock,iElTh) + (pDif*pNN(ip,ni)*u(kblock,dofniT))
+                            
+                    !--------------------------------------Kinetic Energy--------------------------------------
+                            !do nj=1,iNODE !-----------------------------loop-i--------------
+                            !	dofnj(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)
+                            !	energy(kblock,iElKe)= energy(kblock,iElKe) + half*dot(v(kblock,dofni),matvec(amass(kblock,dofni,dofnj),v(kblock,dofnj)))
+                            !end do !------------------------------end-loop-nj----------------
+                        end do !------------------------------end-loop-ni----------------
+    
+                    end do ! -------------------- ip loop  ------------------------
+                else if (lflags(iOpCode).eq.jMassCalc) then
                     !amass(kblock,:,:)= zero
                     do ip=1,iGP ! ---------------------- loop over all integration points (computation of mass matrix)--------------------------------
                         ! summation over node_i
