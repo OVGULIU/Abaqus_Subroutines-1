@@ -1016,10 +1016,16 @@
     
                 energy(kblock,iElIe)=zero
                 energy(kblock,iElTh)=zero
+<<<<<<< HEAD
                 rhs(kblock,1:ndofel)=zero
                 !energy(kblock,iElKe)=zero
                     
                 if (lflags(iOpCode).eq.jIntForceAndDtStable) then
+=======
+                energy(kblock,iElKe)=zero
+                    
+!                if (lflags(iOpCode).eq.jIntForceAndDtStable) then
+>>>>>>> 6b7c65d97ff645583f3fafcbd374ed3881e23f10
                     do ip=1,iGP ! ---------------------- loop over all integration points (computation of residuum)--------------------------------
                     
                         H = zero
@@ -1043,10 +1049,25 @@
                             !Electric Field
                             pELECFIELD = pELECFIELD - ((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))*predef(kblock,ni,2,1)	
                         end do
+<<<<<<< HEAD
+=======
+                        
+                        Elesize = pd_min
+                        Pe = NORM((pZ*pF/pRTHETA*pELECFIELD*(Elesize)))/2
+                        Courant = NORM((pDif*pZ*pF/pRTHETA*pELECFIELD))*dtimeCur/Elesize
+        !                if (Pe>1.0) then
+        !                end if
+        !                if (Courant>0.1)   then
+        !                    write(*,*) "Courant number: ", Courant, "at ", jElem(kblock)
+        !                end if
+                        
+                        pCo = dot(pNN(ip,:),CoNODE)
+>>>>>>> 6b7c65d97ff645583f3fafcbd374ed3881e23f10
                
                         ! small strain tensor
                         Ee = half*(transpose(H) + H)
         
+<<<<<<< HEAD
                         ! Elemental concentration and charge carrier density
                         pCo = dot(pNN(ip,:),CoNODE)
                         pQf = pF*((pZ*pCo)+(cSat*(1.d0)))
@@ -1072,6 +1093,23 @@
 !                        end if
         
                         do ni=1,iNODE !-----------------------------loop-i--------------
+=======
+                        ! Electrical Displacement given by -(minus)X epsilon0 Xepsilonr XElecfield
+                        ElecDisp = pEPSILONZERO*pEPSILONR*pELECFIELD
+        
+                        rhs(kblock,1:ndofel)=zero
+    !										
+                        pSED = ( ( pGM*ddot(Ee,Ee)+half*pLAM*trace(Ee)*trace(Ee)) )
+            
+                        energy(kblock,iElIe)= energy(kblock,iElIe) + (detJ(ip))*pSED
+            
+                        pQf = pF*((pZ*pCo)+(cSat*(1.d0)))
+                        
+                        pA_Vector = pDif*pZ*pF/pRTHETA*pELECFIELD                    
+                        sigma_k = (Elesize/(2*NORM(pA_Vector)))*Pe
+                        do ni=1,iNODE !-----------------------------loop-i--------------
+                            pQf = pF*((pZ*pCo)+(cSat*(1.d0)))
+>>>>>>> 6b7c65d97ff645583f3fafcbd374ed3881e23f10
     
                             call STRESSES_CONCEN_COUPLED(S,Ee,ElecDisp,pQf,pID,pGM,pLAM,pEPSILONZERO,pEPSILONR,pEMCoup, pZ, cSat)
                             
@@ -1085,7 +1123,11 @@
                             rhs(kblock,dofniT) = rhs(kblock,dofniT) &
                         - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
                         - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD))) &
+<<<<<<< HEAD
                         + (pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+=======
+                        - (pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+>>>>>>> 6b7c65d97ff645583f3fafcbd374ed3881e23f10
     !					+ pDif*(pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,((/1.0d0, 1.0d0, 1.0d0/)*pa1))))
     !                   
     !         				rhs(kblock,dofniT) = rhs(kblock,dofniT) &

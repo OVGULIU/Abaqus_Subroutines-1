@@ -888,8 +888,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !--------------------------Constants used in modified PNP model-------------------------------------
 
     double precision :: pCo_central ! Concentration at centroid of element
-    double precision :: pV_i		! Volume concentration of any mole of a species
-    double precision :: pV_ges      ! Maximum volume concentration allowed
+    double precision :: pV_i		! Volume fractions density of ions in materiall
+    double precision :: pVpoly     ! Volume fractions density of ions in 
     double precision :: pDensVolFrac! Total density volume fraction of mobile species
     double precision :: pGradRho	! Grad of total volume
     double precision :: pNa		    ! Avogadro's constant
@@ -943,6 +943,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 
     integer :: iCORDTOTAL
     integer :: kblock,ip,nn,ni,nj,i,pmod,total,Increment_int, temp1
+    double precision :: pVsat
     double precision :: palpha,pbeta,Total_int, temp2, temp3, area, Ele_temp,pkback
     double precision :: pkfront, Influx_ele, Influx_ele_int, Total_influx
 
@@ -1006,7 +1007,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     end do
     
     !-------------------------------------------------------------------------------
-        open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/X0_POLY.csv',status='old')!
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/X0_POLY.csv',status='old')!
     READ(107,*) Filesize
     Allocate ( X0_Poly(Filesize) )
     Read(107,*) X0_POLY
@@ -1110,11 +1111,12 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         pLAM = (pEM*pNU)/((one+pNU)*(one-two*pNU)) 
            
     !--------------------------Parameters used in modified PNP model-------------------------------------
-        pNa = 602.2140857
-        pPi = 3.14159265358979311
-        pRi = 0.502
-        pV_ges = 4.0
-        pImmobileConc = 1 / (4.0d0/3.0d0*pPi*(pRi**3)*pNa)        
+        pNa = 602.2140857d0
+        pPi = 3.14159265358979311d0
+        pRi = 0.502d0
+        pVpoly = 0.7d0
+        pVsat = 1.0d0
+        pImmobileConc = 1.0d0 / (4.0d0/3.0d0*pPi*(pRi**3)*pNa)        
     !--------------------------Parameters used in modified PNP model-------------------------------------
     
     !===============================================================================================================================================
@@ -1221,17 +1223,12 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
            
             end do ! -------------------ip-loop------------------------------- 
     !    !===================================================================================================================================
-    !    !-----------------------------------ELEMENT LENGTH CALCULATION & STABLE TIME INCREMENT CALCULATION----------------------------------
+    !    !-----------------------------------ELEMENT LENGTH CALCULATION----------------------------------
     !    !===================================================================================================================================
             
             pVolume = detJ(1)+detJ(2)+detJ(3)+detJ(4)+detJ(5)+detJ(6)+detJ(7)+detJ(8)
             pd_min = pvolume**(one/three)
-            cd = sqrt( (pEM*(one-pNU))/(pRHO*(one+pNU)*(one-two*pNU)) )
-            cdT = (pDif)
-            Mechtime = (pd_min/cd)
-            Thermaltime = (pd_min*pd_min)/(2*cdT)
-            TimeMin = minval( (/Mechtime,Thermaltime/) )
-            dtimeStable(kblock) = factorStable*TimeMin		
+
             
 !    !===================================================================================================================================
 !    !--------------------------------------------------------RHS CALCULATION------------------------------------------------------------
@@ -1299,8 +1296,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 end if
                 ! Electrical Displacement given by -(minus).epsilon0.epsilonr.Elecfield
                 ElecDisp = pEPSILONZERO*pEPSILONR*pELECFIELD
-                
-                pDensVolFrac = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*pCo +0.7d0
+                pV_i = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*pCo
+                pDensVolFrac = pV_i +pVpoly
                 
 !                pDensVolFrac = pV_i/pV_ges
                 if (pDensVolFrac>1.0) then
@@ -1335,12 +1332,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     sigma_k = (Elesize/(2*NORM(pA_Vector)))*Pe
                     Courant = NORM((pDif*pZ*pF/pRTHETA*pELECFIELD))*dtimeCur/Elesize
                 end if 
-                
-!                        if (Pe>1.0) then
-!                        end if
-!                        if (Courant>0.1)   then
-!                            write(*,*) "Courant number: ", Courant, "at ", jElem(kblock)
-!                        end if
 
                 do ni=1,iNODE !-----------------------------loop-i--------------
 
@@ -1354,7 +1345,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     rhs(kblock,dofni) = rhs(kblock,dofni) 	+ pQUAD*pWT(ip)*detJ(ip)*(matvec(S,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))) 
 !											
             !--------------------------------------Concentration RHS--------------------------------------
-                    if (pDensVolFrac>1.0) then
+                    if (pDensVolFrac>=pVsat) then
                         filename = '/home/cerecam/Desktop/LimitReached' // trim(JOBNAME) // '.inp'
                         INQUIRE(FILE= filename ,EXIST=I_EXIST)
                         if (.NOT. I_Exist) then                                
@@ -1366,7 +1357,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         end if
                         if (pmod.eq.1.0) then
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pCo*(pImmobileConc)*gCo))
+                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-pCo*(1/(pImmobileConc))*gCo))
                         else
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
                         - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
@@ -1379,7 +1370,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
                         - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
                         - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*(one-pDensVolFrac)*pELECFIELD))) &
-                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pCo*(pImmobileConc)*gCo))&
+                        - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-pCo*(1/(pImmobileConc))*gCo))&
                         + (pDif)*(pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
                         else
                                 rhs(kblock,dofniT) = rhs(kblock,dofniT) &
@@ -1572,7 +1563,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         ! CONCENTRATION !
 !                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(1.0d0)*palpha 
                             RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
-                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*0.0d0
+                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pV_i)*0.0d0
 !                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*(-7.8108557636741719E-005)
                              
                         ! DISPLACEMENT !
@@ -1597,7 +1588,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         end if  
 !                        RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
                     end do ! ------------------------ ni-loop ------------------------
-                    if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<1.0d0)) then
+                    if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<pVsat)) then
                         if (kInc.gt.0) then
                             svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*3.1E-04*(-1.0d0/15.0d0)*detJquad(ipquad)
                             if (ISNAN(pDif*(pF*pZ)/(pRTHETA)*pCo*detJquad(ipquad))) then
@@ -1614,8 +1605,17 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 end if
             end if ! ------------------------ jElem z0 Poly-loop ------------------------
             
-                
-                
+    !    !===================================================================================================================================
+    !    !-----------------------------------STABLE TIME INCREMENT CALCULATION----------------------------------
+    !    !===================================================================================================================================
+            
+            cd = sqrt( (pEM*(one-pNU))/(pRHO*(one+pNU)*(one-two*pNU)) )
+            cdT = pDif
+            Mechtime = (pd_min/cd)
+            Thermaltime = (pd_min*pd_min)/(2*cdT)
+            TimeMin = minval( (/Mechtime,Thermaltime/) )
+            dtimeStable(kblock) = factorStable*TimeMin		
+            
 !    !===================================================================================================================================
 !    !--------------------------------------------------------MASS MATRIX CALCULATION------------------------------------------------------------
 !    !===================================================================================================================================
