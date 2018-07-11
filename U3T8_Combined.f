@@ -1499,12 +1499,14 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)
 
                         if (ANY(jElem(kblock).eq.Z0_Poly)) then ! Back Face
-                        
+                                if (pCo<=0.0d0) then
+                                    pV_i = 0.0d0
+                                end if
                         ! CONCENTRATION !
 !                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(1.0d0)*palpha 
                             RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
-!                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pV_i)*0.0d0
-                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pV_i)*(-7.8E-005)
+!                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pV_i)*(-3.0E-04)
+                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pV_i)*palpha
                              
                         ! DISPLACEMENT !
                             RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
@@ -1515,8 +1517,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !                            write(*,*) "temp3/((0.9375*0.9375)*Influx_ele)", temp3/((0.9375*0.9375)*Influx_ele)
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
                                 RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
-                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*1.0E-4
-!                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(temp3/((0.9375*0.9375)))
+!                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*5.0E-4
+                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(temp3/((0.9375*0.9375)*589.0))
                                 
                             end if
                             
@@ -1666,15 +1668,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         pkFront = props(5)
         
         pGM  = half*pEM/(one+pNU)
-        pLAM = (pEM*pNU)/((one+pNU)*(one-two*pNU)) 
-           
-    !--------------------------Parameters used in modified PNP model-------------------------------------
-        pNa = 602.2140857
-        pPi = 3.14159265358979311
-        pRi = 0.502
-        pV_ges = 4.0
-        pImmobileConc = pV_ges / (4.0d0/3.0d0*pPi*(pRi**3)*pNa)        
-    !--------------------------Parameters used in modified PNP model-------------------------------------
+        pLAM = (pEM*pNU)/((one+pNU)*(one-two*pNU))        
                                
     !===============================================================================================================================================
         
