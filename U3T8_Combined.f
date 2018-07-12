@@ -945,7 +945,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     integer :: kblock,ip,nn,ni,nj,i,pmod,total,Increment_int, temp1
     double precision :: pVsat
     double precision :: palpha,pbeta,Total_int, temp2, temp3, area, Ele_temp,pkback
-    double precision :: pkfront, Influx_ele, Influx_ele_int, Total_influx
+    double precision :: pkfront, Total_influx
 
     double precision :: AREA_X0, AREA_X1, AREA_Y0, AREA_Y1, AREA_Z0, AREA_Z1
 
@@ -1080,7 +1080,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             svars(:,2) = 0.0d0
             temp2 = 0.0d0
             temp3 = 0.0d0
-            Influx_ele = 589
         end if
         iCORDTOTAL=4
     !!    if (kblock==1) then
@@ -1128,11 +1127,9 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             read(106,*) temp1   ! Increment number
             read(106,*) temp2   ! Total flux within RVE from previous step c_dot integrated over volue of RVE
             read(106,*) temp3   ! Total integral of influx calculated from the previous step over area applied
-            read(106,*) Influx_ele ! Number of elements upon which an influx is applied (if element saturated no influx applied)
             close(106)  
         end if 
         palpha = (temp2-temp3)/AREA_Z0  ! Calculation of the required amount of outflux
-        Influx_ele_int = 0
         ! loop over element block
         do kblock=1,nblock ! ---------------------------------------------------
             ! loop over all integration points (computation of FE variables)
@@ -1282,7 +1279,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 ! Electrical Displacement given by -(minus).epsilon0.epsilonr.Elecfield
                 ElecDisp = pEPSILONZERO*pEPSILONR*pELECFIELD
                 pV_i = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*pCo
-                pDensVolFrac = pV_i +pVpoly
+                pDensVolFrac = pV_i + pVpoly
                 
 !                pDensVolFrac = pV_i/pV_ges
                 if (pDensVolFrac>1.0) then
@@ -1330,27 +1327,27 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !											
             !--------------------------------------Concentration RHS--------------------------------------
                     if (pmod.eq.1.0) then
-                        if (pDensVolFrac>=pVsat) then
-                        
-                            filename = '/home/cerecam/Desktop/LimitReached' // trim(JOBNAME) // '.inp'
-                            INQUIRE(FILE= filename ,EXIST=I_EXIST)
-                            if (.NOT. I_Exist) then                                
-                                WRITE(*,*) "Limit has been reached in ",jelem(kblock)," at concentration of ", pCo,"kinc: ", kInc
-                                open(unit=107, file=filename)
-                                    WRITE(107,*) "Limit reached in element: ",jelem(kblock),"; at concentration: ", pCo,"; kinc: ", kInc, "; time: ",kInc*dtimeCur, "; job: ", trim(JOBNAME)
-                                    WRITE(107,*) "The properties used in this simulation are: ", props
-                                close(107)
+                        if (pDensVolFrac>=pVsat) then  
+                        write(*,*) "pDensVolFrac", pDensVolFrac
+!                            filename = '/home/cerecam/Desktop/LimitReached' // trim(JOBNAME) // '.inp'
+!                            INQUIRE(FILE= filename ,EXIST=I_EXIST)
+!                            if (.NOT. I_Exist) then                                
+!                                WRITE(*,*) "Limit has been reached in ",jelem(kblock)," at concentration of ", pCo,"kinc: ", kInc
+!                                open(unit=107, file=filename)
+!                                    WRITE(107,*) "Limit reached in element: ",jelem(kblock),"; at concentration: ", pCo,"; kinc: ", kInc, "; time: ",kInc*dtimeCur, "; job: ", trim(JOBNAME)
+!                                    WRITE(107,*) "The properties used in this simulation are: ", props
+!                                close(107)
                             end if
                             
-                            rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-                            - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-pCo*(1/(pImmobileConc))*gCo))
-                        else
+!                            rhs(kblock,dofniT) = rhs(kblock,dofniT) &
+!                            - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-pCo*(1/(pImmobileConc))*gCo))
+!                        else
                             rhs(kblock,dofniT) = rhs(kblock,dofniT) &
                             - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
                             - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*(one-pDensVolFrac)*pELECFIELD))) &
                             - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-pCo*(1/(pImmobileConc))*gCo))&
                             + (pDif)*(pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
-                        end if
+!                        end if
                     else
                         rhs(kblock,dofniT) = rhs(kblock,dofniT) &
                         - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
@@ -1449,7 +1446,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 pWTquad = 1.0d0
                 
                 
-                pbeta = temp3/((0.9375*0.9375)*Influx_ele)
+                pbeta = temp3/AREAZ1
+!                pbeta = temp3/AREAZ1
                 fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
                 INQUIRE(FILE= fname ,EXIST=I_EXIST)
                 if (I_Exist) then
@@ -1459,13 +1457,11 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 end if
                 if ((MOD(kInc,101).eq.0) .AND. (jElem(kblock).eq.15137)) then
                     write(106,*) "Element number", jElem(kblock)
-                    write(106,*) "kblock", kblock
                     write(106,*) "Increment_int:", temp1
                     write(106,*) "Total_int: ", temp2
                     write(106,*) "temp3", temp3
                     write(106,*) "pInflux", pbeta
                     write(106,*) "Outflux", palpha
-                    write(106,*) "# Elements upon which Influx applied: ",Influx_ele
                 end if
                 close(106)
                 svars(kblock,2) = 0.0d0 ! State variable that sotres dc/dx*area
@@ -1486,7 +1482,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad))
 
                     detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
-                    
                     pCo = zero
                     do ni=1,size(QuadNodes)
                         nj = QuadNodes(ni)
@@ -1501,6 +1496,13 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     end if
                     pV_i = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*pCo
                     pDensVolFrac = pV_i +pVpoly
+                    if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<pVsat)) then
+                        if (kInc.gt.0) then
+                            svars(kblock,2) = svars(kblock,2) + (one-pDensVolFrac)*pDif*(pF*pZ)/(pRTHETA)*pCo*(-1.0d0/15.0d0)*detJquad(ipquad)*10
+                            ELSE
+                            svars(kblock,2) = 0.0d0
+                        end if
+                    end if
                     do ni=1,size(QuadNodes)
                         nj = QuadNodes(ni)
                         dofniT = iCORDTOTAL*nj
@@ -1518,11 +1520,11 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         elseif (ANY(jElem(kblock).eq.Z1_Poly) ) then ! Front Face   
                         ! CONCENTRATION !
                             if ((pDensVolFrac<pVsat)) then
-!                            write(*,*) "temp3/((0.9375*0.9375)*Influx_ele)", temp3/((0.9375*0.9375)*Influx_ele)
+!                            write(*,*) "temp3/AREAZ1", temp3/AREAZ1
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
                                 RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
 !                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*5.0E-4
-                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*temp3/((0.9375*0.9375)*589)
+                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*temp3/((AREAZ1)
                                 
                             end if
                             
@@ -1534,18 +1536,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         end if  
 !                        RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
                     end do ! ------------------------ ni-loop ------------------------
-                    if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<pVsat)) then
-                        if (kInc.gt.0) then
-                            svars(kblock,2) = svars(kblock,2) + pDif*(pF*pZ)/(pRTHETA)*pCo*(-1.0d0/15.0d0)*detJquad(ipquad)*10
-                        ELSE
-                            svars(kblock,2) = 0.0d0
-                        end if
-                    end if
+                    
                 end do ! ------------------------ ipquad-loop ------------------------
-                
-                if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<pVsat)) then
-                    Influx_ele_int = Influx_ele_int+1
-                end if
             end if ! ------------------------ jElem Z0 Poly-loop ------------------------
             
     !    !===================================================================================================================================
@@ -1609,7 +1601,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             read(107,*) Increment_int
             read(107,*) Total_int   ! Current total of dc/dt            (**)
             read(107,*) Total_influx ! Current total of influx
-            read(107,*) Influx_ele  ! Current total of influx elements  (**)
             close(107)
             open(unit=107, file=filename, status="old", action="write")
         else ! The file will onlt not exist in the 1st increment (kInc=0)
@@ -1617,13 +1608,11 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             Increment_int=0.0d0
             Total_int=0.0d0 ! Initialization of dc/dt
             Total_influx = 0.0d0 ! Initialization of dc/dx for influx
-            Influx_ele = 0  ! Initialization of no. of elements experiencing influx
         end if
         
         if (Increment_int.eq.kInc) then ! If on the same increment (i.e. only on a different nblock) add to previous summation values (**)
             Total_int = sum(svars(:,1))+Total_int
             Total_influx = sum(svars(:,2)) + Total_influx
-            Influx_ele = Influx_ele_int + Influx_ele
         else    ! If this increment is new (i.e. on the first nblock again)
             filename2 = '/home/cerecam/Desktop/Du_results_Prev' // trim(JOBNAME) // '.inp'
             INQUIRE(FILE= filename2 ,EXIST=I_EXIST)
@@ -1635,28 +1624,15 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             write(106,*) Increment_int
             write(106,*) Total_int      ! Store previous summation values (fully 'summed')
             write(106,*) Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
-            write(106,*) Influx_ele     ! Store previous summation values (fully 'summed')  
             close(106)
-!            write(*,*)  " pree recalc"
-!            write(*,*) "Increment_int",Increment_int
-!            write(*,*) "svars(:,1)",svars(:,1)      ! Store previous summation values (fully 'summed')
-!            write(*,*) "Total_influx",Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
-!            write(*,*) "Influx_ele",Influx_ele
             Total_int = sum(svars(:,1)) ! New summation values (starting at at nblock==1)
             Total_influx = sum(svars(:,2)) ! New summation values (starting new increment at nblock=1)
-            Influx_ele = Influx_ele_int
-!            write(*,*) "after re-calc"
-!            write(*,*) "Increment_int",Increment_int
-!            write(*,*) "svars(:,1)",svars(:,1)       ! Store previous summation values (fully 'summed')
-!            write(*,*) "Total_influx",Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
-!            write(*,*) "Influx_ele",Influx_ele
             
         end if 
         Increment_int=kInc
         write(107,*) kinc
         write(107,*) Total_int
         write(107,*) Total_influx ! Writing current summation of influx elements (any nblock, if nblock ==1, is a new summation, else if a incremental summation)
-        write(107,*) Influx_ele
         close(107)
     end if ! ------------------------ type.eq.48 loop ---------------------------
     
