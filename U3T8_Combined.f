@@ -1446,8 +1446,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 pWTquad = 1.0d0
                 
                 
-                pbeta = temp3/AREAZ1
-!                pbeta = temp3/AREAZ1
+                pbeta = temp3/AREA_Z1
+!                pbeta = temp3/AREA_Z1
                 fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
                 INQUIRE(FILE= fname ,EXIST=I_EXIST)
                 if (I_Exist) then
@@ -1520,11 +1520,11 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         elseif (ANY(jElem(kblock).eq.Z1_Poly) ) then ! Front Face   
                         ! CONCENTRATION !
                             if ((pDensVolFrac<pVsat)) then
-!                            write(*,*) "temp3/AREAZ1", temp3/AREAZ1
+!                            write(*,*) "temp3/AREA_Z1", temp3/AREA_Z1
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
                                 RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
 !                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*5.0E-4
-                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*temp3/((AREAZ1)
+                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*temp3/(AREA_Z1)
                                 
                             end if
                             
