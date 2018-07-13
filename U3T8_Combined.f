@@ -1455,13 +1455,14 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 else
                     open(unit=106,file=fname, status='new',action='write')
                 end if
-                if ((MOD(kInc,101).eq.0) .AND. (jElem(kblock).eq.15137)) then
-                    write(106,*) "Element number", jElem(kblock)
-                    write(106,*) "Increment_int:", temp1
-                    write(106,*) "Total_int: ", temp2
-                    write(106,*) "temp3", temp3
-                    write(106,*) "pInflux", pbeta
-                    write(106,*) "Outflux", palpha
+                if ((MOD(kInc,911).eq.0) .AND. (jElem(kblock).eq.15137)) then
+                    write(106,*) "Element number: ", jElem(kblock)
+                    write(106,*) "Increment_int: ", temp1
+                    write(106,*) "Time: ", time(iStepTime)
+                    write(106,*) "Total_c_dot: ", temp2
+                    write(106,*) "temp3: ", temp3
+                    write(106,*) "pInflux: ", temp3/Area_Z1
+                    write(106,*) "Outflux: ", palpha
                 end if
                 close(106)
                 svars(kblock,2) = 0.0d0 ! State variable that sotres dc/dx*area
