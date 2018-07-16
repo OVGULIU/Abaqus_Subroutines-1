@@ -544,9 +544,9 @@ end subroutine VEXTERNALDB
     !-------------------------------------------------------------------------------
     !
     ! USER SUBROUTINE - VUFIELD:UPDATES PREDEFINED FIELD
-!SUBROUTINE VUFIELD(FIELD, NBLOCK, NFIELD, KFIELD, NCOMP, &
-!           KSTEP, JFLAGS, JNODEID, TIME, &
-!           COORDS, U, V, A)
+SUBROUTINE VUFIELD(FIELD, NBLOCK, NFIELD, KFIELD, NCOMP, &
+           KSTEP, JFLAGS, JNODEID, TIME, &
+           COORDS, U, V, A)
 !!    include 'vaba_param.inc'	
 !    ! indices for the time array 
 !    integer, parameter :: i_ufld_Current = 1 
@@ -642,8 +642,8 @@ end subroutine VEXTERNALDB
 !    !	end if
 !    !		write(*,*) "VUFIELD"
     
-!    return
-!end subroutine VUFIELD
+    return
+end subroutine VUFIELD
 
 !===============================================================================================================================================
 
@@ -685,7 +685,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     double precision, parameter :: six=6.d0
     double precision, parameter :: eight=8.d0
     double precision, parameter :: Abcissa=SQRT(1.d0/3.d0)
-    double precision, parameter :: factorStable=0.99d0
+    double precision, parameter :: factorStable=0.5d0
     double precision, parameter :: pi=3.1415926535897932
     
     ! parameters - problem specification
@@ -1316,8 +1316,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 
                 do ni=1,iNODE !-----------------------------loop-i--------------
 
-!                    call STRESSES_CONCEN_COUPLED(S,Ee,ElecDisp,pQf,pID,pGM,pLAM,pEPSILONZERO,pEPSILONR,pEMCoup, pZ, cSat)
-                    call STRESSES_lin_elastic(SIG,P,S,F,Ee,pID,pGM,pLAM)
+                    call STRESSES_CONCEN_COUPLED(S,Ee,ElecDisp,pQf,pID,pGM,pLAM,pEPSILONZERO,pEPSILONR,pEMCoup, pZ, cSat)
+!                    call STRESSES_lin_elastic(SIG,P,S,F,Ee,pID,pGM,pLAM)
                     
                     dofni(1:iCORD) = 1+iCORDTOTAL*((ni*1)-1)+(CordRange-1)
                     dofniT = iCORDTOTAL*ni
@@ -1358,11 +1358,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             !--------------------------------------Thermal Energy--------------------------------------
                     energy(kblock,iElTh)= energy(kblock,iElTh) + (pDif*pNN(ip,ni)*u(kblock,dofniT))
                     
-            !--------------------------------------Kinetic Energy--------------------------------------
-                    !do nj=1,iNODE !-----------------------------loop-i--------------
-                    !	dofnj(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)
-                    !	energy(kblock,iElKe)= energy(kblock,iElKe) + half*dot(v(kblock,dofni),matvec(amass(kblock,dofni,dofnj),v(kblock,dofnj)))
-                    !end do !------------------------------end-loop-nj----------------
                 end do !------------------------------end-loop-ni----------------
 
             end do ! -------------------- ip loop  ------------------------
@@ -1455,7 +1450,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 else
                     open(unit=106,file=fname, status='new',action='write')
                 end if
-                if ((MOD(kInc,911).eq.0) .AND. (jElem(kblock).eq.15137)) then
+                if ((MOD(kInc,577).eq.0) .AND. (jElem(kblock).eq.15137)) then
                     write(106,*) "Element number: ", jElem(kblock)
                     write(106,*) "Increment_int: ", temp1
                     write(106,*) "Time: ", time(iStepTime)
@@ -1500,6 +1495,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<pVsat)) then
                         if (kInc.gt.0) then
                             svars(kblock,2) = svars(kblock,2) + (one-pDensVolFrac)*pDif*(pF*pZ)/(pRTHETA)*pCo*(-1.0d0/15.0d0)*detJquad(ipquad)*10
+                            
                             ELSE
                             svars(kblock,2) = 0.0d0
                         end if
@@ -1786,6 +1782,10 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     
                     call STRESSES_lin_elastic(SIG,P,S,F,Ee,pID,pGM,pLAM)
                     
+                    
+                    pSED = ( ( pGM*ddot(Ee,Ee)+half*pLAM*trace(Ee)*trace(Ee)) )           
+                    energy(kblock,iElIe)= energy(kblock,iElIe) + (detJ(ip))*pSED
+                    
                     do ni=1,iNODE !-----------------------------loop-i--------------
                         
                         do i=1,iCORD
@@ -1794,12 +1794,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     
                 !--------------------------------------Displacement RHS--------------------------------------
                         rhs(kblock,dofni) = rhs(kblock,dofni) 	+ pQUAD*pWT(ip)*detJ(ip)*(matvec(P,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))) 
-                        
-                !--------------------------------------Kinetic Energy--------------------------------------
-                        !do nj=1,iNODE !-----------------------------loop-i--------------
-                        !	dofnj(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)
-                        !	energy(kblock,iElKe)= energy(kblock,iElKe) + half*dot(v(kblock,dofni),matvec(amass(kblock,dofni,dofnj),v(kblock,dofnj)))
-                        !end do !------------------------------end-loop-nj----------------
                     end do !------------------------------end-loop-ni----------------
     
                 end do ! -------------------- ip loop  ------------------------
