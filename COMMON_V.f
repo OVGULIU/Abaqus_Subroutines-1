@@ -10,11 +10,11 @@ integer, parameter :: NELOUT = 1
 ! number of variables per element for user output: (9+1+1+1)*KGP
 integer, parameter :: NVAROUT = 1 
 ! number of integration points per element
-integer, parameter :: KGP=1
+integer, parameter :: KGP=8
 ! number of cartesian coordinates per node
 integer, parameter :: KCORD=3
 ! number of nodes per element
-integer, parameter :: KNODE=4
+integer, parameter :: KNODE=8
 ! number of slip systems (each system covers both dirrections)
 integer, parameter :: KSS = 1
 ! user varialbe field

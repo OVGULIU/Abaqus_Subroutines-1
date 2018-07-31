@@ -374,8 +374,8 @@
 
 !                S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID - (pEMCoup/pZ)*pQf*pID
 		!write(*,*)"S",S
-		S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID + (1.d0/(pEPSILONZERO*pEPSILONR))*(dya(ElecDisp,ElecDisp) - 0.5d0*(dot(ElecDisp,ElecDisp))*pID)- (pEMCoup/pZ)*pQf*pID
-!		S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID
+!		S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID + (1.d0/(pEPSILONZERO*pEPSILONR))*(dya(ElecDisp,ElecDisp) - 0.5d0*(dot(ElecDisp,ElecDisp))*pID)- (pEMCoup/pZ)*pQf*pID
+		S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID
 !		S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID + (1.d0/(pEPSILONZERO*pEPSILONR))*(dya(ElecDisp,ElecDisp) - 0.5d0*(dot(ElecDisp,ElecDisp))*pID)
             
                 !---------------------------------------------------------------------------       
@@ -625,7 +625,7 @@
             double precision, parameter :: two=2.d0
             double precision, parameter :: four=4.d0
             double precision, parameter :: six=6.d0
-            double precision, parameter :: factorStable=0.99d0
+            double precision, parameter :: factorStable=1.1d0
             double precision, parameter :: pi=3.1415926535897932
             
             ! parameters - problem specification
@@ -870,9 +870,9 @@
         pRi = 0.502
         !pImmobileConc = 1.8e-3
         !pV_ges = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*(pImmobileConc)
-        pV_ges = 40.0
+        pV_ges = 4.0
         pImmobileConc = pV_ges / (4.0d0/3.0d0*pPi*(pRi**3)*pNa)        
-!--------------------------Parameters used in modified PNP model-------------------------------------
+!---------------------------------------------------------------
 
         pGM  = half*pEM/(one+pNU)
         pLAM = (pEM*pNU)/((one+pNU)*(one-two*pNU))      
@@ -1113,7 +1113,7 @@
 !--------------------------------------------------------RHS CALCULATION------------------------------------------------------------
 !===================================================================================================================================
           
-                        rhs(kblock,1:ndofel)=zero
+            rhs(kblock,1:ndofel)=zero
 			energy(kblock,iElIe)=zero
 			energy(kblock,iElTh)=zero
 			!energy(kblock,iElKe)=zero
@@ -1204,13 +1204,6 @@
 		
 					energy(kblock,iElIe)= energy(kblock,iElIe) + (detJ(ip)/6.0d0)*pSED
 		
-  					VonMisS = sqrt( half*( (S(1,1)- S(2,2))**(two) + (S(2,2)- S(3,3))**(two) + (S(3,3)- S(1,1))**(two) &
-        		                        + six*(S(1,2)*S(1,2) + S(2,3)*S(2,3) + S(3,1)*S(3,1)) ) )
-					if (VonMisS<0.d0) then
-						write(*,*) "VonMises",VonMisS
-					end if
-					svars(kblock,1) = VonMisS
-
 					pQf = pF*((pZ*pCo)+(cSat*(1.d0)))
 					if (jElem(kblock)==54945 .OR. jElem(kblock)==54747) then 
 !						write(*,*) "jelem",jElem(kblock)

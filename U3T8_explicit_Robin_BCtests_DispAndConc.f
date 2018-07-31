@@ -454,56 +454,56 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
     
     ! ------ START OF THE ANALYSIS ------
     if (lOp .eq. j_int_StartAnalysis) then
-        call VGETJOBNAME(JOBNAME,LENJOBNAME)
-        filename = '/home/cerecam/Desktop/LimitReached'// trim(JOBNAME) // '.inp'
-        INQUIRE(FILE=filename,EXIST=I_EXIST)
-        if (I_EXIST) then
-            open(unit=107, file=filename)            
-            close(UNIT=107,STATUS='DELETE')
-            write(*,*) " !!! LimitReached"// trim(JOBNAME) // ".inp Deleted !!"
-        end if
-        filename = '/home/cerecam/Desktop/Du_results_'// trim(JOBNAME) // '.inp'
-        INQUIRE(FILE=filename,EXIST=I_EXIST)
-        if (I_EXIST) then
-            open(unit=107, file=filename)            
-            close(UNIT=107,STATUS='DELETE')
-            write(*,*) " -- ", filename, " Deleted"
-        end if
-        filename = '/home/cerecam/Desktop/Du_results_Prev'// trim(JOBNAME) // '.inp'
-        INQUIRE(FILE=filename,EXIST=I_EXIST)
-        if (I_EXIST) then
-            open(unit=107, file=filename)            
-            close(UNIT=107,STATUS='DELETE')
-            write(*,*) " -- ", filename, " Deleted"
-        end if
-        filename = '/home/cerecam/Desktop/Du_results_full'// trim(JOBNAME) // '.inp'
-        INQUIRE(FILE=filename,EXIST=I_EXIST)
-        if (I_EXIST) then
-            open(unit=107, file=filename)            
-            close(UNIT=107,STATUS='DELETE')
-            write(*,*) " -- ", filename, " Deleted"
-        end if
-        filename = '/home/cerecam/Desktop/Check_results'// trim(JOBNAME) // '.inp'
-        INQUIRE(FILE=filename,EXIST=I_EXIST)
-        if (I_EXIST) then
-            open(unit=107, file=filename)            
-            close(UNIT=107,STATUS='DELETE')
-            write(*,*) " -- " // filename // " Deleted"
-        end if
-        filename = '/home/cerecam/Desktop/Check_Element14194'// trim(JOBNAME) // '.inp'
-        INQUIRE(FILE=filename,EXIST=I_EXIST)
-        if (I_EXIST) then
-            open(unit=107, file=filename)            
-            close(UNIT=107,STATUS='DELETE')
-            write(*,*) " -- ", filename, " Deleted"
-        end if
-        filename = '/home/cerecam/Desktop/Check_Element18945'// trim(JOBNAME) // '.inp'
-        INQUIRE(FILE=filename,EXIST=I_EXIST)
-        if (I_EXIST) then
-            open(unit=107, file=filename)            
-            close(UNIT=107,STATUS='DELETE')
-            write(*,*) " -- ", filename, " Deleted"
-        end if
+    call VGETJOBNAME(JOBNAME,LENJOBNAME)
+    filename = '/home/cerecam/Desktop/LimitReached'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " !!! LimitReached"// trim(JOBNAME) // ".inp Deleted !!"
+    end if
+    filename = '/home/cerecam/Desktop/Du_results_'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " -- ", filename, " Deleted"
+    end if
+    filename = '/home/cerecam/Desktop/Du_results_Prev'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " -- ", filename, " Deleted"
+    end if
+    filename = '/home/cerecam/Desktop/Du_results_full'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " -- ", filename, " Deleted"
+    end if
+    filename = '/home/cerecam/Desktop/Check_results'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " -- " // filename // " Deleted"
+    end if
+    filename = '/home/cerecam/Desktop/Check_Element14194'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " -- ", filename, " Deleted"
+    end if
+    filename = '/home/cerecam/Desktop/Check_Element18945'// trim(JOBNAME) // '.inp'
+    INQUIRE(FILE=filename,EXIST=I_EXIST)
+    if (I_EXIST) then
+        open(unit=107, file=filename)            
+        close(UNIT=107,STATUS='DELETE')
+        write(*,*) " -- ", filename, " Deleted"
+    end if
     ! ------ Start of the step ------
     else if (lOp .eq. j_int_StartStep) then
     ! ------ Setup the increment ------
@@ -528,21 +528,6 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
     !			write(*,*)
     !			write(*,*) "----------------- VEXTERNALDB at Increment:",int(i_Array(i_int_kInc)),"-----------------",int(i_Array(i_int_kInc))
     !			write(*,*)
-        call VGETJOBNAME(JOBNAME,LENJOBNAME)
-        filename = '/home/cerecam/Desktop/Du_results_'// trim(JOBNAME) // '.inp'
-        INQUIRE(FILE=filename,EXIST=I_EXIST)
-        if (I_EXIST) then
-            open(unit=107, file=filename)            
-            close(UNIT=107,STATUS='DELETE')
-            write(*,*) " -- ", filename, " Deleted"
-        end if
-        filename = '/home/cerecam/Desktop/Du_results_Prev'// trim(JOBNAME) // '.inp'
-        INQUIRE(FILE=filename,EXIST=I_EXIST)
-        if (I_EXIST) then
-            open(unit=107, file=filename)            
-            close(UNIT=107,STATUS='DELETE')
-            write(*,*) " -- ", filename, " Deleted"
-        end if
     
     end if
     
@@ -890,7 +875,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     double precision :: pStability(iCORD)	! stability
     
 !--------------------------Constants used in modified PNP model-------------------------------------
-    double precision :: pCo_central ! Concentration at element centre
+
     double precision :: pV_i		! Volume concentration of any mole of a species
     double precision :: pV_ges      ! Maximum volume concentration allowed
     double precision :: pDensVolFrac! Total density volume fraction of mobile species
@@ -941,10 +926,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     integer :: LENJOBNAME
 !--------------------------Integers -------------------------------------           
 
-    integer :: kblock,ip,nn,ni,nj,i,pmod,total,Increment_int, temp1, Influx_ele, Influx_ele_int
-    double precision :: palpha,pbeta,pkback,pkfront,Total_int, temp2, Ele_temp
-    
-    double precision :: AREA_X0, AREA_X1, AREA_Y0, AREA_Y1, AREA_Z0, AREA_Z1
+    integer :: kblock,ip,nn,ni,nj,i,pmod,total,Increment_int, temp1
+    double precision :: palpha,pbeta,pkback,pkfront,Total_int, temp2, area, Ele_temp
 
 
     integer :: CordRange(iCORD) = (/(i, i=1,iCORD, 1)/)
@@ -956,78 +939,12 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !===============================================================================================================================================
 
     CALL VGETJOBNAME( JOBNAME,LENJOBNAME)
-    
-    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/X0_POLY.csv',status='old')!
-    READ(107,*) Filesize
-    Allocate ( X0_Poly(Filesize) )
-    Read(107,*) X0_POLY
-    close(107)
-    AREA_X0 = FILESIZE*(0.9375*0.9375)
-    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/X1_POLY.csv',status='old')!
-    READ(107,*) Filesize
-    Allocate ( X1_Poly(Filesize) )
-    Read(107,*) X1_POLY
-    close(107)
-    AREA_X1 = FILESIZE*(0.9375*0.9375)
-    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Y0_POLY.csv',status='old')!
-    READ(107,*) Filesize
-    Allocate ( Y0_Poly(Filesize) )
-    Read(107,*) Y0_POLY
-    close(107)
-    AREA_Y0 = FILESIZE*(0.9375*0.9375)
-    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Y1_POLY.csv',status='old')!
-    READ(107,*) Filesize
-    Allocate ( Y1_Poly(Filesize) )
-    Read(107,*) Y1_POLY
-    close(107)
-    AREA_Y1 = FILESIZE*(0.9375*0.9375)
-    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Z0_POLY.csv',status='old')!
-    READ(107,*) Filesize
-    Allocate ( Z0_Poly(Filesize) )
-    Read(107,*) Z0_POLY
-    close(107)
-    AREA_Z0 = FILESIZE*(0.9375*0.9375)
-    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Z1_POLY.csv',status='old')!
-    READ(107,*) Filesize
-    Allocate ( Z1_Poly(Filesize) )
-    Read(107,*) Z1_POLY
-    close(107)
-    AREA_Z1 = FILESIZE*(0.9375*0.9375)
-    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/X0_GOLD.csv',status='old')!
-    READ(107,*) Filesize
-    Allocate ( X0_GOLD(Filesize) )
-    Read(107,*) X0_GOLD
-    close(107)
-    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/X1_GOLD.csv',status='old')!
-    READ(107,*) Filesize
-    Allocate ( X1_GOLD(Filesize) )
-    Read(107,*) X1_GOLD
-    close(107)
-    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Y0_GOLD.csv',status='old')!
-    READ(107,*) Filesize
-    Allocate ( Y0_GOLD(Filesize) )
-    Read(107,*) Y0_GOLD
-    close(107)
-    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Y1_GOLD.csv',status='old')!
-    READ(107,*) Filesize
-    Allocate ( Y1_GOLD(Filesize) )
-    Read(107,*) Y1_GOLD
-    close(107)
-    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Z0_GOLD.csv',status='old')!
-    READ(107,*) Filesize
-    Allocate ( Z0_GOLD(Filesize) )
-    Read(107,*) Z0_GOLD
-    close(107)
-    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Z1_GOLD.csv',status='old')!
-    READ(107,*) Filesize
-    Allocate ( Z1_GOLD(Filesize) )
-    Read(107,*) Z1_GOLD
-    close(107)    
-    
+             
 if (jtype.eq.38) then
     if (kInc ==0.0) then
         svars(:,1) = 0.0d0
     end if
+    area = 30.0*30.0
     pEM  = props(1)
     pNU  = props(2)
     pRHO = props(3)
@@ -1111,61 +1028,131 @@ if (jtype.eq.38) then
     forall(i=1:iCORD) pID(i,i)=one
     !---------------------------------------------------------------------------
     
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/X0_POLY.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( X0_Poly(Filesize) )
+    Read(107,*) X0_POLY
+    close(107)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/X1_POLY.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( X1_Poly(Filesize) )
+    Read(107,*) X1_POLY
+    close(107)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Y0_POLY.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( Y0_Poly(Filesize) )
+    Read(107,*) Y0_POLY
+    close(107)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Y1_POLY.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( Y1_Poly(Filesize) )
+    Read(107,*) Y1_POLY
+    close(107)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Z0_POLY.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( Z0_Poly(Filesize) )
+    Read(107,*) Z0_POLY
+    close(107)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Z1_POLY.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( Z1_Poly(Filesize) )
+    Read(107,*) Z1_POLY
+    close(107)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/X0_GOLD.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( X0_GOLD(Filesize) )
+    Read(107,*) X0_GOLD
+    close(107)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/X1_GOLD.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( X1_GOLD(Filesize) )
+    Read(107,*) X1_GOLD
+    close(107)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Y0_GOLD.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( Y0_GOLD(Filesize) )
+    Read(107,*) Y0_GOLD
+    close(107)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Y1_GOLD.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( Y1_GOLD(Filesize) )
+    Read(107,*) Y1_GOLD
+    close(107)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Z0_GOLD.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( Z0_GOLD(Filesize) )
+    Read(107,*) Z0_GOLD
+    close(107)
+    open(unit=107, file='/home/cerecam/Desktop/Voxel_models/2M_32x32x32/nodeSets/Z1_GOLD.csv',status='old')!
+    READ(107,*) Filesize
+    Allocate ( Z1_GOLD(Filesize) )
+    Read(107,*) Z1_GOLD
+    close(107)
 
 !===============================================================================================================================================
     
     ! loop over element block
-    filename2 = '/home/cerecam/Desktop/Du_results_Prev' // trim(JOBNAME) // '.inp'
-    INQUIRE(FILE= filename2 ,EXIST=I_EXIST)
-    if (I_Exist) then
-        open(unit=106, file=filename2)
-        read(106,*) temp1 
-        read(106,*) temp2
-        read(106,*) Influx_ele
-        close(106) 
-!        fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
-!        INQUIRE(FILE= fname ,EXIST=I_EXIST)
-!        if (I_Exist) then
-!            open(unit=106,file=fname, status='old', action='write', position='append')
-!        else
-!            open(unit=106,file=fname, status='new',action='write')
-!        end if
-!        if (MOD(kInc,53).eq.0 .AND. (ANY(jElem(:).eq.18945))) then
-!            write(106,*) "Increment_int:", temp1
-!            write(106,*) "Total_int: ", temp2
-!            write(106,*) "palpha", (temp2-(pbeta*(0.9375*0.9375)*Influx_ele))/AREA_Z0
-!            write(106,*) "Elements upon which Influx applied: ",Influx_ele
-!        end if
-!        close(106)
-    end if
-    palpha = (temp2-(pbeta*(0.9375*0.9375)*Influx_ele))/AREA_Z0
-    Influx_ele_int = 0
+    
     do kblock=1,nblock ! ---------------------------------------------------
-         
-!        if ((jelem(kblock)==14194) .AND. (MOD(kInc,10).eq.0)) then
-!            fname = '/home/cerecam/Desktop/Check_Element14194' // trim(JOBNAME) // '.inp'
-!            INQUIRE(FILE= fname ,EXIST=I_EXIST)
-!            if (I_Exist) then
-!                open(unit=106,file=fname, status='old', action='write', position='append')
-!            else
-!                open(unit=106,file=fname, status='new',action='write')
-!            end if
-!                write(106,*) svars(kblock,1)
-!            close(106)
-!        end if
-!        if ((jelem(kblock)==18945) .AND. (MOD(kInc,10).eq.0)) then
-!            fname = '/home/cerecam/Desktop/Check_Element18945' // trim(JOBNAME) // '.inp'
-!            INQUIRE(FILE= fname ,EXIST=I_EXIST)
-!            if (I_Exist) then
-!                open(unit=106,file=fname, status='old', action='write', position='append')
-!            else
-!                open(unit=106,file=fname, status='new',action='write')
-!            end if
-!                write(106,*) svars(kblock,1)
-!            close(106)
-!        end if
+        filename2 = '/home/cerecam/Desktop/Du_results_Prev' // trim(JOBNAME) // '.inp'
+        INQUIRE(FILE= filename2 ,EXIST=I_EXIST)
+        if (I_Exist) then
+            open(unit=106, file=filename2)
+            read(106,*) temp1 
+            read(106,*) temp2
+            close(106) 
+            fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
+            INQUIRE(FILE= fname ,EXIST=I_EXIST)
+            if (I_Exist) then
+                open(unit=106,file=fname, status='old', action='write', position='append')
+            else
+                open(unit=106,file=fname, status='new',action='write')
+            end if
+            if ((MOD(kInc,21).eq.0 .AND. (jElem(kblock).eq.18945))) then
+                write(106,*) "Increment_int:", temp1
+                write(106,*) "Total_int: ", temp2
+                write(106,*) "palpha", (temp2-(pbeta*area))/area
+            end if
+            close(106)
+        end if 
+        if ((jelem(kblock)==14194) .AND. (MOD(kInc,10).eq.0)) then
+            fname = '/home/cerecam/Desktop/Check_Element14194' // trim(JOBNAME) // '.inp'
+            INQUIRE(FILE= fname ,EXIST=I_EXIST)
+            if (I_Exist) then
+                open(unit=106,file=fname, status='old', action='write', position='append')
+            else
+                open(unit=106,file=fname, status='new',action='write')
+            end if
+                write(106,*) svars(kblock,1)
+            close(106)
+        end if
+        if ((jelem(kblock)==18945) .AND. (MOD(kInc,10).eq.0)) then
+            fname = '/home/cerecam/Desktop/Check_Element18945' // trim(JOBNAME) // '.inp'
+            INQUIRE(FILE= fname ,EXIST=I_EXIST)
+            if (I_Exist) then
+                open(unit=106,file=fname, status='old', action='write', position='append')
+            else
+                open(unit=106,file=fname, status='new',action='write')
+            end if
+                write(106,*) svars(kblock,1)
+            close(106)
+        end if
+        palpha = (temp2-(pbeta*area))/area
 !        if (jElem(kblock) == 7497) then
             
+!            write(107,*) "post-total: ",total
+!!            write(107,*)"Increment: ", kInc
+!!            write(107,*)"Du element (50)7497: ", du(kblock,1:4)
+!!            write(107,*)"Du element (50)7497: ", du(kblock,5:8)
+!!            write(107,*)"Du element (50)7497: ", du(kblock,9:12)
+!!            write(107,*)"Du element (50)7497: ", du(kblock,13:16)
+!!            write(107,*)"Du element (50)7497: ", du(kblock,17:20)
+!!            write(107,*)"Du element (50)7497: ", du(kblock,21:24)
+!!            write(107,*)"Du element (50)7497: ", du(kblock,25:28)
+!!            write(107,*)"Du element (50)7497: ", du(kblock,29:32)
+!            write(107,*)
+!            close(107)
+!        end if
         ! loop over all integration points (computation of FE variables)
         do ip=1,iGP ! ------------------------------------------------------
 
@@ -1282,19 +1269,13 @@ if (jtype.eq.38) then
         if (lflags(iOpCode).eq.jIntForceAndDtStable) then
             svars(kblock,1) = 0.0d0
             Ele_temp = 0.0d0
-!            pCo_central = 0.0d0
-!            do ni=1,iNODE 
-!                pCo_central = pCo_central + u(kblock, (iCORDTOTAL*ni))
-!            end do
-!            pCo_central = pCo_central/iNODE
-!            pV_i = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*pCo_central
-!            pDensVolFrac = pV_i/pV_ges
             do ip=1,iGP ! ---------------------- loop over all integration points (computation of residuum)--------------------------------
             
                 H = zero
                 pQf = zero
                 pCo = zero
                 gCo = zero
+                gCo2 = zero
                 pELECFIELD= zero
                 Elesize = zero
                 do ni=1,iNODE
@@ -1443,28 +1424,28 @@ if (jtype.eq.38) then
                     end do !------------------------------end-loop-ni----------------
 
                 end do ! -------------------- ip loop  ------------------------
-!            if ((jelem(kblock)==14194) .AND. (MOD(kInc,2).eq.0)) then
-!                fname = '/home/cerecam/Desktop/Temp_Element14194' // trim(JOBNAME) // '.inp'
-!                INQUIRE(FILE= fname ,EXIST=I_EXIST)
-!                if (I_Exist) then
-!                    open(unit=106,file=fname, status='old', action='write', position='append')
-!                else
-!                    open(unit=106,file=fname, status='new',action='write')
-!                end if
-!                    write(106,*) Ele_temp
-!                close(106)
-!            end if
-!            if ((jelem(kblock)==18945) .AND. (MOD(kInc,2).eq.0)) then
-!                fname = '/home/cerecam/Desktop/Temp_Element18945' // trim(JOBNAME) // '.inp'
-!                INQUIRE(FILE= fname ,EXIST=I_EXIST)
-!                if (I_Exist) then
-!                    open(unit=106,file=fname, status='old', action='write', position='append')
-!                else
-!                    open(unit=106,file=fname, status='new',action='write')
-!                end if
-!                    write(106,*) Ele_temp
-!                close(106)
-!            end if       
+            if ((jelem(kblock)==14194) .AND. (MOD(kInc,2).eq.0)) then
+                fname = '/home/cerecam/Desktop/Temp_Element14194' // trim(JOBNAME) // '.inp'
+                INQUIRE(FILE= fname ,EXIST=I_EXIST)
+                if (I_Exist) then
+                    open(unit=106,file=fname, status='old', action='write', position='append')
+                else
+                    open(unit=106,file=fname, status='new',action='write')
+                end if
+                    write(106,*) Ele_temp
+                close(106)
+            end if
+            if ((jelem(kblock)==18945) .AND. (MOD(kInc,2).eq.0)) then
+                fname = '/home/cerecam/Desktop/Temp_Element18945' // trim(JOBNAME) // '.inp'
+                INQUIRE(FILE= fname ,EXIST=I_EXIST)
+                if (I_Exist) then
+                    open(unit=106,file=fname, status='old', action='write', position='append')
+                else
+                    open(unit=106,file=fname, status='new',action='write')
+                end if
+                    write(106,*) Ele_temp
+                close(106)
+            end if       
 !===================================================================================================================================
 !    !--------------------------------------------------------ROBIN BC: RHS ADDITION------------------------------------------------------------
 !    !====================================================================================================================
@@ -1601,20 +1582,18 @@ if (jtype.eq.38) then
 !                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(-1.0d0)*palpha
 !                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(1.0d0)*palpha 
                                 RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pDensVolFrac)*(1.0d0)*palpha 
+                                RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock, dofni)*(pkBack*(/1.0d0,1.0d0,0.0d0/))
                             elseif (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<0.1d0)) then   
 !                            elseif (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac>0.0d0)) then                             
 !                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(1.0d0)*pbeta
 !                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
                                 RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(1.0d0)*pbeta
-!                                Influx_ele_int = Influx_ele_int+1   
+                                RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock, dofni)*(pkFront*(/1.0d0,1.0d0,0.0d0/))    
                             end if  
                         end do ! ------------------------ ni-loop ------------------------
                     end do ! ------------------------ ipquad-loop ------------------------
-                    if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<0.1d0)) then
-                        Influx_ele_int = Influx_ele_int+1
-                    end if
-                end if ! ------------------------ jElem Z0 or Z1 Poly-loop ------------------------
-!                 Influx_ele_int = Influx_ele_int/16
+                end if ! ------------------------ jElem z0 Poly-loop ------------------------
+                
                 
                 
 !    !===================================================================================================================================
@@ -1668,55 +1647,43 @@ if (jtype.eq.38) then
 !    end if
 !    write(107,*) kinc
 !    write(107,*) sum(svars(:,1))
-!    close(107)               
+!    close(107)                          
         end do !-----------------------nblock-----------------------------------
-         
-!        write(*,*) "end!!!!"
-!        Increment_int = svars(1,2)
-!        Total_int = svars(1,3)
 
-        filename = '/home/cerecam/Desktop/Du_results_' // trim(JOBNAME) // '.inp'
-        INQUIRE(FILE= filename ,EXIST=I_EXIST)
-        if (I_Exist) then ! Read most recent summation value (from previous nblocks) from this file
-            open(unit=107, file=filename,status="old",action="read")
-            read(107,*) Increment_int
-            read(107,*) Total_int   ! Current total of dc/dt            (**)
-            read(107,*) Influx_ele  ! Current total of influx elements  (**)
-            close(107)
-            open(unit=107, file=filename, status="old", action="write")
-        else ! The file will onlt not exist in the 1st increment (kInc=0)
-            open(unit=107, file=filename, status="new", action="write")
-            Total_int=0
-            Increment_int=0 ! Initialization of dc/dt
-            Influx_ele = 0  ! Initialization of no. of elements experiencing influx
-        end if
-        
-        if (Increment_int.eq.kInc) then ! If on the same increment (i.e. only on a different nblock) add to previous summation values (**)
-            Total_int = sum(svars(:,1))+Total_int
-            Influx_ele = Influx_ele_int + Influx_ele
-        else    ! If this increment is new (i.e. on the first nblock again)
-            filename2 = '/home/cerecam/Desktop/Du_results_Prev' // trim(JOBNAME) // '.inp'
-            INQUIRE(FILE= filename2 ,EXIST=I_EXIST)
-            if (I_Exist) then
-                open(unit=106, file=filename2, status="old", action="write")
-            else
-                open(unit=106, file=filename2, status="new", action="write")
-            end if 
-            write(106,*) Increment_int
-            write(106,*) Total_int      ! Store previous summation values (fully 'summed')
-            write(106,*) Influx_ele     ! Store previous summation values (fully 'summed')  
-            close(106)
-            Total_int = sum(svars(:,1)) ! New summation values (starting at at nblock==1)
-            Influx_ele = Influx_ele_int
-            
-        end if 
-        Increment_int=kInc
-        write(107,*) kinc
-        write(107,*) Total_int
-        write(107,*) Influx_ele
-        close(107)
-    
     end if ! ------------------------ type.eq.48 loop ---------------------------
+    filename = '/home/cerecam/Desktop/Du_results_' // trim(JOBNAME) // '.inp'
+    INQUIRE(FILE= filename ,EXIST=I_EXIST)
+    if (I_Exist) then
+        open(unit=107, file=filename,status="old",action="read")
+        read(107,*) Increment_int
+        read(107,*) Total_int
+        close(107)
+        open(unit=107, file=filename, status="old", action="write")
+    else
+        open(unit=107, file=filename, status="new", action="write")
+        Total_int=0
+        Increment_int=0
+    end if
+    if (Increment_int.eq.kInc) then
+        Total_int = sum(svars(:,1))+Total_int
+    else
+        filename2 = '/home/cerecam/Desktop/Du_results_Prev' // trim(JOBNAME) // '.inp'
+        INQUIRE(FILE= filename2 ,EXIST=I_EXIST)
+        if (I_Exist) then
+            open(unit=106, file=filename2, status="old", action="write")
+        else
+            open(unit=106, file=filename2, status="new", action="write")
+        end if 
+        Total_int = sum(svars(:,1))
+        write(106,*) Increment_int
+        write(106,*) Total_int        
+        close(106)
+        
+    end if
+    Increment_int=kInc
+    write(107,*) kinc
+    write(107,*) Total_int
+    close(107)
     
 return
 end subroutine VUEL

@@ -489,17 +489,7 @@
             integer, intent(in ) :: kinc 	                            ! current increment number
             integer, intent(in ) :: npredef                             ! number of predefined field variables (incl. temperature)
             integer, intent(in ) :: jdltyp                              ! specifies the load type
-            
-            !dimension rhs( nblock,ndofel), amass(nblock,ndofel,ndofel), & 
-            !            dtimeStable(nblock), & 
-            !            svars(nblock,nsvars), energy(nblock,nElEnergy), & 
-            !            props(nprops), jprops(njprops), & 
-            !            jelem(nblock), time(nTime), lflags(nFlags), & 
-            !            coords(nblock,nnode,ncrd), u(nblock,ndofel), & 
-            !            du(nblock,ndofel), v(nblock,ndofel), a(nblock, ndofel), & 
-            !            dMassScaleFactor(nblock), & 
-            !            predef(nblock, nnode, npredef, nPred), adlmag(nblock) 
-            
+                        
             double precision, intent(in ), dimension(nprops) :: props   ! real property values
             integer, intent(in ), dimension(njprops) :: jprops          ! integer property values
             double precision, dimension(nblock,nnode,ncrd) :: coords    ! block of original coordinates of nodes (reference configuration)
@@ -584,34 +574,16 @@
             integer :: NODERange(iNODE) = (/(i, i=1,iNODE, 1)/)
 
             !-------------------------------------------------------------------------------  
-
-            ! element ingoing note =======================
-            !write(*,*)" "
-            !write(*,*)"VUEL in"
-            !write(*,*)"kinc",kinc
-            !write(*,*)"Abcissa",Abcissa
-            !write(*,*)"ndofel",ndofel
-            !write(*,*)"ncrd",ncrd
-            !write(*,*)"kstep",kstep
-            !write(*,*)"jtype",jtype
-            !write(*,*)"nblock",nblock
-            !write(*,*)"props",props
-            !write(*,*)"block",jElem(1)," to ",jElem(nblock)
-            !write(*,*)"lflags(iOpCode)",lflags(iOpCode)
-            !write(*,*)"for mass calculation:",jMassCalc
-            !write(*,*)"for internal force and stable increment calculation:",jIntForceAndDtStable
-            !write(*,*)"(lflags(iOpCode).eq.jIntForceAndDtStable):",(lflags(iOpCode).eq.jIntForceAndDtStable)
-            !write(*,*)" "
-            ! ============================================
+           
             
-            
-            if (jtype.eq.38 .and. lflags(iProcedure).eq.jDynExplicit) then 
+            if (jtype.eq.38) then 
                 
                 pEM  = props(1)
                 pNU  = props(2)
-                pRHO = props(3)
+                pRHO = props(3)    
+                
                 pGM  = half*pEM/(one+pNU)
-                pLAM = (pEM*pNU)/((one+pNU)*(one-two*pNU))
+                pLAM = (pEM*pNU)/((one+pNU)*(one-two*pNU)) 
                     
                 ! integration point coordinates and weights --------------------------------
                 if (iGP==8) then

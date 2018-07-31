@@ -41,73 +41,112 @@
         ! ================================================================
         integer :: ip,i,j,alpha
         double precision :: xi1,xi2,xi3
+        double precision :: Abcissa
         ! ================================================================
 
 
         if (LOP==0) then ! read user defined input file
-     
             ! integration point coordinates and weights --------------------------------
-            if (KGP==1) then ! HUGHES - The Finite Element Method 1987 (p. 174)
+!            if (KGP==1) then ! HUGHES - The Finite Element Method 1987 (p. 174)
 
-                KGPCORD(1,:) = (/ 1.d0/4.d0, 1.d0/4.d0, 1.d0/4.d0 /)
+!                KGPCORD(1,:) = (/ 1.d0/4.d0, 1.d0/4.d0, 1.d0/4.d0 /)
         
-                KWT = (/ 1.d0 /)
+!                KWT = (/ 1.d0 /)
                 
-                KQUAD = 1.d0/6.d0
-        
-            elseif (KGP==8) then
-                Abcissa=SQRT(1.d0/3.d0)
+!                KQUAD = 1.d0/6.d0
+        if (KNODE==8) then
+!            if (KGP==8) then
+!                Abcissa=SQRT(1.d0/3.d0)
 
-                KGPCORD(1,:) = (/ -Abcissa, -Abcissa, -Abcissa /)
-                KGPCORD(2,:) = (/  Abcissa, -Abcissa, -Abcissa /)
-                KGPCORD(3,:) = (/  Abcissa,  Abcissa, -Abcissa /)
-                KGPCORD(4,:) = (/ -Abcissa,  Abcissa, -Abcissa /)
-                KGPCORD(5,:) = (/ -Abcissa, -Abcissa,  Abcissa /)
-                KGPCORD(6,:) = (/  Abcissa, -Abcissa,  Abcissa /)
-                KGPCORD(7,:) = (/  Abcissa,  Abcissa,  Abcissa /)
-                KGPCORD(8,:) = (/ -Abcissa,  Abcissa,  Abcissa /)
+!                KGPCORD(1,:) = (/ -Abcissa, -Abcissa, -Abcissa /)
+!                KGPCORD(2,:) = (/  Abcissa, -Abcissa, -Abcissa /)
+!                KGPCORD(3,:) = (/  Abcissa,  Abcissa, -Abcissa /)
+!                KGPCORD(4,:) = (/ -Abcissa,  Abcissa, -Abcissa /)
+!                KGPCORD(5,:) = (/ -Abcissa, -Abcissa,  Abcissa /)
+!                KGPCORD(6,:) = (/  Abcissa, -Abcissa,  Abcissa /)
+!                KGPCORD(7,:) = (/  Abcissa,  Abcissa,  Abcissa /)
+!                KGPCORD(8,:) = (/ -Abcissa,  Abcissa,  Abcissa /)
                     
-                kWT(:) = (/ one, one, one, one, one, one, one, one /)
+!                kWT(:) = (/ 1.0d0, 1.0d0, 1.0d0, 1.0d0, 1.0d0, 1.0d0, 1.0d0, 1.0d0 /)
             
-                KQUAD = 1.0
-            else
+!                KQUAD = 1.0
+!            else
         
-                stop "Error in computation of integration point coordinates. The number of IPs does not conform with the element type (4 node tetrahedral element with 4 integratin points)."
+!                stop "Error in computation of integration point coordinates. The number of IPs does not conform with the element type (4 node tetrahedral element with 4 integratin points)."
         
-            end if
-            !---------------------------------------------------------------------------
-        
-
-            ! shape function for each ip -----------------------------------------------
-            do ip=1,KGP
-        
-                xi1=KGPCORD(ip,1)
-                xi2=KGPCORD(ip,2)
-                xi3=KGPCORD(ip,3)
-        
-                if (KNODE==4) then ! cf. WRIGGERS - Nonlinear Finite Elemente Methods 2008 (p. 120)
-        
-                    KNN(ip,1) = 1.d0-xi1-xi2-xi3
-                    KNN(ip,2) = xi1
-                    KNN(ip,3) = xi2
-                    KNN(ip,4) = xi3
-        
-                else if (KNODE==8) then
-                    KNN(ip,1) = one/eight*(1-xi1)*(1-xi2)*(1-xi3)
-                    KNN(ip,2) = one/eight*(1+xi1)*(1-xi2)*(1-xi3)
-                    KNN(ip,3) = one/eight*(1+xi1)*(1+xi2)*(1-xi3)
-                    KNN(ip,4) = one/eight*(1-xi1)*(1+xi2)*(1-xi3)
-                    KNN(ip,5) = one/eight*(1-xi1)*(1-xi2)*(1+xi3)
-                    KNN(ip,6) = one/eight*(1+xi1)*(1-xi2)*(1+xi3)
-                    KNN(ip,7) = one/eight*(1+xi1)*(1+xi2)*(1+xi3)
-                    KNN(ip,8) = one/eight*(1-xi1)*(1+xi2)*(1+xi3)
-                else
-                    stop "Error in computation of shape functions. The number of nodes does not conform with the element type (4 node tetrahedral element)."
-                end if
-        
-            end do
-            !---------------------------------------------------------------------------
+!            end if
+!                !---------------------------------------------------------------------------
+            
     
+!                ! shape function for each ip -----------------------------------------------
+!                do ip=1,KGP
+            
+!                    xi1=KGPCORD(ip,1)
+!                    xi2=KGPCORD(ip,2)
+!                    xi3=KGPCORD(ip,3)
+            
+!                    if (KNODE==4) then ! cf. WRIGGERS - Nonlinear Finite Elemente Methods 2008 (p. 120)
+            
+!                        KNN(ip,1) = 1.d0-xi1-xi2-xi3
+!                        KNN(ip,2) = xi1
+!                        KNN(ip,3) = xi2
+!                        KNN(ip,4) = xi3
+            
+!                    else if (KNODE==8) then
+!                        KNN(ip,1) = 1.0d0/8.0d0*(1-xi1)*(1-xi2)*(1-xi3)
+!                        KNN(ip,2) = 1.0d0/8.0d0*(1+xi1)*(1-xi2)*(1-xi3)
+!                        KNN(ip,3) = 1.0d0/8.0d0*(1+xi1)*(1+xi2)*(1-xi3)
+!                        KNN(ip,4) = 1.0d0/8.0d0*(1-xi1)*(1+xi2)*(1-xi3)
+!                        KNN(ip,5) = 1.0d0/8.0d0*(1-xi1)*(1-xi2)*(1+xi3)
+!                        KNN(ip,6) = 1.0d0/8.0d0*(1+xi1)*(1-xi2)*(1+xi3)
+!                        KNN(ip,7) = 1.0d0/8.0d0*(1+xi1)*(1+xi2)*(1+xi3)
+!                        KNN(ip,8) = 1.0d0/8.0d0*(1-xi1)*(1+xi2)*(1+xi3)
+!                    else
+!                        stop "Error in computation of shape functions. The number of nodes does not conform with the element type (4 node tetrahedral element)."
+!                    end if
+            
+!                end do
+                !---------------------------------------------------------------------------
+            elseif (KNODE==4) then
+    
+                ! integration point coordinates and weights --------------------------------
+                if (KGP==1) then ! HUGHES - The Finite Element Method 1987 (p. 174)
+    
+                    KGPCORD(1,:) = (/ 1.d0/4.d0, 1.d0/4.d0, 1.d0/4.d0 /)
+            
+                    KWT = (/ 1.d0 /)
+                    
+                    KQUAD = 1.d0/6.d0
+            
+                else
+            
+                    stop "Error in computation of integration point coordinates. The number of IPs does not conform with the element type (4 node tetrahedral element with 4 integratin points)."
+            
+                end if
+                !---------------------------------------------------------------------------
+            
+    
+                ! shape function for each ip -----------------------------------------------
+                do ip=1,KGP
+            
+                    xi1=KGPCORD(ip,1)
+                    xi2=KGPCORD(ip,2)
+                    xi3=KGPCORD(ip,3)
+            
+                    if (KNODE==4) then ! cf. WRIGGERS - Nonlinear Finite Elemente Methods 2008 (p. 120)
+            
+                        KNN(ip,1) = 1.d0-xi1-xi2-xi3
+                        KNN(ip,2) = xi1
+                        KNN(ip,3) = xi2
+                        KNN(ip,4) = xi3
+            
+                    else
+                        stop "Error in computation of shape functions. The number of nodes does not conform with the element type (4 node tetrahedral element)."
+                    end if
+            
+                end do
+            !---------------------------------------------------------------------------
+            end if
 
             ! identity matrix ----------------------------------------------------------
             KID=0.d0

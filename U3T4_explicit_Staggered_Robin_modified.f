@@ -86,7 +86,8 @@ module functions
                 trace = trace + mat(i,i)
             end do
         else
-            stop "Error in function `trace' - matrix is non-sqare!"
+            write(*,*) "Error in function `trace' - matrix is non-sqare!"
+            CALL XPLB_EXIT
         end if
 
     end function trace
@@ -112,7 +113,8 @@ module functions
                 - mat(1,2)*mat(2,1)*mat(3,3) &
                 - mat(1,1)*mat(2,3)*mat(3,2)
         else
-            stop "Error in function `det' - tensor is non-sqare!"
+            write(*,*) "Error in function `det' - tensor is non-sqare!"
+            CALL XPLB_EXIT
         end if
             
     end function det
@@ -160,7 +162,8 @@ module functions
             inv(1,1) = 1.d0/mat(1,1)
             
         else
-            stop "Error in function `inv' - tensor is non-sqare or larger then 3x3!"
+            write(*,*) "Error in function `inv' - tensor is non-sqare or larger then 3x3!"
+            CALL XPLB_EXIT
         end if
 
     end function inv
@@ -185,7 +188,8 @@ module functions
                 dot = dot + vec1(i)*vec2(i)
             end do
         else
-            stop "Error in function `dot' - vectors have not the same length!"
+            write(*,*) "Error in function `dot' - vectors have not the same length!"
+            CALL XPLB_EXIT
         end if
 
     end function dot
@@ -210,7 +214,8 @@ module functions
             cross(2) = vec1(3)*vec2(1)-vec1(1)*vec2(3)
             cross(3) = vec1(1)*vec2(2)-vec1(2)*vec2(1)
         else
-            stop "error in `cross' - vector lengths are not the same or not given in 3D!"
+            write(*,*) "error in `cross' - vector lengths are not the same or not given in 3D!"
+            CALL XPLB_EXIT
         end if
 
     end function cross
@@ -237,7 +242,8 @@ module functions
                 end do
             end do
         else
-            stop "Error in function `ddot' - tensor dimensions are not the same!"
+            write(*,*) "Error in function `ddot' - tensor dimensions are not the same!"
+            CALL XPLB_EXIT
         end if
 
     end function ddot
@@ -267,7 +273,8 @@ module functions
             end do
 
         else
-            stop "Error in function `dya' - vector lengths are not the same!"
+            write(*,*) "Error in function `dya' - vector lengths are not the same!"
+            CALL XPLB_EXIT
         end if
 
     end function dya
@@ -297,7 +304,8 @@ module functions
             end do
     
         else 
-            stop "Dimension error in function `matvec' - dimension of vector must be consistent with the dimensions of the matrix"
+            write(*,*) "Dimension error in function `matvec' - dimension of vector must be consistent with the dimensions of the matrix"
+            CALL XPLB_EXIT
         end if
  
     end function matvec
@@ -330,8 +338,9 @@ module functions
             matmat(3,2) = mat1(3,1)*mat2(1,2)+mat1(3,2)*mat2(2,2)+mat1(3,3)*mat2(3,2)
             matmat(3,3) = mat1(3,1)*mat2(1,3)+mat1(3,2)*mat2(2,3)+mat1(3,3)*mat2(3,3)
 
-        else 
-            stop "Dimension error in function `matmat' - matrix dimensions are not consistent or larger than 3x3"
+        else
+            write(*,*) "Dimension error in function `matmat' - matrix dimensions are not consistent or larger than 3x3"
+            CALL XPLB_EXIT 
         end if
 
     end function matmat
@@ -377,6 +386,189 @@ module constitutive_relations
 
 end module constitutive_relations
 !===============================================================================
+
+        ! USER SUBROUTINE - UPDATE EXTERNAL DATABASE
+	SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
+
+	!include 'vaba_param.inc'
+! ------Contents of i_Array------
+	integer, parameter :: i_int_nTotalNodes	= 1
+	integer, parameter :: i_int_nTotalElements = 2
+	integer, parameter :: i_int_kStep = 3
+	integer, parameter :: i_int_kInc = 4
+	integer, parameter :: i_int_iStatus = 5
+	integer, parameter :: i_int_lWriteRestart = 6 
+
+! ------Possible values for lOp argument------
+	integer, parameter :: j_int_StartAnalysis = 0
+	integer, parameter :: j_int_StartStep = 1
+	integer, parameter :: j_int_SetupIncrement = 2
+	integer, parameter :: j_int_StartIncrement = 3
+	integer, parameter :: j_int_EndIncrement = 4
+	integer, parameter :: j_int_EndStep =5
+	integer, parameter :: j_int_EndAnalysis = 6 
+
+! ------Possible values i_Array(i_int_iStatus)------
+	integer, parameter :: j_int_Continue = 0
+	integer, parameter :: j_int_TerminateStep = 1
+	integer, parameter :: j_int_TerminateAnalysis = 2
+
+! ------Contents of r_Array------
+	integer, parameter :: i_flt_TotalTime = 1
+	integer, parameter :: i_flt_StepTime = 2
+	integer, parameter :: i_flt_dtime = 3 
+!
+	integer, intent(in ) :: lOp,nrArray,niArray
+	integer, intent(in ), dimension(niArray) :: i_Array
+	double precision, intent(in ), dimension(nrArray) :: r_Array
+
+	integer :: kstep,kInc
+
+	kstep = i_Array(i_int_kStep)
+	kInc = i_Array(i_int_kInc)
+	
+! ------ START OF THE ANALYSIS ------
+	if (lOp .eq. j_int_StartAnalysis) then
+        INQUIRE(FILE='/home/cerecam/Desktop/LimitReached.inp',EXIST=I_EXIST)
+        if (I_EXIST) then
+            open(unit=107, file='/home/cerecam/Desktop/LimitReached.inp')
+            
+            close(UNIT=107,STATUS='DELETE')
+            write(*,*) " !!! LimitReached.inp Deleted !!"
+        end if
+! ------ Start of the step ------
+	else if (lOp .eq. j_int_StartStep) then
+! ------ Setup the increment ------
+	else if (lOp .eq. j_int_SetupIncrement) then
+! ------ Start of increment ------
+	else if (lOp .eq. j_int_StartIncrement) then
+		if (MOD(int(i_Array(i_int_kInc)),360).eq.0d0) then
+			if (i_Array(i_int_kInc).ne.1) then
+				write(*,*)
+				write(*,*) "----------------- VEXTERNALDB at Increment:",int(i_Array(i_int_kInc)),"-----------------"
+				write(*,*)
+				call EXECUTE_COMMAND_LINE('/home/cerecam/Desktop/MesoporousSilica/Short/Coupled_Flux/PythonRunTest.sh', wait=.true.)
+			end if
+		end if
+! ------ End of increment ------
+	else if (lOp .eq. j_int_EndIncrement) then
+! ------ End of the step ------
+	else if (lOp .eq. j_int_EndStep) then
+			call EXECUTE_COMMAND_LINE('/home/cerecam/Desktop/MesoporousSilica/Short/Coupled_Flux/PythonRunTest.sh', wait=.true.)
+! ------ End of the analysis ------
+	else if (lOp .eq. j_int_EndAnalysis) then
+			write(*,*)
+			write(*,*) "----------------- VEXTERNALDB at Increment:",int(i_Array(i_int_kInc)),"-----------------",int(i_Array(i_int_kInc))
+			write(*,*)
+
+	end if
+
+	return
+	end subroutine VEXTERNALDB
+
+!===============================================================================================================================================
+        !-------------------------------------------------------------------------------
+        !
+        ! USER SUBROUTINE - VUFIELD:UPDATES PREDEFINED FIELD
+	SUBROUTINE VUFIELD(FIELD, NBLOCK, NFIELD, KFIELD, NCOMP, &
+			   KSTEP, JFLAGS, JNODEID, TIME, &
+			   COORDS, U, V, A)
+	include 'vaba_param.inc'	
+	! indices for the time array 
+	integer, parameter :: i_ufld_Current = 1 
+	integer, parameter :: i_ufld_Increment = 2 
+	integer, parameter :: i_ufld_Period = 3 
+	integer, parameter :: i_ufld_Total = 4
+
+	! indices for the coordinate array COORDS 
+	integer, parameter :: i_ufld_CoordX = 1 
+	integer, parameter :: i_ufld_CoordY = 2 
+	integer, parameter :: i_ufld_CoordZ = 3
+
+	! indices for the displacement array U 
+	integer, parameter :: i_ufld_SpaDisplX = 1 
+	integer, parameter :: i_ufld_SpaDislY = 2 
+	integer, parameter :: i_ufld_SpaDisplz = 3 
+	integer, parameter :: i_ufld_RotDisplX = 4 
+	integer, parameter :: i_ufld_RotDisplY = 5 
+	integer, parameter :: i_ufld_RotDisplZ = 6 
+	integer, parameter :: i_ufld_AcoPress = 7 
+	integer, parameter :: i_ufld_Temp = 8
+
+	!indices for velocity array V 
+	integer, parameter :: i_ufld_SpaVelX = 1 
+	integer, parameter :: i_ufld_SpaVelY = 2 
+	integer, parameter :: i_ufld_SpaVelZ = 3 
+	integer, parameter :: i_ufld_RotVelX = 4 
+	integer, parameter :: i_ufld_RotVelY = 5 
+	integer, parameter :: i_ufld_RotVelZ = 6 
+	integer, parameter :: i_ufld_DAcoPress = 7 
+	integer, parameter :: i_ufld_DTemp = 8
+
+	! indicies for the acceleration array A 
+	integer, parameter :: i_ufld_SpaAccelX = 1 
+	integer, parameter :: i_ufld_SpaAccelY = 2 
+	integer, parameter :: i_ufld_SpaAccelZ = 3 
+	integer, parameter :: i_ufld_RotAccelX = 4 
+	integer, parameter :: i_ufld_RotAccelY = 5 
+	integer, parameter :: i_ufld_RotAccelZ = 6 
+	integer, parameter :: i_ufld_DDAcoPress = 7 
+	integer, parameter :: i_ufld_DDTemp = 8
+
+	! indices for JFLAGS 
+	integer, parameter :: i_ufld_kInc = 1 
+	integer, parameter :: i_ufld_kPass = 2
+
+	! Variables passed in for information
+        integer, intent(in) :: NBLOCK
+	integer, intent(in) :: NFIELD
+	integer, intent(in) :: KFIELD
+	integer, intent(in) :: NCOMP
+	integer, intent(in) :: KSTEP
+	integer, intent(in), dimension(i_ufld_kPass) :: JFLAGS
+	integer, intent(in), dimension(NBLOCK) :: JNODEID
+	double precision, intent(in), dimension(4) :: TIME
+	double precision, intent(in), dimension(3,NBLOCK) :: COORDS
+	double precision, intent(in), dimension(8,NBLOCK) :: U,V,A
+	double precision, dimension(NBLOCK) :: data_arr
+	
+
+	! Dimensioned arrays
+	double precision, intent(inout), dimension(NBLOCK,NCOMP,NFIELD) :: FIELD
+!	write(*,*) "TIME(i_ufld_Current)",TIME(i_ufld_Current)
+!	write(*,*) "MOD(TIME(i_ufld_Current),0.05d0)",MOD(TIME(i_ufld_Current),0.05d0)
+!	write(*,*) "MOD(TIME(i_ufld_Current),0.05d0).eq.0.0d0", MOD(TIME(i_ufld_Current),0.05d0).eq.0.0d0
+!	write(*,*) "TIME(i_ufld_Current).ne.0",TIME(i_ufld_Current).ne.0
+!	write(*,*)
+
+!			write(*,*) "NCOMP", NCOMP, "NFIELD", NFIELD
+!			write(*,*) "NBLOCK", NBLOCK
+!			write(*,*) "KSTEP", KSTEP
+!			write(*,*) "JFLAGS", JFLAGS
+!			write(*,*) "JNODEID(1)", JNODEID(1)
+!			write(*,*) "JNODEID(15)", JNODEID(15)
+!			write(*,*) "JNODEID(55)", JNODEID(55)
+!			write(*,*) "JFLAGS",JFLAGS
+!			write(*,*) "U(all,1)", U(:,kblock)
+!			write(*,*) "FIELD",FIELD(:,NCOMP,NFIELD)
+!	if (MOD(JFLAGS(i_ufld_kInc),1).eq.0d0) then
+			if (JFLAGS(i_ufld_kInc).eq.1d0 .OR. JFLAGS(i_ufld_kInc).eq.0d0) then				
+			elseif (MOD(int(JFLAGS(i_ufld_kInc)),360).eq.0d0) then
+				write(*,*) "----------------- VUFIELD at increment:",JFLAGS(i_ufld_kInc)," -----------------"	
+				open(unit=105, file='/home/cerecam/Desktop/MesoporousSilica/Short/Coupled_Flux/ElecPotentials.csv',status='old')!
+				READ(105,*) data_arr
+				do kblock=1,nblock
+					FIELD(kblock,NCOMP,NFIELD) = data_arr(kblock)
+				end do
+				write(*,*) "********* New field written **********"
+!				write(*,*)
+				close(105)
+			end if
+!	end if
+!		write(*,*) "VUFIELD"
+
+	return
+	end subroutine VUFIELD
 
 
 !===============================================================================
@@ -609,7 +801,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !--------------------------Constants used in modified PNP model-------------------------------------
 
     double precision :: pV_i		! Volume concentration of any mole of a species
-    double precision :: pV_ges      ! Maximum volume concentration allowed
+    double precision :: pV_tot      ! Maximum volume concentration allowed
     double precision :: pDensVolFrac! Total density volume fraction of mobile species
     double precision :: pGradRho	! Grad of total volume
     double precision :: pNa		    ! Avogadro's constant
@@ -647,18 +839,29 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     ! integer
     integer :: iptri,Filesize
     ! Allocatable arrays
-    integer, DIMENSION(:), ALLOCATABLE :: Z0Ele 
-!    integer, DIMENSION(:), ALLOCATABLE :: BackEle            
+    integer, DIMENSION(:), ALLOCATABLE :: FrontEle 
+    integer, DIMENSION(:), ALLOCATABLE :: BackEle      
+    
+    logical :: I_EXIST      
                 
     if (jtype.eq.34) then 
     
-        open(unit=107, file='/home/cerecam/Desktop/MesoporousSilica/Short/ShortExperimental/NumberZ0_ELEMENTS.inp',status='old')!
+        open(unit=107, file='/home/cerecam/Desktop/MesoporousSilica/Short/BoundaryConditions/nodeSets/NumberPolymerEleSetFront.inp',status='old')!
         READ(107,*) Filesize
-        Allocate ( Z0Ele(Filesize) )
+        Allocate ( FrontEle(Filesize) )
         close(107)
 
-        open(unit=107, file='/home/cerecam/Desktop/MesoporousSilica/Short/ShortExperimental/Z0_ELEMENTS.csv',status='old')!
-        READ(107,*) Z0Ele
+        open(unit=107, file='/home/cerecam/Desktop/MesoporousSilica/Short/BoundaryConditions/nodeSets/PolymerEleSetFront.csv',status='old')!
+        READ(107,*) FrontEle
+        close(107)
+
+        open(unit=107, file='/home/cerecam/Desktop/MesoporousSilica/Short/BoundaryConditions/nodeSets/NumberPolymerEleSetBack.inp',status='old')!
+        READ(107,*) Filesize
+        Allocate ( BackEle(Filesize) )
+        close(107)
+
+        open(unit=107, file='/home/cerecam/Desktop/MesoporousSilica/Short/BoundaryConditions/nodeSets/PolymerEleSetBack.csv',status='old')!
+        READ(107,*) BackEle
         close(107)
     
         pEM  = props(1)
@@ -683,9 +886,9 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         pPi = 3.14159265358979311
         pRi = 0.502
         !pImmobileConc = 1.8e-3
-        !pV_ges = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*(pImmobileConc)
-        pV_ges = 4.0
-        pImmobileConc = pV_ges / (4.0d0/3.0d0*pPi*(pRi**3)*pNa) 
+        !pV_tot = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*(pImmobileConc)
+        pV_tot = 4.0
+        pImmobileConc = pV_tot / (4.0d0/3.0d0*pPi*(pRi**3)*pNa) 
            
         ! integration point coordinates and weights --------------------------------
         if (iGP==1) then ! HUGHES - The Finite Element Method 1987 (p. 174)
@@ -714,7 +917,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 pNN(ip,4) = xi3
 
             else
-                stop "Error in computation of shape functions. The number of nodes does not conform with the element type (4 node tetrahedral element)."
+                write(*,*) "Error in computation of shape functions. The number of nodes does not conform with the element type (4 node tetrahedral element)."
+                CALL XPLB_EXIT 
             end if
 
         end do
@@ -766,7 +970,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         dNdXi3(4) =  one
                      
                     else 
-                        stop "Error in computation of shape function derivatives. The number of nodes does not conform with the element type (4 node tetrahedral element)."     
+                        write(*,*)  "Error in computation of shape function derivatives. The number of nodes does not conform with the element type (4 node tetrahedral element)."
+                        CALL XPLB_EXIT     
                     end if
     
                     ! derivatives of physical coordinates with respect to natural coordinates                
@@ -882,7 +1087,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         dNdXi3(4) =  one
                      
                     else 
-                        stop "Error in computation of shape function derivatives. The number of nodes does not conform with the element type (4 node tetrahedral element)."     
+                        write(*,*) "Error in computation of shape function derivatives. The number of nodes does not conform with the element type (4 node tetrahedral element)."
+                        CALL XPLB_EXIT     
                     end if
     
                     ! derivatives of physical coordinates with respect to natural coordinates                
@@ -939,7 +1145,19 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         pELECFIELD = pELECFIELD - ((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))*predef(kblock,ni,2,1)
                     end do
                     pCo = dot(pNN(ip,:),CoNODE)
+                    if (pCo.lt.0.0d0) then
+                        pCo = 0.0d0
+                    end if
     				pV_i = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*pCo
+                
+                    pDensVolFrac = pV_i/pV_tot
+                    if (pDensVolFrac>1.0) then
+                        write(*,*) "rho exceeds to 1.0"
+                    end if
+                    if (pDensVolFrac<0.0) then
+                        pDensVolFrac=0.0
+!                        write(*,*) "rho exceeds to 0.0"
+                    end if
                 
                     ! small strain tensor
                     Ee = half*(transpose(H) + H)
@@ -948,7 +1166,9 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 					pQf = pF*((pZ*pCo)+(cSat*(1.d0)))
                     ! stress
                     call stresses_concen_coupled(S,Ee,ElecDisp,pQf,pID,pGM,pLAM,pEPSILONZERO,pEPSILONR,pEMCoup, pZ, cSat)
-                    
+                    if (ANY(S.ne.0.0d0)) then
+                        write(*,*) "Stress: ",S
+                    end if
                     energy(kblock,iElIe)= energy(kblock,iElIe) + (detJ(ip)/6.0d0)*( ( pGM*ddot(Ee,Ee)+half*pLAM*trace(Ee)*trace(Ee)) )
 
                     
@@ -983,35 +1203,43 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 						dofni(1:iCORD) = 1+iCORDTOTAL*((ni*1)-1)+(CordRange-1)
 						dofniT = iCORDTOTAL*ni
         
-                        !--------------------------------------Displacement RHS--------------------------------------
-						rhs(kblock,dofni) = rhs(kblock,dofni) 	+ pQUAD*pWT(ip)*detJ(ip)*(matvec(S,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))) 
-!											- pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),((pEMCoup/pZ)*pQf*pID))
-                        !--------------------------------------Concentration RHS--------------------------------------
-                        rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
-                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD))) &
-                            - (pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+!                        !--------------------------------------Displacement RHS--------------------------------------
+!						rhs(kblock,dofni) = rhs(kblock,dofni) 	+ pQUAD*pWT(ip)*detJ(ip)*(matvec(S,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))) 
+!!											- pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),((pEMCoup/pZ)*pQf*pID))
+!                        !--------------------------------------Concentration RHS--------------------------------------
+!                        rhs(kblock,dofniT) = rhs(kblock,dofniT) &
+!                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
+!                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD))) &
+!                            - (pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
                     
 !                        !-------------------------- RHS modified PNP model-------------------------------------
-!                        if (pDensVolFrac>0.3) then
-!                                    rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-!                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
-!                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pDif*pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))&
+                        if (pDensVolFrac>0.05) then
+                            INQUIRE(FILE='/home/cerecam/Desktop/LimitReached.inp',EXIST=I_EXIST)
+                            if (I_Exist.eq.FALSE) then
+                                open(unit=107, file='/home/cerecam/Desktop/LimitReached.inp')
+                                WRITE(107,*) "Limit has been reached!", pDensVolFrac
+                                WRITE(*,*) "Limit has been reached! ", pDensVolFrac
+                                close(107)
+                            end if
+                            
+                                    rhs(kblock,dofniT) = rhs(kblock,dofniT) &
+                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
+                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pDif*pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))
 !                            + (pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
-!                        else
-!                                    rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-!                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
-!                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*(one-pDensVolFrac)*pELECFIELD))) &
-!                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pDif*pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))&
+                        else
+                                    rhs(kblock,dofniT) = rhs(kblock,dofniT) &
+                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
+                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*(one-pDensVolFrac)*pELECFIELD))) &
+                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pDif*pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))
 !                            + (pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
                         
-!                        end if
+                        end if
     
                     end do !------------------------------end-loop-i----------------
     
                 end do ! ----------------------------end-loop-ip--------------------
 
-                if (ANY(jElem(kblock).eq.Z0Ele)) then
+                if (ANY(jElem(kblock).eq.FrontEle) .OR. ANY(jElem(kblock).eq.BackEle)) then
                     pGPCORDtri(1,:) = (/ one/six, one/six /)
                     pGPCORDtri(2,:) = (/ two/three, one/six /)
                     pGPCORDtri(3,:) = (/ one/six, two/three /)
@@ -1085,17 +1313,14 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     !					write(*,*) "Jacobian : ", DetjTri
                     end if
     ! ------------------------------------ Application of flux vector -----------------------------------------------
-                    if (kinc==2) then
-                        write(*,*) "jelem upon which flux vector is applied: ", jElem(kblock)
-                    end if
                     DO iptri=1,iGPtri
                         do ni=1,size(NODES)
                             nj = NODES(ni)                            
                             dofniT = iCORDTOTAL*nj
-                            if (ANY(jElem(kblock).eq.Z0Ele)) then
-                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTtri(iptri)*ABS(DetjTri)*pNNtri(iptri,ni)*1.0E-4
-!                            elseif (ANY(jElem(kblock).eq.Z0Ele)) then
-!                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTtri(iptri)*ABS(DetjTri)*pNNtri(iptri,ni)*0.0d0
+                            if (ANY(jElem(kblock).eq.FrontEle)) then
+                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTtri(iptri)*ABS(DetjTri)*pNNtri(iptri,ni)*0.0d0
+                            elseif (ANY(jElem(kblock).eq.BackEle)) then
+                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTtri(iptri)*ABS(DetjTri)*pNNtri(iptri,ni)*1.0E-3
                             end if
                                     
                         END DO ! ------------------------ ni-loop ------------------------

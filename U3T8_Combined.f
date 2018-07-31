@@ -1442,24 +1442,24 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 
                 
                 pbeta = temp3/AREA_Z1
-!                pbeta = temp3/AREA_Z1
-                fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
-                INQUIRE(FILE= fname ,EXIST=I_EXIST)
-                if (I_Exist) then
-                    open(unit=106,file=fname, status='old', action='write', position='append')
-                else
-                    open(unit=106,file=fname, status='new',action='write')
-                end if
-                if ((MOD(kInc,577).eq.0) .AND. (jElem(kblock).eq.15137)) then
-                    write(106,*) "Element number: ", jElem(kblock)
-                    write(106,*) "Increment_int: ", temp1
-                    write(106,*) "Time: ", time(iStepTime)
-                    write(106,*) "Total_c_dot: ", temp2
-                    write(106,*) "temp3: ", temp3
-                    write(106,*) "pInflux: ", temp3/Area_Z1
-                    write(106,*) "Outflux: ", palpha
-                end if
-                close(106)
+
+!                fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
+!                INQUIRE(FILE= fname ,EXIST=I_EXIST)
+!                if (I_Exist) then
+!                    open(unit=106,file=fname, status='old', action='write', position='append')
+!                else
+!                    open(unit=106,file=fname, status='new',action='write')
+!                end if
+!                if ((MOD(kInc,577).eq.0) .AND. (jElem(kblock).eq.15137)) then
+!                    write(106,*) "Element number: ", jElem(kblock)
+!                    write(106,*) "Increment_int: ", temp1
+!                    write(106,*) "Time: ", time(iStepTime)
+!                    write(106,*) "Total_c_dot: ", temp2
+!                    write(106,*) "temp3: ", temp3
+!                    write(106,*) "pInflux: ", temp3/Area_Z1
+!                    write(106,*) "Outflux: ", palpha
+!                end if
+!                close(106)
                 svars(kblock,2) = 0.0d0 ! State variable that sotres dc/dx*area
                 do ipquad=1,4
 
@@ -1494,7 +1494,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     pDensVolFrac = pV_i +pVpoly
                     if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<pVsat)) then
                         if (kInc.gt.0) then
-                            svars(kblock,2) = svars(kblock,2) + (one-pDensVolFrac)*pDif*(pF*pZ)/(pRTHETA)*pCo*(-1.0d0/15.0d0)*detJquad(ipquad)*10
+                            svars(kblock,2) = svars(kblock,2) + (one-pDensVolFrac)*pDif*(pF*pZ)/(pRTHETA)*pCo*(-1.0d0/15.0d0)*detJquad(ipquad)*1
                             
                             ELSE
                             svars(kblock,2) = 0.0d0

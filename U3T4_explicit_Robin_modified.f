@@ -367,8 +367,8 @@ module constitutive_relations
 
         !S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID - (pEMCoup/pZ)*pQf*pID
 		!write(*,*)"S",S
-!		S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID + (1.d0/(pEPSILONZERO*pEPSILONR))*(dya(ElecDisp,ElecDisp) - 0.5d0*(dot(ElecDisp,ElecDisp))*pID)- (pEMCoup/pZ)*pQf*pID
-		S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID
+		S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID + (1.d0/(pEPSILONZERO*pEPSILONR))*(dya(ElecDisp,ElecDisp) - 0.5d0*(dot(ElecDisp,ElecDisp))*pID)- (pEMCoup/pZ)*pQf*pID
+!		S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID
 !		S = 2.d0*pGM*Ee + pLAM*trace(Ee)*pID + (1.d0/(pEPSILONZERO*pEPSILONR))*(dya(ElecDisp,ElecDisp) - 0.5d0*(dot(ElecDisp,ElecDisp))*pID)
                 !---------------------------------------------------------------------------       
             
@@ -377,6 +377,74 @@ module constitutive_relations
 
 end module constitutive_relations
 !===============================================================================
+! USER SUBROUTINE - UPDATE EXTERNAL DATABASE
+	SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
+
+	!include 'vaba_param.inc'
+! ------Contents of i_Array------
+	integer, parameter :: i_int_nTotalNodes	= 1
+	integer, parameter :: i_int_nTotalElements = 2
+	integer, parameter :: i_int_kStep = 3
+	integer, parameter :: i_int_kInc = 4
+	integer, parameter :: i_int_iStatus = 5
+	integer, parameter :: i_int_lWriteRestart = 6 
+
+! ------Possible values for lOp argument------
+	integer, parameter :: j_int_StartAnalysis = 0
+	integer, parameter :: j_int_StartStep = 1
+	integer, parameter :: j_int_SetupIncrement = 2
+	integer, parameter :: j_int_StartIncrement = 3
+	integer, parameter :: j_int_EndIncrement = 4
+	integer, parameter :: j_int_EndStep =5
+	integer, parameter :: j_int_EndAnalysis = 6 
+
+! ------Possible values i_Array(i_int_iStatus)------
+	integer, parameter :: j_int_Continue = 0
+	integer, parameter :: j_int_TerminateStep = 1
+	integer, parameter :: j_int_TerminateAnalysis = 2
+
+! ------Contents of r_Array------
+	integer, parameter :: i_flt_TotalTime = 1
+	integer, parameter :: i_flt_StepTime = 2
+	integer, parameter :: i_flt_dtime = 3 
+!
+	integer, intent(in ) :: lOp,nrArray,niArray
+	integer, intent(in ), dimension(niArray) :: i_Array
+	double precision, intent(in ), dimension(nrArray) :: r_Array
+
+	integer :: kstep,kInc
+    logical :: I_EXIST
+    character*256 :: JOBNAME
+	character*256 :: filename
+	kstep = i_Array(i_int_kStep)
+	kInc = i_Array(i_int_kInc)
+    
+! ------ START OF THE ANALYSIS ------
+	if (lOp .eq. j_int_StartAnalysis) then
+    call VGETJOBNAME(JOBNAME,LENJOBNAME)
+    filename = '/home/cerecam/Desktop/LimitReached'// trim(JOBNAME) // '.inp'
+        INQUIRE(FILE=filename,EXIST=I_EXIST)
+        if (I_EXIST) then
+            open(unit=107, file=filename)            
+            close(UNIT=107,STATUS='DELETE')
+            write(*,*) " !!! LimitReached"// trim(JOBNAME) // ".inp Deleted !!"
+        end if
+! ------ Start of the step ------
+	else if (lOp .eq. j_int_StartStep) then
+! ------ Setup the increment ------
+	else if (lOp .eq. j_int_SetupIncrement) then
+! ------ Start of increment ------
+	else if (lOp .eq. j_int_StartIncrement) then
+! ------ End of increment ------
+	else if (lOp .eq. j_int_EndIncrement) then
+! ------ End of the step ------
+	else if (lOp .eq. j_int_EndStep) then
+	else if (lOp .eq. j_int_EndAnalysis) then
+	end if
+
+	return
+	end subroutine VEXTERNALDB
+
 
 
 !===============================================================================
@@ -609,7 +677,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !--------------------------Constants used in modified PNP model-------------------------------------
 
     double precision :: pV_i		! Volume concentration of any mole of a species
-    double precision :: pV_ges      ! Maximum volume concentration allowed
+    double precision :: pV_tot      ! Maximum volume concentration allowed
     double precision :: pDensVolFrac! Total density volume fraction of mobile species
     double precision :: pGradRho	! Grad of total volume
     double precision :: pNa		    ! Avogadro's constant
@@ -647,19 +715,51 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     ! integer
     integer :: iptri,Filesize
     ! Allocatable arrays
+!    integer, DIMENSION(:), ALLOCATABLE :: FrontEle 
+!    integer, DIMENSION(:), ALLOCATABLE :: BackEle 
     integer, DIMENSION(:), ALLOCATABLE :: Z0Ele 
-!    integer, DIMENSION(:), ALLOCATABLE :: BackEle            
+    integer, DIMENSION(:), ALLOCATABLE :: Z1Ele
+    
+    logical :: I_EXIST        
+    character*256 :: JOBNAME
+    character*256 :: filename
+    integer :: LENJOBNAME
                 
     if (jtype.eq.34) then 
     
-        open(unit=107, file='/home/cerecam/Desktop/MesoporousSilica/Short/ShortExperimental/NumberZ0_ELEMENTS.inp',status='old')!
+        open(unit=107, file='/home/cerecam/Desktop/MesoporousSilica/Short/BoundaryConditions/nodeSets/NumberPolymerEleSetFront.inp',status='old')!
+        READ(107,*) Filesize
+        Allocate ( Z1Ele(Filesize) )
+        close(107)
+
+        open(unit=107, file='/home/cerecam/Desktop/MesoporousSilica/Short/BoundaryConditions/nodeSets/PolymerEleSetFront.csv',status='old')!
+        READ(107,*) Z1Ele
+        close(107)
+
+        open(unit=107, file='/home/cerecam/Desktop/MesoporousSilica/Short/BoundaryConditions/nodeSets/NumberPolymerEleSetBack.inp',status='old')!
         READ(107,*) Filesize
         Allocate ( Z0Ele(Filesize) )
         close(107)
 
-        open(unit=107, file='/home/cerecam/Desktop/MesoporousSilica/Short/ShortExperimental/Z0_ELEMENTS.csv',status='old')!
+        open(unit=107, file='/home/cerecam/Desktop/MesoporousSilica/Short/BoundaryConditions/nodeSets/PolymerEleSetBack.csv',status='old')!
         READ(107,*) Z0Ele
         close(107)
+        
+!        open(unit=107, file='/home/cerecam/Desktop/MesoporousSilica/Short/ShortExperimental/NumberZ0_ELEMENTS.inp',status='old')!
+!        READ(107,*) Filesize
+!        Allocate ( Z0Ele(Filesize) )
+!        close(107)
+
+!        open(unit=107, file='/home/cerecam/Desktop/MesoporousSilica/Short/ShortExperimental/Z0_ELEMENTS.csv',status='old')!
+!        READ(107,*) Z0Ele
+!        close(107)
+        
+!        Filesize=655
+!        Allocate ( Z1Ele(Filesize) )
+
+!        open(unit=107, file='/home/cerecam/Desktop/MesoporousSilica/Short1/Z1_ELEMENTS.csv',status='old')!
+!        READ(107,*) Z1Ele
+!        close(107)
     
         pEM  = props(1)
         pNU  = props(2)
@@ -683,9 +783,9 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         pPi = 3.14159265358979311
         pRi = 0.502
         !pImmobileConc = 1.8e-3
-        !pV_ges = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*(pImmobileConc)
-        pV_ges = 4.0
-        pImmobileConc = pV_ges / (4.0d0/3.0d0*pPi*(pRi**3)*pNa) 
+        !pV_tot = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*(pImmobileConc)
+        pV_tot = 4.0
+        pImmobileConc = pV_tot / (4.0d0/3.0d0*pPi*(pRi**3)*pNa) 
            
         ! integration point coordinates and weights --------------------------------
         if (iGP==1) then ! HUGHES - The Finite Element Method 1987 (p. 174)
@@ -823,7 +923,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                                 + pQUAD*pWT(ip)*detJ(ip)*pRHO*matmat(pNN(ip,ni)*Pid,pNN(ip,nj)*Pid)
                             ! Capacitence matrix calculation
                             amass(kblock,dofniT,dofnjT) = amass(kblock,dofniT,dofnjT) &
-                                + (1/pDif)*pQUAD*pWT(ip)*detJ(ip)*pNN(ip,ni)*pNN(ip,nj)
+                                + pQUAD*pWT(ip)*detJ(ip)*pNN(ip,ni)*pNN(ip,nj)
                         end do !--------------------------end-loop-j----------------
     
                     end do !------------------------------end-loop-i----------------
@@ -939,7 +1039,19 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         pELECFIELD = pELECFIELD - ((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))*predef(kblock,ni,2,1)
                     end do
                     pCo = dot(pNN(ip,:),CoNODE)
+                    if (pCo.lt.0.0d0) then
+                        pCo = 0.0d0
+                    end if
     				pV_i = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*pCo
+                
+                    pDensVolFrac = pV_i/pV_tot
+                    if (pDensVolFrac>1.0) then
+!                        write(*,*) "rho exceeds to 1.0"
+                    end if
+                    if (pDensVolFrac<0.0) then
+                        pDensVolFrac=0.0
+!                        write(*,*) "rho exceeds to 0.0"
+                    end if
                 
                     ! small strain tensor
                     Ee = half*(transpose(H) + H)
@@ -948,7 +1060,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 					pQf = pF*((pZ*pCo)+(cSat*(1.d0)))
                     ! stress
                     call stresses_concen_coupled(S,Ee,ElecDisp,pQf,pID,pGM,pLAM,pEPSILONZERO,pEPSILONR,pEMCoup, pZ, cSat)
-                    
+
                     energy(kblock,iElIe)= energy(kblock,iElIe) + (detJ(ip)/6.0d0)*( ( pGM*ddot(Ee,Ee)+half*pLAM*trace(Ee)*trace(Ee)) )
 
                     
@@ -986,23 +1098,32 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         !--------------------------------------Displacement RHS--------------------------------------
 						rhs(kblock,dofni) = rhs(kblock,dofni) 	+ pQUAD*pWT(ip)*detJ(ip)*(matvec(S,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))) 
 !											- pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),((pEMCoup/pZ)*pQf*pID))
-                        !--------------------------------------Concentration RHS--------------------------------------
+!                        !--------------------------------------Concentration RHS--------------------------------------
                         rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
-                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD))) &
-                            - (pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+                            - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-gCo)) &
+                            - (pDif)*pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD))) &
+                            + (pDif)*(pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
                     
 !                        !-------------------------- RHS modified PNP model-------------------------------------
-!                        if (pDensVolFrac>0.3) then
+!                        if (pDensVolFrac>0.1) then
+!                            CALL VGETJOBNAME( JOBNAME,LENJOBNAME)
+!                            filename = '/home/cerecam/Desktop/LimitReached' // trim(JOBNAME) // '.inp'
+!                            INQUIRE(FILE= filename ,EXIST=I_EXIST)
+!                            if (.NOT. I_Exist) then                                
+!                                WRITE(*,*) "Limit has been reached in ",jelem(kblock)," at concentration of ", pCo,"kinc: ", kInc
+!                                open(unit=107, file=filename)
+!                                WRITE(107,*) "Limit has been reached in ",jelem(kblock)," at concentration of ", pCo," kinc: ", kInc, " for job: ", trim(JOBNAME)
+!                                close(107)
+!                            end if
 !                                    rhs(kblock,dofniT) = rhs(kblock,dofniT) &
 !                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
-!                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pDif*pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))&
+!                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pDif*pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo)) &
 !                            + (pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
 !                        else
 !                                    rhs(kblock,dofniT) = rhs(kblock,dofniT) &
 !                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
 !                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*(one-pDensVolFrac)*pELECFIELD))) &
-!                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pDif*pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))&
+!                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pDif*pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo)) &
 !                            + (pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
                         
 !                        end if
@@ -1011,7 +1132,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     
                 end do ! ----------------------------end-loop-ip--------------------
 
-                if (ANY(jElem(kblock).eq.Z0Ele)) then
+!                if (ANY(jElem(kblock).eq.FrontEle) .OR. ANY(jElem(kblock).eq.BackEle)) then
+                if (ANY(jElem(kblock).eq.Z0Ele)) then            
                     pGPCORDtri(1,:) = (/ one/six, one/six /)
                     pGPCORDtri(2,:) = (/ two/three, one/six /)
                     pGPCORDtri(3,:) = (/ one/six, two/three /)
@@ -1085,18 +1207,30 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     !					write(*,*) "Jacobian : ", DetjTri
                     end if
     ! ------------------------------------ Application of flux vector -----------------------------------------------
-                    if (kinc==2) then
-                        write(*,*) "jelem upon which flux vector is applied: ", jElem(kblock)
-                    end if
                     DO iptri=1,iGPtri
                         do ni=1,size(NODES)
                             nj = NODES(ni)                            
                             dofniT = iCORDTOTAL*nj
+!                            if (ANY(jElem(kblock).eq.FrontEle)) then
                             if (ANY(jElem(kblock).eq.Z0Ele)) then
-                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTtri(iptri)*ABS(DetjTri)*pNNtri(iptri,ni)*1.0E-4
-!                            elseif (ANY(jElem(kblock).eq.Z0Ele)) then
-!                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTtri(iptri)*ABS(DetjTri)*pNNtri(iptri,ni)*0.0d0
+!                                if (pDensVolFrac>0.1) then
+!                                    RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTtri(iptri)*ABS(DetjTri)*pNNtri(iptri,ni)*0.0d0
+!                                else                                
+                                    RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTtri(iptri)*ABS(DetjTri)*pNNtri(iptri,ni)*(one-pDensVolFrac)*1.5E-4
+!                                end if                           
+                            elseif (ANY(jElem(kblock).eq.Z1Ele)) then                               
+                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTtri(iptri)*ABS(DetjTri)*pNNtri(iptri,ni)*pDensVolFrac*(-1.0d0)*1.5E-4
                             end if
+!                            if (ANY(jElem(kblock).eq.FrontEle)) then
+                                
+!                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTtri(iptri)*ABS(DetjTri)*pNNtri(iptri,ni)*(-1.0d0)*3.0E-4
+!                            elseif (ANY(jElem(kblock).eq.BackEle)) then
+!                                if (pDensVolFrac>0.015) then
+!                                    RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTtri(iptri)*ABS(DetjTri)*pNNtri(iptri,ni)*0.0d0
+!                                else                                
+!                                    RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTtri(iptri)*ABS(DetjTri)*pNNtri(iptri,ni)*(one-pDensVolFrac)*3.0E-4
+!                                end if
+!                            end if
                                     
                         END DO ! ------------------------ ni-loop ------------------------
                     END DO ! ------------------------ iptri-loop ------------------------

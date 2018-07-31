@@ -449,8 +449,9 @@
             integer :: ip,nn,ni,i,dof,K1,K2,j
             
             ! parameters
-            double precision, parameter :: VPGP = KCORD*KCORD
+            double precision parameter :: VPGP = KCORD*KCORD
             !-------------------------------------------------------------------------------  
+            
 
 	    ! Properties
 	    kEpZero = props(1)
