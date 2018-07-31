@@ -1494,7 +1494,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     pDensVolFrac = pV_i +pVpoly
                     if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<pVsat)) then
                         if (kInc.gt.0) then
-                            svars(kblock,2) = svars(kblock,2) + (one-pDensVolFrac)*pDif*(pF*pZ)/(pRTHETA)*pCo*(-1.0d0/15.0d0)*detJquad(ipquad)*1
+                            svars(kblock,2) = svars(kblock,2) + (one-pDensVolFrac)*pDif*(pF*pZ)/(pRTHETA)*pCo*(-1.0d0/15.0d0)*detJquad(ipquad)*10
                             
                             ELSE
                             svars(kblock,2) = 0.0d0
