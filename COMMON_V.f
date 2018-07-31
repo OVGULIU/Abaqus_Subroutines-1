@@ -22,7 +22,7 @@ double precision :: VARFLD(NVAROUT,NELOUT)
 common VARFLD
 !
 ! variation value for numerical tangent (global)
-double precision, parameter :: KVNTG = 1.d-08
+double precision, parameter :: KVNTG = 1.d-06
 ! abort criterium/tolerance for local iteration
 double precision, parameter :: KTOL = 1.d-09
 ! variation value for numerical tangent (local)
@@ -38,7 +38,7 @@ double precision, dimension(KGP,KCORD) :: KGPCORD
 common KGPCORD
 !
 ! integration point weights
-double precision, dimension(KGP) :: KWT
+double precision, dimension(KGP) :: KWT 
 common KWT
 !
 ! factor for quadrature rule

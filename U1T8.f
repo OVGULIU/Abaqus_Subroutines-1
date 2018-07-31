@@ -5,7 +5,7 @@
         !===============================================================================
     
         ! include of ABAQUS subroutines
-        INCLUDE 'UEXTERNALDB.f'
+!        INCLUDE 'UEXTERNALDB.f'
         !INCLUDE 'UVARM.f'
         !INCLUDE 'SDVINI.f'
     
@@ -378,6 +378,7 @@
             double precision, parameter :: four=4.d0
             double precision, parameter :: six=6.d0
             double precision, parameter :: eight=8.d0
+            double precision, parameter :: Abcissa=SQRT(1.d0/3.d0)
 
             ! variables passed in for information (scalar parameters)
             integer, intent(in ) :: NDOFEL         ! number of dof in the element
@@ -498,27 +499,39 @@
             kSat = props(5)
 
             ! element ingoing note =======================
-            ! write(*,*)
-            ! ============================================
-            
+!            if ((JELEM.eq.9991))then
+!                write(*,*) "JELEM: ", JELEM
+!                write(*,*) "U array: ", U
+!                write(*,*) "props", props
+!            end if
+            ! ============================================               
+            ! coordinate vectors of current element
+            X1 = COORDS(1,:)
+            X2 = COORDS(2,:)
+            x3 = COORDS(3,:)
             ! loop over all integration points (computation of FE variables)
             do ip=1,KGP ! ----------------------------------------------------------
-                
-                ! get solution-dependent state variables (history variables)
-                
-                ! natural coordinates of current ip
-                xi1 = KGPCORD(ip,1)
-                xi2 = KGPCORD(ip,2)
-                xi3 = KGPCORD(ip,3)
-                
-                ! coordinate vectors of current element
-                X1 = COORDS(1,:)
-                X2 = COORDS(2,:)
-                x3 = COORDS(3,:)
-            
+
                 ! ------------------------------------------------------------------
                 if (KNODE==8) then
-                            
+                    kGPCORD(1,:) = (/ -Abcissa, -Abcissa, -Abcissa /)
+                    kGPCORD(2,:) = (/  Abcissa, -Abcissa, -Abcissa /)
+                    kGPCORD(3,:) = (/  Abcissa,  Abcissa, -Abcissa /)
+                    kGPCORD(4,:) = (/ -Abcissa,  Abcissa, -Abcissa /)
+                    kGPCORD(5,:) = (/ -Abcissa, -Abcissa,  Abcissa /)
+                    kGPCORD(6,:) = (/  Abcissa, -Abcissa,  Abcissa /)
+                    kGPCORD(7,:) = (/  Abcissa,  Abcissa,  Abcissa /)
+                    kGPCORD(8,:) = (/ -Abcissa,  Abcissa,  Abcissa /)
+                        
+                    kWT(:) = (/ one, one, one, one, one, one, one, one /)
+                        
+                    kQUAD = one                    
+                    
+                    ! natural coordinates of current ip
+                    xi1 = KGPCORD(ip,1)
+                    xi2 = KGPCORD(ip,2)
+                    xi3 = KGPCORD(ip,3)
+                
                     ! derivatives of shape functions with respect to natural coordinates                
                     dNdXi1(1) = -one/eight*(1-xi2)*(1-xi3)
                     dNdXi2(1) = -one/eight*(1-xi1)*(1-xi3)
@@ -551,7 +564,17 @@
                     dNdXi1(8) =  -one/eight*(1+xi2)*(1+xi3)
                     dNdXi2(8) =  one/eight*(1-xi1)*(1+xi3)
                     dNdXi3(8) =  one/eight*(1-xi1)*(1+xi2)
-                             
+                            
+                    ! Shape functions 
+                    kNN(ip,1) = one/eight*(1-xi1)*(1-xi2)*(1-xi3)
+                    kNN(ip,2) = one/eight*(1+xi1)*(1-xi2)*(1-xi3)
+                    kNN(ip,3) = one/eight*(1+xi1)*(1+xi2)*(1-xi3)
+                    kNN(ip,4) = one/eight*(1-xi1)*(1+xi2)*(1-xi3)
+                    kNN(ip,5) = one/eight*(1-xi1)*(1-xi2)*(1+xi3)
+                    kNN(ip,6) = one/eight*(1+xi1)*(1-xi2)*(1+xi3)
+                    kNN(ip,7) = one/eight*(1+xi1)*(1+xi2)*(1+xi3)
+                    kNN(ip,8) = one/eight*(1-xi1)*(1+xi2)*(1+xi3)
+                    
                 else 
                     write(*,*) "Error in computation of shape function derivatives. The number of nodes does not conform with the element type (4 node tetrahedral element)."
                     CALL XPLB_EXIT      
@@ -593,7 +616,7 @@
             end do ! ---------------------------------------------------------------
 
             ! loop over all degrees of freedom
-            if (Lflags(3).eq.5 .OR. Lflags(3).eq.1) then
+!            if (Lflags(3).eq.5 .OR. Lflags(3).eq.1) then
                 RHS=0.d0
                 do ip=1,KGP ! ----------------------------------------------------------
             
@@ -602,6 +625,7 @@
                     do ni=1,KNODE
                         E = E - U(ni)*( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/) )
                     end do
+                    
 !            		WRITE(*,*) E
                     CoNODE = predef(1,2,:)
                     kCo = dot(kNN(ip,:),CoNODE)
@@ -610,7 +634,7 @@
             
                     ! Electric displacement field
                     D = kEpZero*kEpR*E 
-!            		write(*,*) "D", D
+                    
 !                   ! Free charge density
 !                    if (jElem==41151 .OR. jElem==46798) then
 !            			open(unit=103, file='/home/cerecam/Desktop/GPG_Cube/Resultscheck.txt', status="old", position="append", action="write")!	
@@ -635,9 +659,15 @@
 !            			write(*,*) "RHS", RHS
 !            		end if
                 end do ! ----------------------------end-loop-ip------------------------
-            end if
+!                if ((JELEM.eq.9991))then
+!                    write(*,*) "U(ni)"
+!                    write(*,*) U
+!                    write(*,*) "RHS"
+!                    write(*,*) RHS
+!                end if
+!            end if
                     !write(*,*) "D", D
-            if (Lflags(3).eq.2 .OR. Lflags(3).eq.1) then
+!            if (Lflags(3).eq.2 .OR. Lflags(3).eq.1) then
                 RHS_test=0.d0
                 do ip=1,KGP ! ----------------------------------------------------------
                                     
@@ -648,6 +678,7 @@
                     end do
     
                     D = kEpZero*kEpR*E
+                    
         
                     do ni=1,KNODE !-----------------------------loop-i------------------
                         ! internal residual force vector
@@ -659,6 +690,10 @@
     !        		end if
     !               write(*,*) "U:	",U
                 end do ! ----------------------------end-loop-ip------------------------
+!                if ((JELEM.eq.9991))then
+!                    write(*,*) "RHS_test(:)"
+!                    write(*,*) RHS_test
+!                end if
                 AMATRX=0.d0
                 do dof=1,NDOFEL ! ------------------------------------------------------
                     ! loop over all integration points (computation of residuum)                
@@ -700,19 +735,17 @@
 !            		write(*,*) "RHS_diff:	",RHS_num(1:NDOFEL)-RHS_test(1:NDOFEL)
                     
                 end do ! ----------------------------end-loop-dof---------------------------
+!                if ((JELEM.eq.9991))then
+!                    write(*,*) "RHS_num(:)"
+!                    write(*,*) RHS_num
+!                end if
 !            		if (jElem==56618) then	
 !            			write(*,*) "AMATRX", AMATRX
 !            		end if 
-!                    if(jelem==56618) then
-!                        if (kinc==1) then			
-!                			write(*,*) "AMATRX", AMATRX
-!                			write(*,*) "RHS:	",RHS(1:NDOFEL)
-!                			write(*,*) "RHS_test:	",RHS_test(1:NDOFEL)
-!                			write(*,*) "RHS_num:	",RHS_num(1:NDOFEL)
-!                			write(*,*) "RHS_diff:	",RHS_num(1:NDOFEL)-RHS_test(1:NDOFEL)
-!                			write(*,*)
-!                    end if
-            end if
+!                if ((JELEM.eq.9991))then
+!                    write(*,*) "AMATRX", AMATRX
+!                end if
+!            end if
             
         return
         end subroutine UEL
