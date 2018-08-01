@@ -630,7 +630,7 @@ SUBROUTINE VUFIELD(FIELD, NBLOCK, NFIELD, KFIELD, NCOMP, &
     if (JFLAGS(i_ufld_kInc).eq.1d0 .OR. JFLAGS(i_ufld_kInc).eq.0d0) then				
     elseif (MOD(int(JFLAGS(i_ufld_kInc)),41).eq.0d0) then
         write(*,*) "----------------- VUFIELD at increment:",JFLAGS(i_ufld_kInc)," -----------------"	
-        open(unit=105, file='/home/cerecam/Desktop/GP_BoundaryConditionTests/ElecPotentialsSandwich.csv',status='old')!
+        open(unit=105, file='/home/cerecam/Desktop/GP_BoundaryConditionTests/ElecPotentials.csv',status='old')!
         READ(105,*) data_arr
         do kblock=1,nblock
             FIELD(kblock,NCOMP,NFIELD) = data_arr(kblock)
@@ -690,6 +690,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     
     ! parameters - problem specification
     integer, parameter :: iGP=8		!Number of Gauss Points
+    integer, parameter :: iGPR=8		!Number of Gauss Points in reduced integration
     integer, parameter :: iGPquad=4		!Number of Gauss Points for boundary 2D elements
     integer, parameter :: iCORD=3	!Degrees of freedom (mechanical)
 !    integer, parameter :: ICORDTOTAL=4  !Degrees of freedom (total per node (3 mech; 1 temp))
@@ -826,31 +827,43 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     double precision :: dX3dxi3             ! derivatives
     double precision :: JJ(iCORD,iCORD)     ! Jacobi matrix
     double precision :: detJ(iGP)           ! Jacobi-determinant (reference)
+    ! ------------ Reduced integeration derivatives ------------------------
+    double precision :: dNdXi1R(iNODE)       ! shape function derivatives
+    double precision :: dNdXi2R(iNODE)       ! shape function derivatives
+    double precision :: dNdXi3R(iNODE)       ! shape function derivatives
+    double precision :: dNdX1R(iGPR,iNODE)    ! shape function derivatives
+    double precision :: dNdX2R(iGPR,iNODE)    ! shape function derivatives
+    double precision :: dNdX3R(iGPR,iNODE)    ! shape function derivatives
+    double precision :: dX1dxi1R             ! derivatives
+    double precision :: dX1dxi2R             ! derivatives
+    double precision :: dX1dxi3R             ! derivatives
+    double precision :: dX2dxi1R             ! derivatives
+    double precision :: dX2dxi2R             ! derivatives
+    double precision :: dX2dxi3R             ! derivatives
+    double precision :: dX3dxi1R             ! derivatives
+    double precision :: dX3dxi2R             ! derivatives
+    double precision :: dX3dxi3R             ! derivatives
+    double precision :: detJR           ! Jacobi-determinant (reference)
+    ! -----------------------------------------------------------------------
     double precision :: Ux(iNODE)           ! nodal displacement in x
     double precision :: Uy(iNODE)           ! nodal displacement in y
     double precision :: Uz(iNODE)           ! nodal displacement in z
     double precision :: Uarray(iCORD)       ! nodal displacement in each dimension
-    double precision :: CoNODE(iNODE)       ! nodal concentration 1.4498201477996281E-007s
-    double precision :: Co           ! Concentration inetrpolated in element
+    double precision :: CoNODE(iNODE)       ! nodal concentration
     double precision :: pCo          ! Concentration mobile interpolated in element
     double precision :: pQf       ! Free charge density
     double precision :: phi          ! nodal Electrical potentials
     double precision :: gCo(iCORD)          ! Grad of concentrations
-    double precision :: gCo2(iCORD)          ! Grad of concentrations
     double precision :: H(iCORD,iCORD)      ! displacement gradient
     double precision :: F(iCORD,iCORD)      ! deformation gradient
     double precision :: Ee(iCORD,iCORD)     ! small /Gree-Lagrange strain tensor
     double precision :: SIG(iCORD,iCORD)    ! Cauchy stress tensor
     double precision :: S(iCORD,iCORD)      ! 2. PK
     double precision :: P(iCORD,iCORD)      ! 1. PK
-    double precision :: SIGt(iCORD)    ! Cauchy stress tensor
-    double precision :: St(iCORD)      ! 2. PK
-    double precision :: Pt(iCORD)      ! 1. PK
     double precision :: pELECFIELD(iCORD)    ! Electric Field vector from grad(phi)
     double precision :: ELECDISP(iCORD)    ! Electric Displacement vector calculated from elec field vector
     double precision :: J(iCORD)    ! flux vector for diffusion problem
-    double precision :: VonMisS    ! Von Mises stress
-    double precision :: VonMisE    ! Von Mises Strain
+    double precision :: pVolume		        ! Volume of element
     integer :: dofni(iCORD)        ! current dof
     integer :: dofniT        	   ! Thermal current dof
     integer :: dofnj(iCORD)        ! current dof
@@ -858,59 +871,56 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 
 !--------------------------Constants used in Constitutive models-------------------------------------
 
-    double precision :: pEM		! Young's Modulus
-    double precision :: pNU		! Poisson's ratio
-    double precision :: pRHO            ! density
-    double precision :: pLAM		! Lambda (Lame parameter 1)
-    double precision :: pGM		! Mu (shear modulus, Lame parameter 2)
-    double precision :: pEPSILONR	! Vacuum permittivitty
-    double precision :: pEPSILONZERO	! Relative Permittivity
-    double precision :: pRTHETA		! Gas constant times temp 
-    double precision :: pF		! Faraday's constant 
-    double precision :: pZ		! Valence mobile species 
-    double precision :: pEMCoup		! Electromechanical coupling parameter
-    double precision :: pDif		! Diffusivity
-    double precision :: Csat		! Saturated concentration
-    double precision :: pVolume		! Volume of element
-    double precision :: pSED		! SED
-    double precision :: pa1		! stability term RHS
-    double precision :: pa2		! stability term AMASS
-    double precision :: Pe		! Peclet number
-    double precision :: Courant		! Courant number
-    double precision :: Sigma_K     ! Stability parameter [ref. Tu et al, Compt Physics Comm]
-    double precision :: pA_VECTOR(iCORD)	! Stabilization vector [ref. Tu et al, Compt Physics Comm]
-    double precision :: V_DASH		! Additive diffusion
-    double precision :: elesize_sum	! Element size intermediate term
-    double precision :: Elesize		! Element size in veocity field direction (Radius of equivalent volume circle)
-    double precision :: pCoTotal	! integration within domain
-    double precision :: pStability(iCORD)	! stability
+    double precision :: pEM		            ! Young's Modulus
+    double precision :: pNU		            ! Poisson's ratio
+    double precision :: pRHO                ! density
+    double precision :: pLAM		        ! Lambda (Lame parameter 1)
+    double precision :: pGM		            ! Mu (shear modulus, Lame parameter 2)
+    double precision :: pEPSILONR	        ! Vacuum permittivitty
+    double precision :: pEPSILONZERO	    ! Relative Permittivity
+    double precision :: pRTHETA		        ! Gas constant times temp 
+    double precision :: pF		            ! Faraday's constant 
+    double precision :: pZ		            ! Valence mobile species 
+    double precision :: pEMCoup		        ! Electromechanical coupling parameter
+    double precision :: pDif		        ! Diffusivity
+    double precision :: Csat		        ! Saturated concentration
+    double precision :: pSED		        ! SED
+    double precision :: pa1		            ! stability term RHS
+    double precision :: pa2		            ! stability term AMASS
     
 !--------------------------Constants used in modified PNP model-------------------------------------
 
-    double precision :: pCo_central ! Concentration at centroid of element
-    double precision :: pV_i		! Volume fractions density of ions in materiall
-    double precision :: pVpoly     ! Volume fractions density of ions in 
-    double precision :: pDensVolFrac! Total density volume fraction of mobile species
-    double precision :: pGradRho	! Grad of total volume
-    double precision :: pNa		    ! Avogadro's constant
-    double precision :: pPi		    ! Constant of pi
-    double precision :: pRi		    ! Radius of concentration molecules
-    double precision :: pImmobileConc		    ! Radius of concentration molecules
+    double precision :: pV_i		        ! Volume fractions density of ions in materiall
+    double precision :: pVpoly              ! Volume fractions density of ions in 
+    double precision :: pDensVolFrac        ! Total density volume fraction of mobile species
+    double precision :: pNa		            ! Avogadro's constant
+    double precision :: pPi		            ! Constant of pi
+    double precision :: pRi		            ! Radius of concentration molecules
+    double precision :: pImmobileConc		! Radius of concentration molecules
+    
+    !----------- Constants used in stability scheme [ref. Tu et al, Compt Physics Comm] --------------
+    
+    double precision :: Pe	              	! Peclet number
+    double precision :: Courant		        ! Courant number
+    double precision :: Sigma_K             ! Stability parameter [ref. Tu et al, Compt Physics Comm]
+    double precision :: pA_VECTOR(iCORD)	! Stabilization vector [ref. Tu et al, Compt Physics Comm]
+    double precision :: Elesize		        ! Element size in veocity field direction (Radius of equivalent volume circle)
     
 !--------------------------Constants used Robin Boundary Conditions -------------------------------------                
 
-    double precision :: xi1quad,xi2quad         ! natural coordinates
-    double precision :: Jquad(iGPquad,2,2)           ! Jacobian matrix quad faces (reference)
-    double precision :: Detjquad(iGPquad)           ! Jacobi-determinant quad faces (reference)
-    double precision :: F1(iCORD)    ! Centroid of element
-    double precision :: F2(iCORD)    ! Centroid of element
-    double precision :: F3(iCORD)    ! Centroid of element
-    double precision :: F4(iCORD)    ! Centroid of element
-    double precision :: F5(iCORD)    ! Centroid of element
-    double precision :: F6(iCORD)    ! Centroid of element
-    double precision :: F_all(6)    ! Centroid of element
-    double precision :: coordquad(4,2)    ! Centroid of element
-    double precision :: CoNODEQuad(4) ! Concentration on face of boundary element
+    double precision :: xi1quad,xi2quad     ! natural coordinates
+    double precision :: Jquad(iGPquad,2,2)  ! Jacobian matrix quad faces (reference)
+    double precision :: Detjquad(iGPquad)   ! Jacobi-determinant quad faces (reference)
+    double precision :: pEonB(iCORD)        ! Elec field across elements on influx boundary
+    double precision :: F1(iCORD)           ! Centroid of element
+    double precision :: F2(iCORD)           ! Centroid of element
+    double precision :: F3(iCORD)           ! Centroid of element
+    double precision :: F4(iCORD)           ! Centroid of element
+    double precision :: F5(iCORD)           ! Centroid of element
+    double precision :: F6(iCORD)           ! Centroid of element
+    double precision :: F_all(6)            ! Centroid of element
+    double precision :: coordquad(4,2)      ! Centroid of element
+    double precision :: CoNODEQuad(4)       ! Concentration on face of boundary element
     ! integer
     integer :: ipquad,Filesize, factor
     integer :: QuadNodes(4)
@@ -929,7 +939,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     integer, DIMENSION(:), ALLOCATABLE :: Z0_GOLD
     integer, DIMENSION(:), ALLOCATABLE :: Z1_GOLD
     
-!-------------------------- Constants for exiting flux calculation -----------------------------------------
+!-------------------------- Constants for outflux calculation -----------------------------------------
     double precision :: pNDu
     double precision :: DuCo(iNODE)
     
@@ -939,6 +949,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     character*256 :: filename2, fname
     integer :: LENJOBNAME
     CHARACTER(len=255) :: cwd
+    
 !--------------------------Integers -------------------------------------           
 
     integer :: iCORDTOTAL
@@ -952,7 +963,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     integer :: CordRange(iCORD) = (/(i, i=1,iCORD, 1)/)
     integer :: NODERange(iNODE) = (/(i, i=1,iNODE, 1)/)
     
-    CALL VGETJOBNAME( JOBNAME,LENJOBNAME)
+    CALL VGETJOBNAME( JOBNAME,LENJOBNAME)   ! Get jobname of simulation
         
     ! identity matrix ----------------------------------------------------------
     pID=zero
@@ -1494,9 +1505,75 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     pDensVolFrac = pV_i +pVpoly
                     if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<pVsat)) then
                         if (kInc.gt.0) then
-                            svars(kblock,2) = svars(kblock,2) + (one-pDensVolFrac)*pDif*(pF*pZ)/(pRTHETA)*pCo*(-1.0d0/15.0d0)*detJquad(ipquad)*5
+                            pEonB = zero
+                            DO ip=1,iGPR
+                                ! derivatives of shape functions with respect to natural coordinates                
+                                dNdXi1R(1) = -one/eight
+                                dNdXi2R(1) = -one/eight
+                                dNdXi3R(1) = -one/eight
                             
-                            ELSE
+                                dNdXi1R(2) =  one/eight
+                                dNdXi2R(2) =  -one/eight
+                                dNdXi3R(2) =  -one/eight
+                            
+                                dNdXi1R(3) =  one/eight
+                                dNdXi2R(3) =  one/eight
+                                dNdXi3R(3) =  -one/eight
+                            
+                                dNdXi1R(4) =  -one/eight
+                                dNdXi2R(4) =  one/eight
+                                dNdXi3R(4) =  -one/eight
+                            
+                                dNdXi1R(5) =  -one/eight
+                                dNdXi2R(5) =  -one/eight
+                                dNdXi3R(5) =  one/eight
+                            
+                                dNdXi1R(6) =  one/eight
+                                dNdXi2R(6) =  -one/eight
+                                dNdXi3R(6) =  one/eight
+                            
+                                dNdXi1R(7) =  one/eight
+                                dNdXi2R(7) =  one/eight
+                                dNdXi3R(7) =  one/eight
+                            
+                                dNdXi1R(8) =  -one/eight
+                                dNdXi2R(8) =  one/eight
+                                dNdXi3R(8) =  one/eight
+                        
+                                ! derivatives of physical coordinates with respect to natural coordinates                
+                                dX1dxi1R=dot(X1,dNdXi1R)
+                                dX1dxi2R=dot(X1,dNdXi2R)
+                                dX1dxi3R=dot(X1,dNdXi3R)
+                    
+                                dX2dxi1R=dot(X2,dNdXi1R)
+                                dX2dxi2R=dot(X2,dNdXi2R)
+                                dX2dxi3R=dot(X2,dNdXi3R)
+                    
+                                dX3dxi1R=dot(X3,dNdXi1R)
+                                dX3dxi2R=dot(X3,dNdXi2R)
+                                dX3dxi3R=dot(X3,dNdXi3R)
+                                                
+                                detJR = pVolume
+                                
+                                ! derivatives of shape functions with respect to physical coordinates  
+                                do nn=1,iNODE
+                                    dNdX1R(ip,nn) = one/detJR*( (dX2dxi2R*dX3dxi3R-dX3dxi2R*dX2dxi3R)*dNdXi1R(nn) &
+                                                                + (dX3dxi1R*dX2dxi3R-dX2dxi1R*dX3dxi3R)*dNdXi2R(nn) &
+                                                                + (dX2dxi1R*dX3dxi2R-dX3dxi1R*dX2dxi2R)*dNdXi3R(nn) )
+                                    dNdX2R(ip,nn) = one/detJR*( (dX3dxi2R*dX1dxi3R-dX1dxi2R*dX3dxi3R)*dNdXi1R(nn) &
+                                                                + (dX1dxi1R*dX3dxi3R-dX3dxi1R*dX1dxi3R)*dNdXi2R(nn) &
+                                                                + (dX3dxi1R*dX1dxi2R-dX1dxi1R*dX3dxi2R)*dNdXi3R(nn) )
+                                    dNdX3R(ip,nn) = one/detJR*( (dX1dxi2R*dX2dxi3R-dX2dxi2R*dX1dxi3R)*dNdXi1R(nn) &
+                                                                + (dX2dxi1R*dX1dxi3R-dX1dxi1R*dX2dxi3R)*dNdXi2R(nn) &
+                                                                + (dX1dxi1R*dX2dxi2R-dX2dxi1R*dX1dxi2R)*dNdXi3R(nn) )
+                                                                
+                                    pEonB = pEonB - (/dNdX3R(ip,nn),dNdX3R(ip,nn),dNdX3R(ip,nn)/)*predef(kblock,nn,2,1)
+                                end do !----------------nn-loop -------------------- 
+                            END DO !------------------- IGPR- LOOP -----------------------
+                            
+                            svars(kblock,2) = svars(kblock,2) + (one-pDensVolFrac)*pDif*(pF*pZ)/(pRTHETA)*pCo*(-pEonB(3))*detJquad(ipquad)*5
+                            
+                        ELSE
                             svars(kblock,2) = 0.0d0
                         end if
                     end if
