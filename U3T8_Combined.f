@@ -502,24 +502,12 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
     else if (lOp .eq. j_int_SetupIncrement) then
     ! ------ Start of increment ------
     else if (lOp .eq. j_int_StartIncrement) then
-        if (MOD(int(i_Array(i_int_kInc)),17000000).eq.0d0) then
-            if (i_Array(i_int_kInc).ne.1) then
-                write(*,*)
-                write(*,*) "----------------- VEXTERNALDB at Increment:",int(i_Array(i_int_kInc)),"-----------------"
-                write(*,*)
-!				call EXECUTE_COMMAND_LINE('/home/cerecam/Desktop/GPG_Cube/PythonRunTest.sh', wait=.true.)
-            end if
-        end if
     ! ------ End of increment ------
     else if (lOp .eq. j_int_EndIncrement) then
     ! ------ End of the step ------
     else if (lOp .eq. j_int_EndStep) then
-!			call EXECUTE_COMMAND_LINE('/home/cerecam/Desktop/VUEL_Simulations/VUEL_CUBE/Cube_Staggered_PNP_only/PythonRunTest.sh', wait=.true.)
     ! ------ End of the analysis ------
     else if (lOp .eq. j_int_EndAnalysis) then
-    !			write(*,*)
-    !			write(*,*) "----------------- VEXTERNALDB at Increment:",int(i_Array(i_int_kInc)),"-----------------",int(i_Array(i_int_kInc))
-    !			write(*,*)
     call VGETJOBNAME(JOBNAME,LENJOBNAME)
     filename = '/home/cerecam/Desktop/Du_results_'// trim(JOBNAME) // '.inp'
     INQUIRE(FILE=filename,EXIST=I_EXIST)
@@ -539,114 +527,7 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
     
     return
 end subroutine VEXTERNALDB
-
-!===============================================================================================================================================
-    !-------------------------------------------------------------------------------
-    !
-    ! USER SUBROUTINE - VUFIELD:UPDATES PREDEFINED FIELD
-SUBROUTINE VUFIELD(FIELD, NBLOCK, NFIELD, KFIELD, NCOMP, &
-           KSTEP, JFLAGS, JNODEID, TIME, &
-           COORDS, U, V, A)
-!!    include 'vaba_param.inc'	
-!    ! indices for the time array 
-!    integer, parameter :: i_ufld_Current = 1 
-!    integer, parameter :: i_ufld_Increment = 2 
-!    integer, parameter :: i_ufld_Period = 3 
-!    integer, parameter :: i_ufld_Total = 4
-    
-!    ! indices for the coordinate array COORDS 
-!    integer, parameter :: i_ufld_CoordX = 1 
-!    integer, parameter :: i_ufld_CoordY = 2 
-!    integer, parameter :: i_ufld_CoordZ = 3
-    
-!    ! indices for the displacement array U 
-!    integer, parameter :: i_ufld_SpaDisplX = 1 
-!    integer, parameter :: i_ufld_SpaDislY = 2 
-!    integer, parameter :: i_ufld_SpaDisplz = 3 
-!    integer, parameter :: i_ufld_RotDisplX = 4 
-!    integer, parameter :: i_ufld_RotDisplY = 5 
-!    integer, parameter :: i_ufld_RotDisplZ = 6 
-!    integer, parameter :: i_ufld_AcoPress = 7 
-!    integer, parameter :: i_ufld_Temp = 8
-    
-!    !indices for velocity array V 
-!    integer, parameter :: i_ufld_SpaVelX = 1 
-!    integer, parameter :: i_ufld_SpaVelY = 2 
-!    integer, parameter :: i_ufld_SpaVelZ = 3 
-!    integer, parameter :: i_ufld_RotVelX = 4 
-!    integer, parameter :: i_ufld_RotVelY = 5 
-!    integer, parameter :: i_ufld_RotVelZ = 6 
-!    integer, parameter :: i_ufld_DAcoPress = 7 
-!    integer, parameter :: i_ufld_DTemp = 8
-    
-!    ! indicies for the acceleration array A 
-!    integer, parameter :: i_ufld_SpaAccelX = 1 
-!    integer, parameter :: i_ufld_SpaAccelY = 2 
-!    integer, parameter :: i_ufld_SpaAccelZ = 3 
-!    integer, parameter :: i_ufld_RotAccelX = 4 
-!    integer, parameter :: i_ufld_RotAccelY = 5 
-!    integer, parameter :: i_ufld_RotAccelZ = 6 
-!    integer, parameter :: i_ufld_DDAcoPress = 7 
-!    integer, parameter :: i_ufld_DDTemp = 8
-    
-!    ! indices for JFLAGS 
-!    integer, parameter :: i_ufld_kInc = 1 
-!    integer, parameter :: i_ufld_kPass = 2
-    
-!    ! Variables passed in for information
-!        integer, intent(in) :: NBLOCK
-!    integer, intent(in) :: NFIELD
-!    integer, intent(in) :: KFIELD
-!    integer, intent(in) :: NCOMP
-!    integer, intent(in) :: KSTEP
-!    integer, intent(in), dimension(i_ufld_kPass) :: JFLAGS
-!    integer, intent(in), dimension(NBLOCK) :: JNODEID
-!    double precision, intent(in), dimension(4) :: TIME
-!    double precision, intent(in), dimension(3,NBLOCK) :: COORDS
-!    double precision, intent(in), dimension(8,NBLOCK) :: U,V,A
-!    double precision, dimension(NBLOCK) :: data_arr
-    
-    
-!    ! Dimensioned arrays
-!    double precision, intent(inout), dimension(NBLOCK,NCOMP,NFIELD) :: FIELD
-    
-!!    write(*,*) "TIME(i_ufld_Current)",TIME(i_ufld_Current)
-!!    write(*,*) "MOD(TIME(i_ufld_Current),0.05d0)",MOD(TIME(i_ufld_Current),0.05d0)
-!!    write(*,*) "MOD(TIME(i_ufld_Current),0.05d0).eq.0.0d0", MOD(TIME(i_ufld_Current),0.05d0).eq.0.0d0
-!!    write(*,*) "TIME(i_ufld_Current).ne.0",TIME(i_ufld_Current).ne.0
-!!    write(*,*)
-    
-!!    write(*,*) "NCOMP", NCOMP, "NFIELD", NFIELD
-!!    write(*,*) "NBLOCK", NBLOCK
-!!    write(*,*) "KSTEP", KSTEP
-!!    write(*,*) "JFLAGS", JFLAGS
-!!    write(*,*) "JNODEID(1)", JNODEID(1)
-!!    write(*,*) "JNODEID(15)", JNODEID(15)
-!!    write(*,*) "JNODEID(55)", JNODEID(55)
-!!    write(*,*) "JFLAGS",JFLAGS
-!!    write(*,*) "U(all,1)", U(:,kblock)
-!!    write(*,*) "FIELD",FIELD(:,NCOMP,NFIELD)
-!    !	if (MOD(JFLAGS(i_ufld_kInc),1).eq.0d0) then
-!    if (JFLAGS(i_ufld_kInc).eq.1d0 .OR. JFLAGS(i_ufld_kInc).eq.0d0) then				
-!    elseif (MOD(int(JFLAGS(i_ufld_kInc)),17000000).eq.0d0) then
-!        write(*,*) "----------------- VUFIELD at increment:",JFLAGS(i_ufld_kInc)," -----------------"	
-!        open(unit=105, file='/home/cerecam/Desktop/GPG_Cube/ElecPotentialsSandwich.csv',status='old')!
-!        READ(105,*) data_arr
-!        do kblock=1,nblock
-!            FIELD(kblock,NCOMP,NFIELD) = data_arr(kblock)
-!        end do
-!!				write(*,*) "********* New field written **********"
-!!				write(*,*)
-!        close(105)
-!    end if
-!    !	end if
-!    !		write(*,*) "VUFIELD"
-    
-    return
-end subroutine VUFIELD
-
-!===============================================================================================================================================
-
+   
 !===============================================================================
 !-------------------------------------------------------------------------------
 ! USER SUBROUTINE - USER ELEMENT
@@ -1570,7 +1451,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                                     pEonB = pEonB - (/dNdX3R(ip,nn),dNdX3R(ip,nn),dNdX3R(ip,nn)/)*predef(kblock,nn,2,1)
                                 end do !----------------nn-loop -------------------- 
                             END DO !------------------- IGPR- LOOP -----------------------
-                            svars(kblock,2) = svars(kblock,2) + (one-pDensVolFrac)*pDif*(pF*pZ)/(pRTHETA)*pCo*(-pEonB(3))*detJquad(ipquad)*10
+                            svars(kblock,2) = svars(kblock,2) + (one-pDensVolFrac)*pDif*(pF*pZ)/(pRTHETA)*pCo*(-pEonB(3))*detJquad(ipquad)*5
                             
                             ELSE
                             svars(kblock,2) = 0.0d0
