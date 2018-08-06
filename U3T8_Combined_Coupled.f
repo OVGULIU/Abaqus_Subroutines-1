@@ -502,7 +502,7 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
     else if (lOp .eq. j_int_SetupIncrement) then
     ! ------ Start of increment ------
     else if (lOp .eq. j_int_StartIncrement) then
-        if (MOD(int(i_Array(i_int_kInc)),179).eq.0d0) then
+        if (MOD(int(i_Array(i_int_kInc)),359).eq.0d0) then
             if (i_Array(i_int_kInc).ne.1) then
                 write(*,*)
                 write(*,*) "----------------- VEXTERNALDB at Increment:",int(i_Array(i_int_kInc)),"-----------------"
@@ -628,7 +628,7 @@ SUBROUTINE VUFIELD(FIELD, NBLOCK, NFIELD, KFIELD, NCOMP, &
 !    write(*,*) "FIELD",FIELD(:,NCOMP,NFIELD)
     !	if (MOD(JFLAGS(i_ufld_kInc),1).eq.0d0) then
     if (JFLAGS(i_ufld_kInc).eq.1d0 .OR. JFLAGS(i_ufld_kInc).eq.0d0) then				
-    elseif (MOD(int(JFLAGS(i_ufld_kInc)),179).eq.0d0) then
+    elseif (MOD(int(JFLAGS(i_ufld_kInc)),359).eq.0d0) then
         write(*,*) "----------------- VUFIELD at increment:",JFLAGS(i_ufld_kInc)," -----------------"	
         open(unit=105, file='/home/cerecam/Desktop/GP_BoundaryConditionTests/ElecPotentials.csv',status='old')!
         READ(105,*) data_arr
