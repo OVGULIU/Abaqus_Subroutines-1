@@ -1279,7 +1279,9 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !!                    face 5 nodes = 4873
 !!                    face 6 nodes = 1584                 
 
-            if (ANY(jElem(kblock).eq.Z0_Poly) .OR. ANY(jElem(kblock).eq.Z1_Poly)) then
+            if (ANY(jElem(kblock).eq.Z0_Poly) .OR. ANY(jElem(kblock).eq.Z1_Poly) .OR. &
+                ANY(jElem(kblock).eq.Y0_Poly) .OR. ANY(jElem(kblock).eq.Y1_Poly) .OR. & 
+                ANY(jElem(kblock).eq.X0_Poly) .OR. ANY(jElem(kblock).eq.X1_Poly)) then
 !                            if (kInc.eq.1) then
 !                    write(*,*) "Robin element: ", jElem(kblock)
 !                    end if
@@ -1319,40 +1321,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !                   FOR Y0_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F3 (i.e. nodes 1,5,6,2)
 !                   FOR Y1_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F5 (i.e. nodes 4,8,7,3)
                 
-                if (ANY(jElem(kblock).eq.Z0_Poly)) then
-                    QuadNodes = (/1,2,3,4/)
-                    do i=1,size(QuadNodes)
-                        coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
-                    end do
-                elseif (ANY(jElem(kblock).eq.Z1_Poly)) then
-                    QuadNodes = (/5,6,7,8/)
-                    do i=1,size(QuadNodes)
-                        coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
-                    end do
-                end if
-                if (ANY(jElem(kblock).eq.X0_Poly)) then
-                    QuadNodes = (/1,5,8,4/)
-                    do i=1,size(QuadNodes)
-                        coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
-                    end do
-                elseif (ANY(jElem(kblock).eq.X1_Poly)) then
-                    QuadNodes = (/6,2,3,7/)
-                    do i=1,size(QuadNodes)
-                        coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
-                    end do
-                end if
-                if (ANY(jElem(kblock).eq.Y0_Poly)) then
-                    QuadNodes = (/1,5,6,2/)
-                    do i=1,size(QuadNodes)
-                        coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
-                    end do
-                elseif (ANY(jElem(kblock).eq.Y1_Poly)) then
-                    QuadNodes = (/4,8,7,3/)
-                    do i=1,size(QuadNodes)
-                        coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
-                    end do
-                end if
-
                 pGPCORDquad(1,:) = (/ 1.0d0/SQRT(3.0d0), 1.0d0/SQRT(3.0d0)/)
                 pGPCORDquad(2,:) = (/ 1.0d0/SQRT(3.0d0), -1.0d0/SQRT(3.0d0)/)
                 pGPCORDquad(3,:) = (/-1.0d0/SQRT(3.0d0), 1.0d0/SQRT(3.0d0)/)
@@ -1390,31 +1358,49 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     pNNquad(ipquad,2) = 1.0d0/four*(1-xi1quad)*(1+xi2quad)
                     pNNquad(ipquad,3) = 1.0d0/four*(1+xi1quad)*(1+xi2quad)
                     pNNquad(ipquad,4) = 1.0d0/four*(1+xi1quad)*(1-xi2quad)
-                    
-                    
-                    Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
-                    Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
-                    Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
-                    Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad))
 
-                    detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
-                    pCo = zero
-                    do ni=1,size(QuadNodes)
-                        nj = QuadNodes(ni)
-                        ! Concentration and Concentration gradient
-                        CoNODEQuad(ni) = u(kblock, (iCORDTOTAL*nj))
+                    if (ANY(jElem(kblock).eq.Z0_Poly)) then ! Back Face
+                        QuadNodes = (/1,2,3,4/)
+                        do i=1,size(QuadNodes)
+                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                        end do
                             
-                    end do
-                    if (ANY(CoNODEQUAD<=0.0d0)) then
-                        pCo =0
-                    else
-                        pCo = dot(pNNquad(ipquad,:),CoNODEQuad)
+                        Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
+                        Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
+                        Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
+                        Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad))
+    
+                        detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+                        do ni=1,size(QuadNodes)
+                            nj = QuadNodes(ni)
+                            dofniT = iCORDTOTAL*nj
+                            dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)
+                            ! CONCENTRATION !
+!                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(1.0d0)*palpha 
+                            RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
+                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pV_i)*(-3.0E-04)
+!                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pV_i)*palpha
+                         
+                            ! DISPLACEMENT !
+                            RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
+                        end do
                     end if
-                    pV_i = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*pCo
-                    pDensVolFrac = pV_i +pVpoly
-                    if (ANY(jElem(kblock).eq.Z1_Poly) .AND. (pDensVolFrac<pVsat)) then
+                    if (ANY(jElem(kblock).eq.Z1_Poly) ) then ! Front FacepCo = zero
+                        QuadNodes = (/5,6,7,8/)
+                        do ni=1,size(QuadNodes)
+                            nj = QuadNodes(ni)
+                            ! Concentration and Concentration gradient
+                            CoNODEQuad(ni) = u(kblock, (iCORDTOTAL*nj))                                
+                        end do
+                        if (ANY(CoNODEQUAD<=0.0d0)) then
+                            pCo =0
+                        else
+                            pCo = dot(pNNquad(ipquad,:),CoNODEQuad)
+                        end if
+                        pV_i = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*pCo
+                        pDensVolFrac = pV_i +pVpoly
                         if (kInc.gt.0) then
-                                                        pEonB = zero
+                            pEonB = zero
                             DO ip=1,iGPR
                                 ! derivatives of shape functions with respect to natural coordinates                
                                 dNdXi1R(1) = -one/eight
@@ -1484,23 +1470,18 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                             ELSE
                             svars(kblock,2) = 0.0d0
                         end if
-                    end if
-                    do ni=1,size(QuadNodes)
-                        nj = QuadNodes(ni)
-                        dofniT = iCORDTOTAL*nj
-                        dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)
-
-                        if (ANY(jElem(kblock).eq.Z0_Poly)) then ! Back Face
-                        ! CONCENTRATION !
-!                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(1.0d0)*palpha 
-                            RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
-                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pV_i)*(-3.0E-04)
-!                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pV_i)*palpha
-                             
-                        ! DISPLACEMENT !
-                            RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
-                        elseif (ANY(jElem(kblock).eq.Z1_Poly) ) then ! Front Face   
-                        ! CONCENTRATION !
+                            
+                        Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
+                        Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
+                        Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
+                        Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad))
+    
+                        detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+                        do ni=1,size(QuadNodes)
+                            nj = QuadNodes(ni)
+                            dofniT = iCORDTOTAL*nj
+                            dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)
+                            ! CONCENTRATION !
                             if ((pDensVolFrac<pVsat)) then
 !                            write(*,*) "temp3/AREA_Z1", temp3/AREA_Z1
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
@@ -1509,36 +1490,88 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*temp3/(AREA_Z1)
                                 
                             end if
+                         
+                            ! DISPLACEMENT !
+                            RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkfront
+                        end do                              
+                    end if  
+                    if (ANY(jElem(kblock).eq.Y1_Poly)) then ! Top Face
+                        QuadNodes = (/4,8,7,3/)
+                        do i=1,size(QuadNodes)
+                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                        end do
                             
-                        ! DISPLACEMENT !                 
-                            RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkFront
-!                        else 
-!                            RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkFront*1000
-                           
-                        end if  
-!                        RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
-                        if (ANY(jElem(kblock).eq.Y1_Poly)) then ! Top Face
-                             
-                        ! DISPLACEMENT !
+                        Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
+                        Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
+                        Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
+                        Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad))
+    
+                        detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+                        do ni=1,size(QuadNodes)
+                            nj = QuadNodes(ni)
+                            dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)                             
+                            ! DISPLACEMENT !
                             RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
-                        end if
-                        if (ANY(jElem(kblock).eq.Y0_Poly)) then ! Bottom Face
-                             
-                        ! DISPLACEMENT !
+                        end do
+                         
+                    end if
+                    if (ANY(jElem(kblock).eq.Y0_Poly)) then ! Bottom Face
+                        QuadNodes = (/1,5,6,2/)
+                        do i=1,size(QuadNodes)
+                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                        end do
+                            
+                        Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
+                        Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
+                        Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
+                        Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad))
+    
+                        detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+                        do ni=1,size(QuadNodes)
+                            nj = QuadNodes(ni)
+                            dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)                             
+                            ! DISPLACEMENT !
                             RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
-                        end if
-                        if (ANY(jElem(kblock).eq.X1_Poly)) then ! Right Face
-                             
-                        ! DISPLACEMENT !
+                        end do
+                    end if
+                    if (ANY(jElem(kblock).eq.X1_Poly)) then ! Right Face
+                        QuadNodes = (/6,2,3,7/)
+                        do i=1,size(QuadNodes)
+                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                        end do
+                            
+                        Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
+                        Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
+                        Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
+                        Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad))
+    
+                        detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+                        do ni=1,size(QuadNodes)
+                            nj = QuadNodes(ni)
+                            dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)                             
+                            ! DISPLACEMENT !
                             RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
-                        end if
-                        if (ANY(jElem(kblock).eq.X0_Poly)) then ! Left Face
-                             
-                        ! DISPLACEMENT !
+                        end do
+                    end if
+                    if (ANY(jElem(kblock).eq.X0_Poly)) then ! Left Face
+                        QuadNodes = (/1,5,8,4/)
+                        do i=1,size(QuadNodes)
+                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                        end do
+                            
+                        Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
+                        Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
+                        Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
+                        Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad))
+    
+                        detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+                        do ni=1,size(QuadNodes)
+                            nj = QuadNodes(ni)
+                            dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)                             
+                            ! DISPLACEMENT !
                             RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
-                        end if
-                    end do ! ------------------------ ni-loop ------------------------
-                    
+                        end do
+                    end if                    
                 end do ! ------------------------ ipquad-loop ------------------------
             end if ! ------------------------ jElem Z0 Poly-loop ------------------------
             
@@ -1820,7 +1853,9 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !                    face 4 nodes = 6237
 !                    face 5 nodes = 4873
 !                    face 6 nodes = 1584
-                if (ANY(jElem(kblock).eq.Z0_gold) .OR. ANY(jElem(kblock).eq.Z1_gold)) then
+                if (ANY(jElem(kblock).eq.Z0_gold) .OR. ANY(jElem(kblock).eq.Z1_gold) .OR. &
+                    ANY(jElem(kblock).eq.Y0_gold) .OR. ANY(jElem(kblock).eq.Y1_gold) .OR. & 
+                    ANY(jElem(kblock).eq.X0_gold) .OR. ANY(jElem(kblock).eq.X1_gold)) then
 !                   X0 = F6 (i.e. nodes 1,5,6,2)
 !                   X1 = F4 (i.e. nodes 6,2,3,7)
 !                   Y0 = F5 (i.e. nodes 4,8,7,3)
@@ -1828,41 +1863,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !                   Z0 = F1 (i.e. nodes 1,2,3,4)
 !                   Z1 = F2 (i.e. nodes 5,6,7,8)
                     
-                    
-                    if (ANY(jElem(kblock).eq.Z0_gold)) then
-                        QuadNodes = (/1,2,3,4/)
-                        do i=1,size(QuadNodes)
-                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
-                        end do
-                    elseif (ANY(jElem(kblock).eq.Z1_gold)) then
-                        QuadNodes = (/5,6,7,8/)
-                        do i=1,size(QuadNodes)
-                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
-                        end do
-                    end if
-                    if (ANY(jElem(kblock).eq.X0_Poly)) then
-                        QuadNodes = (/1,5,8,4/)
-                        do i=1,size(QuadNodes)
-                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
-                        end do
-                    elseif (ANY(jElem(kblock).eq.X1_Poly)) then
-                        QuadNodes = (/6,2,3,7/)
-                        do i=1,size(QuadNodes)
-                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
-                        end do
-                    end if
-                    if (ANY(jElem(kblock).eq.Y0_Poly)) then
-                        QuadNodes = (/1,5,6,2/)
-                        do i=1,size(QuadNodes)
-                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
-                        end do
-                    elseif (ANY(jElem(kblock).eq.Y1_Poly)) then
-                        QuadNodes = (/4,8,7,3/)
-                        do i=1,size(QuadNodes)
-                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
-                        end do
-                    end if
-
                     pGPCORDquad(1,:) = (/ 1.0d0/SQRT(3.0d0), 1.0d0/SQRT(3.0d0)/)
                     pGPCORDquad(2,:) = (/ 1.0d0/SQRT(3.0d0), -1.0d0/SQRT(3.0d0)/)
                     pGPCORDquad(3,:) = (/-1.0d0/SQRT(3.0d0), 1.0d0/SQRT(3.0d0)/)
@@ -1880,53 +1880,135 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         pNNquad(ipquad,3) = 1.0d0/four*(1+xi1quad)*(1+xi2quad)
                         pNNquad(ipquad,4) = 1.0d0/four*(1+xi1quad)*(1-xi2quad)
                         
-                        Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
-                        Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
-                        Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
-                        Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad))
-    
-                        detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
-                        do ni=1,size(QuadNodes)
-                            nj = QuadNodes(ni)
-                            dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1) 
-!                            if ((COORDS(kblock,nj,1).eq.30.0 .OR. COORDS(kblock,nj,1).eq.0.0) .AND. ((COORDS(kblock,nj,2).eq.30.0) .OR. COORDS(kblock,nj,2).eq.0.0)) then
-!                                factor=4
-!                            elseif ((COORDS(kblock,nj,1).eq.30.0) .OR. (COORDS(kblock,nj,1).eq.0.0)) then
-!                                factor = 2
-!                            elseif ((COORDS(kblock,nj,2).eq.30.0) .OR. (COORDS(kblock,nj,2).eq.0.0)) then
-!                                factor = 2
-!                            else 
-!                                factor =1
-!                            end if
-                            if (ANY(jElem(kblock).eq.Z0_gold)) then ! Back Face
-                            ! DISPLACEMENT !
+!                        if ((COORDS(kblock,nj,1).eq.30.0 .OR. COORDS(kblock,nj,1).eq.0.0) .AND. ((COORDS(kblock,nj,2).eq.30.0) .OR. COORDS(kblock,nj,2).eq.0.0)) then
+!                            factor=4
+!                        elseif ((COORDS(kblock,nj,1).eq.30.0) .OR. (COORDS(kblock,nj,1).eq.0.0)) then
+!                            factor = 2
+!                        elseif ((COORDS(kblock,nj,2).eq.30.0) .OR. (COORDS(kblock,nj,2).eq.0.0)) then
+!                            factor = 2
+!                        else 
+!                            factor =1
+!                        end if
+                        if (ANY(jElem(kblock).eq.Z0_gold)) then ! Back Face
+                            QuadNodes = (/1,2,3,4/)
+                            do i=1,size(QuadNodes)
+                                coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                            end do
+                            do ni=1,size(QuadNodes)
+                                nj = QuadNodes(ni)                                    
+                                dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1) 
+                                
+                                Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
+                                Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
+                                Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
+                                Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad)) 
+                                
+                                detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+                                
+                                ! DISPLACEMENT !
                                 RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock, dofni)*pkBack
-                            elseif (ANY(jElem(kblock).eq.Z1_Gold)) then ! Front Face
-                            ! DISPLACEMENT !  
+                            END DO
+                        end if
+                        if (ANY(jElem(kblock).eq.Z1_Gold)) then ! Front Face
+                            QuadNodes = (/5,6,7,8/)
+                            do i=1,size(QuadNodes)
+                                coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                            end do
+                            do ni=1,size(QuadNodes)
+                                nj = QuadNodes(ni)                                    
+                                dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1) 
+                                
+                                Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
+                                Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
+                                Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
+                                Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad)) 
+                                
+                                detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+                                
+                                ! DISPLACEMENT !
                                 RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock, dofni)*pkFront
-                            end if 
-    !                        RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
-                            if (ANY(jElem(kblock).eq.Y1_Poly)) then ! Top Face
-                                 
-                            ! DISPLACEMENT !
+                            END DO
+                        end if 
+                        if (ANY(jElem(kblock).eq.Y1_GOLD)) then ! Top Face
+                            QuadNodes = (/4,8,7,3/)
+                            do i=1,size(QuadNodes)
+                                coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                            end do
+                            do ni=1,size(QuadNodes)
+                                nj = QuadNodes(ni)                                    
+                                dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1) 
+                                
+                                Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
+                                Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
+                                Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
+                                Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad)) 
+                                
+                                detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+                                
+                                ! DISPLACEMENT !
                                 RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
-                            end if
-                            if (ANY(jElem(kblock).eq.Y0_Poly)) then ! Bottom Face
-                                 
-                            ! DISPLACEMENT !
+                            END DO
+                        end if
+                        if (ANY(jElem(kblock).eq.Y0_GOLD)) then ! Bottom Face
+                            QuadNodes = (/1,5,6,2/)
+                            do i=1,size(QuadNodes)
+                                coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                            end do
+                            do ni=1,size(QuadNodes)
+                                nj = QuadNodes(ni)                                    
+                                dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1) 
+                                
+                                Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
+                                Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
+                                Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
+                                Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad)) 
+                                
+                                detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+                                
+                                ! DISPLACEMENT !
                                 RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
-                            end if
-                            if (ANY(jElem(kblock).eq.X1_Poly)) then ! Right Face
-                                 
-                            ! DISPLACEMENT !
+                            END DO
+                        end if
+                        if (ANY(jElem(kblock).eq.X1_GOLD)) then ! Right Face
+                            QuadNodes = (/6,2,3,7/)
+                            do i=1,size(QuadNodes)
+                                coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                            end do
+                            do ni=1,size(QuadNodes)
+                                nj = QuadNodes(ni)                                    
+                                dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1) 
+                                
+                                Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
+                                Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
+                                Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
+                                Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad)) 
+                                
+                                detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+                                
+                                ! DISPLACEMENT !
                                 RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
-                            end if
-                            if (ANY(jElem(kblock).eq.X0_Poly)) then ! Left Face
-                                 
-                            ! DISPLACEMENT !
+                            END DO
+                        end if
+                        if (ANY(jElem(kblock).eq.X0_GOLD)) then ! Left Face
+                            QuadNodes = (/1,5,8,4/)
+                            do i=1,size(QuadNodes)
+                                coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                            end do
+                            do ni=1,size(QuadNodes)
+                                nj = QuadNodes(ni)                                    
+                                dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1) 
+                                
+                                Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
+                                Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
+                                Jquad(ipquad,2,1) = one/four*(-coordquad(1,1)*(1-xi2quad) - coordquad(2,1)*(1+xi2quad) +coordquad(3,1)*(1+xi2quad) + coordquad(4,1)*(1-xi2quad))
+                                Jquad(ipquad,2,2) = one/four*(-coordquad(1,2)*(1-xi2quad) - coordquad(2,2)*(1+xi2quad) +coordquad(3,2)*(1+xi2quad) + coordquad(4,2)*(1-xi2quad)) 
+                                
+                                detJquad(ipquad) = Jquad(ipquad,1,1)*Jquad(ipquad,2,2)-Jquad(ipquad,1,2)*Jquad(ipquad,2,1)
+                                
+                                ! DISPLACEMENT !
                                 RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
-                            end if 
-                        end do ! ------------------------ ni-loop ------------------------
+                            END DO
+                        end if 
                     end do ! ------------------------ ipquad-loop ------------------------
                 end if ! ------------------------ jElem Z0 or Z1 Poly-loop ------------------------
 !    !    !===================================================================================================================================
