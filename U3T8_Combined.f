@@ -566,7 +566,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     double precision, parameter :: six=6.d0
     double precision, parameter :: eight=8.d0
     double precision, parameter :: Abcissa=SQRT(1.d0/3.d0)
-    double precision, parameter :: factorStable=0.5d0
+    double precision, parameter :: factorStable=0.7d0
     double precision, parameter :: pi=3.1415926535897932
     
     ! parameters - problem specification
@@ -807,6 +807,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     integer :: ipquad,Filesize, factor
     integer :: QuadNodes(4)
     
+    double precision, parameter :: pk=-20.0
+    
     ! Allocatable arrays
     integer, DIMENSION(:), ALLOCATABLE :: X0_poly
     integer, DIMENSION(:), ALLOCATABLE :: X1_poly
@@ -992,8 +994,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         pDif = props(10)
         cSat = props(11)
         pa1 = props(12)
-!        palpha = props(13)
-!        pbeta = props(14)
+        palpha = props(13)
+        pbeta = props(14)
         pmod = props(15)
         pkback = props(16)
         pkfront = props(17)
@@ -1012,16 +1014,16 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     
     !===============================================================================================================================================
         
-        filename2 = '/home/cerecam/Desktop/Du_results_Prev' // trim(JOBNAME) // '.inp'
-        INQUIRE(FILE= filename2 ,EXIST=I_EXIST)
-        if (I_Exist) then
-            open(unit=106, file=filename2)
-            read(106,*) temp1   ! Increment number
-            read(106,*) temp2   ! Total flux within RVE from previous step c_dot integrated over volue of RVE
-            read(106,*) temp3   ! Total integral of influx calculated from the previous step over area applied
-            close(106)  
-        end if 
-        palpha = (temp2-temp3)/AREA_Z0  ! Calculation of the required amount of outflux
+!        filename2 = '/home/cerecam/Desktop/Du_results_Prev' // trim(JOBNAME) // '.inp'
+!        INQUIRE(FILE= filename2 ,EXIST=I_EXIST)
+!        if (I_Exist) then
+!            open(unit=106, file=filename2)
+!            read(106,*) temp1   ! Increment number
+!            read(106,*) temp2   ! Total flux within RVE from previous step c_dot integrated over volue of RVE
+!            read(106,*) temp3   ! Total integral of influx calculated from the previous step over area applied
+!            close(106)  
+!        end if 
+!        palpha = (temp2-temp3)/AREA_Z0  ! Calculation of the required amount of outflux
         ! loop over element block
         do kblock=1,nblock ! ---------------------------------------------------
             ! loop over all integration points (computation of FE variables)
@@ -1312,6 +1314,10 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 
 !                   FOR Z0_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F1 (i.e. nodes 1,2,3,4)
 !                   FOR Z1_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F2 (i.e. nodes 5,6,7,8)
+!                   FOR X0_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F6 (i.e. nodes 1,5,8,4)
+!                   FOR X1_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F4 (i.e. nodes 6,2,3,7)
+!                   FOR Y0_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F3 (i.e. nodes 1,5,6,2)
+!                   FOR Y1_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F5 (i.e. nodes 4,8,7,3)
                 
                 if (ANY(jElem(kblock).eq.Z0_Poly)) then
                     QuadNodes = (/1,2,3,4/)
@@ -1320,6 +1326,28 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     end do
                 elseif (ANY(jElem(kblock).eq.Z1_Poly)) then
                     QuadNodes = (/5,6,7,8/)
+                    do i=1,size(QuadNodes)
+                        coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                    end do
+                end if
+                if (ANY(jElem(kblock).eq.X0_Poly)) then
+                    QuadNodes = (/1,5,8,4/)
+                    do i=1,size(QuadNodes)
+                        coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                    end do
+                elseif (ANY(jElem(kblock).eq.X1_Poly)) then
+                    QuadNodes = (/6,2,3,7/)
+                    do i=1,size(QuadNodes)
+                        coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                    end do
+                end if
+                if (ANY(jElem(kblock).eq.Y0_Poly)) then
+                    QuadNodes = (/1,5,6,2/)
+                    do i=1,size(QuadNodes)
+                        coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                    end do
+                elseif (ANY(jElem(kblock).eq.Y1_Poly)) then
+                    QuadNodes = (/4,8,7,3/)
                     do i=1,size(QuadNodes)
                         coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
                     end do
@@ -1333,25 +1361,25 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 pWTquad = 1.0d0
                 
                 
-                pbeta = temp3/AREA_Z1
+!                pbeta = temp3/AREA_Z1
 
-!                fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
-!                INQUIRE(FILE= fname ,EXIST=I_EXIST)
-!                if (I_Exist) then
-!                    open(unit=106,file=fname, status='old', action='write', position='append')
-!                else
-!                    open(unit=106,file=fname, status='new',action='write')
-!                end if
-!                if ((MOD(kInc,577).eq.0) .AND. (jElem(kblock).eq.15137)) then
-!                    write(106,*) "Element number: ", jElem(kblock)
-!                    write(106,*) "Increment_int: ", temp1
-!                    write(106,*) "Time: ", time(iStepTime)
-!                    write(106,*) "Total_c_dot: ", temp2
-!                    write(106,*) "temp3: ", temp3
-!                    write(106,*) "pInflux: ", temp3/Area_Z1
-!                    write(106,*) "Outflux: ", palpha
-!                end if
-!                close(106)
+!!                fname = '/home/cerecam/Desktop/Check_results' // trim(JOBNAME) // '.inp'
+!!                INQUIRE(FILE= fname ,EXIST=I_EXIST)
+!!                if (I_Exist) then
+!!                    open(unit=106,file=fname, status='old', action='write', position='append')
+!!                else
+!!                    open(unit=106,file=fname, status='new',action='write')
+!!                end if
+!!                if ((MOD(kInc,577).eq.0) .AND. (jElem(kblock).eq.15137)) then
+!!                    write(106,*) "Element number: ", jElem(kblock)
+!!                    write(106,*) "Increment_int: ", temp1
+!!                    write(106,*) "Time: ", time(iStepTime)
+!!                    write(106,*) "Total_c_dot: ", temp2
+!!                    write(106,*) "temp3: ", temp3
+!!                    write(106,*) "pInflux: ", temp3/Area_Z1
+!!                    write(106,*) "Outflux: ", palpha
+!!                end if
+!!                close(106)
                 svars(kblock,2) = 0.0d0 ! State variable that sotres dc/dx*area
                 do ipquad=1,4
 
@@ -1466,8 +1494,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         ! CONCENTRATION !
 !                                RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*(1.0d0)*palpha 
                             RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
-!                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pV_i)*(-3.0E-04)
-                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pV_i)*palpha
+                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pV_i)*(-3.0E-04)
+!                            - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(pV_i)*palpha
                              
                         ! DISPLACEMENT !
                             RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
@@ -1477,8 +1505,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !                            write(*,*) "temp3/AREA_Z1", temp3/AREA_Z1
 !                                   RHS(kblock,dofniT) = RHS(kblock,dofniT) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*pDensVolFrac*(-1.0d0)*pbeta
                                 RHS(kblock,dofniT) = RHS(kblock,dofniT) & 
-!                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*5.0E-4
-                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*temp3/(AREA_Z1)
+                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*5.0E-4
+!                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*temp3/(AREA_Z1)
                                 
                             end if
                             
@@ -1489,12 +1517,32 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                            
                         end if  
 !                        RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
+                        if (ANY(jElem(kblock).eq.Y1_Poly)) then ! Top Face
+                             
+                        ! DISPLACEMENT !
+                            RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
+                        end if
+                        if (ANY(jElem(kblock).eq.Y0_Poly)) then ! Bottom Face
+                             
+                        ! DISPLACEMENT !
+                            RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
+                        end if
+                        if (ANY(jElem(kblock).eq.X1_Poly)) then ! Right Face
+                             
+                        ! DISPLACEMENT !
+                            RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
+                        end if
+                        if (ANY(jElem(kblock).eq.X0_Poly)) then ! Left Face
+                             
+                        ! DISPLACEMENT !
+                            RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
+                        end if
                     end do ! ------------------------ ni-loop ------------------------
                     
                 end do ! ------------------------ ipquad-loop ------------------------
             end if ! ------------------------ jElem Z0 Poly-loop ------------------------
             
-    !    !===================================================================================================================================
+!    !    !===================================================================================================================================
     !    !-----------------------------------STABLE TIME INCREMENT CALCULATION----------------------------------
     !    !===================================================================================================================================
             
@@ -1548,46 +1596,46 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !===============================================================================================================================================
                                             
         end do !-----------------------nblock-----------------------------------
-        filename = '/home/cerecam/Desktop/Du_results_' // trim(JOBNAME) // '.inp'
-        INQUIRE(FILE= filename ,EXIST=I_EXIST)
-        if (I_Exist) then ! Read most recent summation value (from previous nblocks) from this file
-            open(unit=107, file=filename,status="old",action="read")
-            read(107,*) Increment_int
-            read(107,*) Total_int   ! Current total of dc/dt            (**)
-            read(107,*) Total_influx ! Current total of influx
-            close(107)
-            open(unit=107, file=filename, status="old", action="write")
-        else ! The file will onlt not exist in the 1st increment (kInc=0)
-            open(unit=107, file=filename, status="new", action="write")
-            Increment_int=0.0d0
-            Total_int=0.0d0 ! Initialization of dc/dt
-            Total_influx = 0.0d0 ! Initialization of dc/dx for influx
-        end if
+!        filename = '/home/cerecam/Desktop/Du_results_' // trim(JOBNAME) // '.inp'
+!        INQUIRE(FILE= filename ,EXIST=I_EXIST)
+!        if (I_Exist) then ! Read most recent summation value (from previous nblocks) from this file
+!            open(unit=107, file=filename,status="old",action="read")
+!            read(107,*) Increment_int
+!            read(107,*) Total_int   ! Current total of dc/dt            (**)
+!            read(107,*) Total_influx ! Current total of influx
+!            close(107)
+!            open(unit=107, file=filename, status="old", action="write")
+!        else ! The file will onlt not exist in the 1st increment (kInc=0)
+!            open(unit=107, file=filename, status="new", action="write")
+!            Increment_int=0.0d0
+!            Total_int=0.0d0 ! Initialization of dc/dt
+!            Total_influx = 0.0d0 ! Initialization of dc/dx for influx
+!        end if
         
-        if (Increment_int.eq.kInc) then ! If on the same increment (i.e. only on a different nblock) add to previous summation values (**)
-            Total_int = sum(svars(:,1))+Total_int
-            Total_influx = sum(svars(:,2)) + Total_influx
-        else    ! If this increment is new (i.e. on the first nblock again)
-            filename2 = '/home/cerecam/Desktop/Du_results_Prev' // trim(JOBNAME) // '.inp'
-            INQUIRE(FILE= filename2 ,EXIST=I_EXIST)
-            if (I_Exist) then
-                open(unit=106, file=filename2, status="old", action="write")
-            else
-                open(unit=106, file=filename2, status="new", action="write")
-            end if 
-            write(106,*) Increment_int
-            write(106,*) Total_int      ! Store previous summation values (fully 'summed')
-            write(106,*) Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
-            close(106)
-            Total_int = sum(svars(:,1)) ! New summation values (starting at at nblock==1)
-            Total_influx = sum(svars(:,2)) ! New summation values (starting new increment at nblock=1)
+!        if (Increment_int.eq.kInc) then ! If on the same increment (i.e. only on a different nblock) add to previous summation values (**)
+!            Total_int = sum(svars(:,1))+Total_int
+!            Total_influx = sum(svars(:,2)) + Total_influx
+!        else    ! If this increment is new (i.e. on the first nblock again)
+!            filename2 = '/home/cerecam/Desktop/Du_results_Prev' // trim(JOBNAME) // '.inp'
+!            INQUIRE(FILE= filename2 ,EXIST=I_EXIST)
+!            if (I_Exist) then
+!                open(unit=106, file=filename2, status="old", action="write")
+!            else
+!                open(unit=106, file=filename2, status="new", action="write")
+!            end if 
+!            write(106,*) Increment_int
+!            write(106,*) Total_int      ! Store previous summation values (fully 'summed')
+!            write(106,*) Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
+!            close(106)
+!            Total_int = sum(svars(:,1)) ! New summation values (starting at at nblock==1)
+!            Total_influx = sum(svars(:,2)) ! New summation values (starting new increment at nblock=1)
             
-        end if 
-        Increment_int=kInc
-        write(107,*) kinc
-        write(107,*) Total_int
-        write(107,*) Total_influx ! Writing current summation of influx elements (any nblock, if nblock ==1, is a new summation, else if a incremental summation)
-        close(107)
+!        end if 
+!        Increment_int=kInc
+!        write(107,*) kinc
+!        write(107,*) Total_int
+!        write(107,*) Total_influx ! Writing current summation of influx elements (any nblock, if nblock ==1, is a new summation, else if a incremental summation)
+!        close(107)
     end if ! ------------------------ type.eq.48 loop ---------------------------
     
     if (jtype.eq.38) then  
@@ -1758,20 +1806,20 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !        --------------------------------------------------------ROBIN BC: RHS ADDITION------------------------------------------------------------
 !        ===================================================================================================================================
 !                        4____________3
-!!                      /|          /|
-!!                     / |         / |         Y
-!!                   8/__|________/7 |         ^
-!!                    |  |        |  |         | 
-!!                    | 1|________|__|2        |____>X 
-!!                    | /         | /         /
-!!                   5|/__________|/6        /Z
+!                      /|          /|
+!                     / |         / |         Y
+!                   8/__|________/7 |         ^
+!                    |  |        |  |         | 
+!                    | 1|________|__|2        |____>X 
+!                    | /         | /         /
+!                   5|/__________|/6        /Z
                 
-!!            Where:  face 1 nodes = 1234
-!!                    face 2 nodes = 5678                
-!!                    face 3 nodes = 1562
-!!                    face 4 nodes = 6237
-!!                    face 5 nodes = 4873
-!!                    face 6 nodes = 1584
+!            Where:  face 1 nodes = 1234
+!                    face 2 nodes = 5678                
+!                    face 3 nodes = 1562
+!                    face 4 nodes = 6237
+!                    face 5 nodes = 4873
+!                    face 6 nodes = 1584
                 if (ANY(jElem(kblock).eq.Z0_gold) .OR. ANY(jElem(kblock).eq.Z1_gold)) then
 !                   X0 = F6 (i.e. nodes 1,5,6,2)
 !                   X1 = F4 (i.e. nodes 6,2,3,7)
@@ -1788,6 +1836,28 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         end do
                     elseif (ANY(jElem(kblock).eq.Z1_gold)) then
                         QuadNodes = (/5,6,7,8/)
+                        do i=1,size(QuadNodes)
+                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                        end do
+                    end if
+                    if (ANY(jElem(kblock).eq.X0_Poly)) then
+                        QuadNodes = (/1,5,8,4/)
+                        do i=1,size(QuadNodes)
+                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                        end do
+                    elseif (ANY(jElem(kblock).eq.X1_Poly)) then
+                        QuadNodes = (/6,2,3,7/)
+                        do i=1,size(QuadNodes)
+                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                        end do
+                    end if
+                    if (ANY(jElem(kblock).eq.Y0_Poly)) then
+                        QuadNodes = (/1,5,6,2/)
+                        do i=1,size(QuadNodes)
+                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                        end do
+                    elseif (ANY(jElem(kblock).eq.Y1_Poly)) then
+                        QuadNodes = (/4,8,7,3/)
                         do i=1,size(QuadNodes)
                             coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
                         end do
@@ -1819,30 +1889,47 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         do ni=1,size(QuadNodes)
                             nj = QuadNodes(ni)
                             dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1) 
-                            if ((COORDS(kblock,nj,1).eq.30.0 .OR. COORDS(kblock,nj,1).eq.0.0) .AND. ((COORDS(kblock,nj,2).eq.30.0) .OR. COORDS(kblock,nj,2).eq.0.0)) then
-                                factor=4
-                            elseif ((COORDS(kblock,nj,1).eq.30.0) .OR. (COORDS(kblock,nj,1).eq.0.0)) then
-                                factor = 2
-                            elseif ((COORDS(kblock,nj,2).eq.30.0) .OR. (COORDS(kblock,nj,2).eq.0.0)) then
-                                factor = 2
-                            else 
-                                factor =1
-                            end if
+!                            if ((COORDS(kblock,nj,1).eq.30.0 .OR. COORDS(kblock,nj,1).eq.0.0) .AND. ((COORDS(kblock,nj,2).eq.30.0) .OR. COORDS(kblock,nj,2).eq.0.0)) then
+!                                factor=4
+!                            elseif ((COORDS(kblock,nj,1).eq.30.0) .OR. (COORDS(kblock,nj,1).eq.0.0)) then
+!                                factor = 2
+!                            elseif ((COORDS(kblock,nj,2).eq.30.0) .OR. (COORDS(kblock,nj,2).eq.0.0)) then
+!                                factor = 2
+!                            else 
+!                                factor =1
+!                            end if
                             if (ANY(jElem(kblock).eq.Z0_gold)) then ! Back Face
                             ! DISPLACEMENT !
                                 RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock, dofni)*pkBack
                             elseif (ANY(jElem(kblock).eq.Z1_Gold)) then ! Front Face
                             ! DISPLACEMENT !  
                                 RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock, dofni)*pkFront
-!                            elseif ((ANY(jElem(kblock).eq.X0_gold)) .OR. (ANY(jElem(kblock).eq.Y0_gold)) & 
-!                                    .OR. (ANY(jElem(kblock).eq.X1_gold)) .OR. (ANY(jElem(kblock).eq.Y1_gold))) then 
-                                    
-!                                    RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock, dofni)*pkFront*1000 
-                            end if  
+                            end if 
+    !                        RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkBack
+                            if (ANY(jElem(kblock).eq.Y1_Poly)) then ! Top Face
+                                 
+                            ! DISPLACEMENT !
+                                RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
+                            end if
+                            if (ANY(jElem(kblock).eq.Y0_Poly)) then ! Bottom Face
+                                 
+                            ! DISPLACEMENT !
+                                RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
+                            end if
+                            if (ANY(jElem(kblock).eq.X1_Poly)) then ! Right Face
+                                 
+                            ! DISPLACEMENT !
+                                RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
+                            end if
+                            if (ANY(jElem(kblock).eq.X0_Poly)) then ! Left Face
+                                 
+                            ! DISPLACEMENT !
+                                RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
+                            end if 
                         end do ! ------------------------ ni-loop ------------------------
                     end do ! ------------------------ ipquad-loop ------------------------
                 end if ! ------------------------ jElem Z0 or Z1 Poly-loop ------------------------
-    !    !===================================================================================================================================
+!    !    !===================================================================================================================================
     !    !--------------------------------------------------------MASS MATRIX CALCULATION------------------------------------------------------------
     !    !===================================================================================================================================
             else if (lflags(iOpCode).eq.jMassCalc) then
