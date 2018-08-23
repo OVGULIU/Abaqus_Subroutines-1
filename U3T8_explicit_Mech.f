@@ -415,7 +415,7 @@
             double precision, parameter :: six=6.d0
             double precision, parameter :: eight=8.d0
             double precision, parameter :: Abcissa=SQRT(1.d0/3.d0)
-            double precision, parameter :: factorStable=0.99d0
+            double precision, parameter :: factorStable=0.75d0
             
             ! parameters - problem specification
             !parameter ( iGP=8, iCORD=3, iNODE=8 )
@@ -566,6 +566,7 @@
             double precision :: pNU
             double precision :: pGM
             double precision :: pLAM
+            double precision :: pSED		! SED
             
             ! integer
             integer :: kblock,ip,nn,ni,nj,i
@@ -769,6 +770,7 @@
                     elseif (lflags(iOpCode).eq.jIntForceAndDtStable) then !compute internal force + stable time increment    
                 
                         rhs(kblock,1:ndofel)=zero
+                        energy(kblock,iElIe)=zero
                         ! loop over all integration points (computation of residuum)
                         
                         Ux = u(kblock,1:iCORD*iNODE:iCORD)
@@ -797,6 +799,10 @@
                                 rhs(kblock,dofni) = rhs(kblock,dofni) + pQUAD*pWT(ip)*detJ(ip)*matvec(P,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))
             
                             end do !------------------------------end-loop-i----------------
+        
+                            ! Internal energy Calculation							
+                            pSED = ( ( pGM*ddot(Ee,Ee)+half*pLAM*trace(Ee)*trace(Ee)) )            
+                            energy(kblock,iElIe)= energy(kblock,iElIe) + (detJ(ip))*pSED
             
                         end do ! ----------------------------end-loop-ip--------------------
                         
