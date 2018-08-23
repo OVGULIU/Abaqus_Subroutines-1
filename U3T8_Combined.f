@@ -807,7 +807,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     integer :: ipquad,Filesize, factor
     integer :: QuadNodes(4)
     
-    double precision, parameter :: pk=-20.0
+    double precision, parameter :: pk = -10.0d0
     
     ! Allocatable arrays
     integer, DIMENSION(:), ALLOCATABLE :: X0_poly
@@ -1278,10 +1278,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !!                    face 4 nodes = 6237
 !!                    face 5 nodes = 4873
 !!                    face 6 nodes = 1584                 
-
-            if (ANY(jElem(kblock).eq.Z0_Poly) .OR. ANY(jElem(kblock).eq.Z1_Poly) .OR. &
-                ANY(jElem(kblock).eq.Y0_Poly) .OR. ANY(jElem(kblock).eq.Y1_Poly) .OR. & 
-                ANY(jElem(kblock).eq.X0_Poly) .OR. ANY(jElem(kblock).eq.X1_Poly)) then
 !                            if (kInc.eq.1) then
 !                    write(*,*) "Robin element: ", jElem(kblock)
 !                    end if
@@ -1321,13 +1317,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !                   FOR Y0_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F3 (i.e. nodes 1,5,6,2)
 !                   FOR Y1_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F5 (i.e. nodes 4,8,7,3)
                 
-                pGPCORDquad(1,:) = (/ 1.0d0/SQRT(3.0d0), 1.0d0/SQRT(3.0d0)/)
-                pGPCORDquad(2,:) = (/ 1.0d0/SQRT(3.0d0), -1.0d0/SQRT(3.0d0)/)
-                pGPCORDquad(3,:) = (/-1.0d0/SQRT(3.0d0), 1.0d0/SQRT(3.0d0)/)
-                pGPCORDquad(4,:) = (/-1.0d0/SQRT(3.0d0), -1.0d0/SQRT(3.0d0)/)
-                
-                pWTquad = 1.0d0
-                
                 
 !                pbeta = temp3/AREA_Z1
 
@@ -1348,6 +1337,14 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !!                    write(106,*) "Outflux: ", palpha
 !!                end if
 !!                close(106)
+                
+                pGPCORDquad(1,:) = (/ 1.0d0/SQRT(3.0d0), 1.0d0/SQRT(3.0d0)/)
+                pGPCORDquad(2,:) = (/ 1.0d0/SQRT(3.0d0), -1.0d0/SQRT(3.0d0)/)
+                pGPCORDquad(3,:) = (/-1.0d0/SQRT(3.0d0), 1.0d0/SQRT(3.0d0)/)
+                pGPCORDquad(4,:) = (/-1.0d0/SQRT(3.0d0), -1.0d0/SQRT(3.0d0)/)
+                
+                pWTquad = 1.0d0
+                
                 svars(kblock,2) = 0.0d0 ! State variable that sotres dc/dx*area
                 do ipquad=1,4
 
@@ -1361,9 +1358,17 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 
                     if (ANY(jElem(kblock).eq.Z0_Poly)) then ! Back Face
                         QuadNodes = (/1,2,3,4/)
-                        do i=1,size(QuadNodes)
-                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                        do ni=1,size(QuadNodes)
+                            nj = QuadNodes(ni)
+                            coordquad(ni,:)= (/coords(kblock,QuadNodes(ni),1),coords(kblock,QuadNodes(ni),2)/)
+                            CoNODEQuad(ni) = u(kblock, (iCORDTOTAL*nj))                                
                         end do
+                        if (ANY(CoNODEQUAD<=0.0d0)) then
+                            pCo =0
+                        else
+                            pCo = dot(pNNquad(ipquad,:),CoNODEQuad)
+                        end if
+                        pV_i = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*pCo
                             
                         Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
                         Jquad(ipquad,1,2) = one/four*(-coordquad(1,2)*(1-xi1quad) + coordquad(2,2)*(1-xi1quad) +coordquad(3,2)*(1+xi1quad) - coordquad(4,2)*(1+xi1quad))
@@ -1388,6 +1393,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     if (ANY(jElem(kblock).eq.Z1_Poly) ) then ! Front FacepCo = zero
                         QuadNodes = (/5,6,7,8/)
                         do ni=1,size(QuadNodes)
+                            coordquad(ni,:)= (/coords(kblock,QuadNodes(ni),1),coords(kblock,QuadNodes(ni),2)/)
                             nj = QuadNodes(ni)
                             ! Concentration and Concentration gradient
                             CoNODEQuad(ni) = u(kblock, (iCORDTOTAL*nj))                                
@@ -1490,7 +1496,10 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !                                - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*(one-pDensVolFrac)*temp3/(AREA_Z1)
                                 
                             end if
-                         
+                            
+                            if (jelem(kblock) == 14761) then
+!                                write(*,*) detJquad(ipquad), ": Jquad"
+                            end if
                             ! DISPLACEMENT !
                             RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pkfront
                         end do                              
@@ -1498,7 +1507,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     if (ANY(jElem(kblock).eq.Y1_Poly)) then ! Top Face
                         QuadNodes = (/4,8,7,3/)
                         do i=1,size(QuadNodes)
-                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),3)/)
                         end do
                             
                         Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
@@ -1511,6 +1520,9 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                             nj = QuadNodes(ni)
                             dofni(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)                             
                             ! DISPLACEMENT !
+                            if (jelem(kblock) == 14761) then
+!                                write(*,*) pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*(-5000), ": Y0"
+                            end if
                             RHS(kblock,dofni) = RHS(kblock,dofni) - pWTquad*ABS(detJquad(ipquad))*pNNQuad(ipQuad,ni)*u(kblock,dofni)*pk
                         end do
                          
@@ -1518,7 +1530,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     if (ANY(jElem(kblock).eq.Y0_Poly)) then ! Bottom Face
                         QuadNodes = (/1,5,6,2/)
                         do i=1,size(QuadNodes)
-                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),3)/)
                         end do
                             
                         Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
@@ -1537,7 +1549,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     if (ANY(jElem(kblock).eq.X1_Poly)) then ! Right Face
                         QuadNodes = (/6,2,3,7/)
                         do i=1,size(QuadNodes)
-                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),2),coords(kblock,QuadNodes(i),3)/)
                         end do
                             
                         Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
@@ -1556,7 +1568,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     if (ANY(jElem(kblock).eq.X0_Poly)) then ! Left Face
                         QuadNodes = (/1,5,8,4/)
                         do i=1,size(QuadNodes)
-                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                            coordquad(i,:)= (/coords(kblock,QuadNodes(i),2),coords(kblock,QuadNodes(i),3)/)
                         end do
                             
                         Jquad(ipquad,1,1) = one/four*(-coordquad(1,1)*(1-xi1quad) + coordquad(2,1)*(1-xi1quad) +coordquad(3,1)*(1+xi1quad) - coordquad(4,1)*(1+xi1quad))
@@ -1573,7 +1585,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         end do
                     end if                    
                 end do ! ------------------------ ipquad-loop ------------------------
-            end if ! ------------------------ jElem Z0 Poly-loop ------------------------
             
 !    !    !===================================================================================================================================
     !    !-----------------------------------STABLE TIME INCREMENT CALCULATION----------------------------------
@@ -1932,7 +1943,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         if (ANY(jElem(kblock).eq.Y1_GOLD)) then ! Top Face
                             QuadNodes = (/4,8,7,3/)
                             do i=1,size(QuadNodes)
-                                coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                                coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),3)/)
                             end do
                             do ni=1,size(QuadNodes)
                                 nj = QuadNodes(ni)                                    
@@ -1952,7 +1963,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         if (ANY(jElem(kblock).eq.Y0_GOLD)) then ! Bottom Face
                             QuadNodes = (/1,5,6,2/)
                             do i=1,size(QuadNodes)
-                                coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                                coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),3)/)
                             end do
                             do ni=1,size(QuadNodes)
                                 nj = QuadNodes(ni)                                    
@@ -1972,7 +1983,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         if (ANY(jElem(kblock).eq.X1_GOLD)) then ! Right Face
                             QuadNodes = (/6,2,3,7/)
                             do i=1,size(QuadNodes)
-                                coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                                coordquad(i,:)= (/coords(kblock,QuadNodes(i),2),coords(kblock,QuadNodes(i),3)/)
                             end do
                             do ni=1,size(QuadNodes)
                                 nj = QuadNodes(ni)                                    
@@ -1992,7 +2003,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                         if (ANY(jElem(kblock).eq.X0_GOLD)) then ! Left Face
                             QuadNodes = (/1,5,8,4/)
                             do i=1,size(QuadNodes)
-                                coordquad(i,:)= (/coords(kblock,QuadNodes(i),1),coords(kblock,QuadNodes(i),2)/)
+                                coordquad(i,:)= (/coords(kblock,QuadNodes(i),2),coords(kblock,QuadNodes(i),3)/)
                             end do
                             do ni=1,size(QuadNodes)
                                 nj = QuadNodes(ni)                                    
