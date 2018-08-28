@@ -4391,31 +4391,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         write(*,*) "Error in computation of integration point coordinates. The number of IPs does not conform with the element type (4 node tetrahedral element with 4 integratin points)."
         CALL XPLB_EXIT
     end if
-    !-------------------------------------------------------------------------------  
-    ! shape function for each ip -----------------------------------------------
-    do ip=1,iGP
 
-        xi1=pGPCORD(ip,1)
-        xi2=pGPCORD(ip,2)
-        xi3=pGPCORD(ip,3)
-
-        if (iNODE==8) then ! cf. WRIGGERS - Nonlinear Finite Element3 Methods 2008 (p. 120)
-
-            pNN(ip,1) = one/eight*(1-xi1)*(1-xi2)*(1-xi3)
-            pNN(ip,2) = one/eight*(1+xi1)*(1-xi2)*(1-xi3)
-            pNN(ip,3) = one/eight*(1+xi1)*(1+xi2)*(1-xi3)
-            pNN(ip,4) = one/eight*(1-xi1)*(1+xi2)*(1-xi3)
-            pNN(ip,5) = one/eight*(1-xi1)*(1-xi2)*(1+xi3)
-            pNN(ip,6) = one/eight*(1+xi1)*(1-xi2)*(1+xi3)
-            pNN(ip,7) = one/eight*(1+xi1)*(1+xi2)*(1+xi3)
-            pNN(ip,8) = one/eight*(1-xi1)*(1+xi2)*(1+xi3)
-
-        else
-            write(*,*) "Error in computation of shape functions. The number of nodes does not conform with the element type (4 node tetrahedral element)."
-            CALL XPLB_EXIT
-        end if
-
-    end do
     if (jtype.eq.48) then 
     CALL Poly(X0_Poly, X1_Poly, Y0_Poly, Y1_Poly, Z0_Poly, Z1_Poly, AREA_X0, AREA_X1, Area_Y0, AREA_Y1, AREA_Z0, AREA_Z1)
         if (kInc ==0.0) then
@@ -4459,7 +4435,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         pVsat = 1.0d0
         pImmobileConc = 1.0d0 / (4.0d0/3.0d0*pPi*(pRi**3)*pNa)        
     !--------------------------Parameters used in modified PNP model-------------------------------------
-    
+        
     !===============================================================================================================================================
         
 !        filename2 = '/home/cerecam/Desktop/Du_results_Prev' // trim(JOBNAME) // '.inp'
@@ -4474,13 +4450,48 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !        palpha = (temp2-temp3)/AREA_Z0  ! Calculation of the required amount of outflux
         ! loop over element block
         do kblock=1,nblock ! ---------------------------------------------------
-            ! loop over all integration points (computation of FE variables)
-            do ip=1,iGP ! ------------------------------------------------------    
     
-                ! natural coordinates of current ip
-                xi1 = pGPCORD(ip,1)
-                xi2 = pGPCORD(ip,2)
-                xi3 = pGPCORD(ip,3)
+    !    !===================================================================================================================================
+    !    !-----------------------------------ELEMENT LENGTH CALCULATION----------------------------------
+    !    !===================================================================================================================================        
+        pvolume = abs((coords(kblock,1,1)-coords(kblock,2,1))*(coords(kblock,1,2)-coords(kblock,4,2))*(coords(kblock,1,3)-coords(kblock,5,3)))
+        pd_min = abs((coords(kblock,1,1)-coords(kblock,2,1)))
+            
+!    !===================================================================================================================================
+!    !--------------------------------------------------------RHS CALCULATION------------------------------------------------------------
+!    !===================================================================================================================================
+
+        energy(kblock,iElIe)=zero
+        energy(kblock,iElTh)=zero
+        rhs(kblock,1:ndofel)=zero
+        !energy(kblock,iElKe)=zero
+            
+        if (lflags(iOpCode).eq.jIntForceAndDtStable) then
+            svars(kblock,1) = 0.0d0 ! State variable that store cdot*vol
+            
+            do ip=1,iGP ! ---------------------- loop over all integration points (computation of residuum)--------------------------------
+!! ----------------------------------------------------------------------------------------------------------------------------------------
+                xi1=pGPCORD(ip,1)
+                xi2=pGPCORD(ip,2)
+                xi3=pGPCORD(ip,3)
+        
+                if (iNODE==8) then ! cf. WRIGGERS - Nonlinear Finite Element3 Methods 2008 (p. 120)
+        
+                    pNN(ip,1) = one/eight*(1-xi1)*(1-xi2)*(1-xi3)
+                    pNN(ip,2) = one/eight*(1+xi1)*(1-xi2)*(1-xi3)
+                    pNN(ip,3) = one/eight*(1+xi1)*(1+xi2)*(1-xi3)
+                    pNN(ip,4) = one/eight*(1-xi1)*(1+xi2)*(1-xi3)
+                    pNN(ip,5) = one/eight*(1-xi1)*(1-xi2)*(1+xi3)
+                    pNN(ip,6) = one/eight*(1+xi1)*(1-xi2)*(1+xi3)
+                    pNN(ip,7) = one/eight*(1+xi1)*(1+xi2)*(1+xi3)
+                    pNN(ip,8) = one/eight*(1-xi1)*(1+xi2)*(1+xi3)
+        
+                else
+                    write(*,*) "Error in computation of shape functions. The number of nodes does not conform with the element type (4 node tetrahedral element)."
+                    CALL XPLB_EXIT
+                end if
+            ! loop over all integration points (computation of FE variables)
+                            ! natural coordinates of current ip
                 if (iNODE==8) then
             
                     ! derivatives of shape functions with respect to natural coordinates                
@@ -4558,30 +4569,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                                                 + (dX1dxi1*dX2dxi2-dX2dxi1*dX1dxi2)*dNdXi3(nn) )
     
                 end do !----------------nn-loop --------------------
-    
-           
-            end do ! -------------------ip-loop------------------------------- 
-    !    !===================================================================================================================================
-    !    !-----------------------------------ELEMENT LENGTH CALCULATION----------------------------------
-    !    !===================================================================================================================================
-            
-            pVolume = detJ(1)+detJ(2)+detJ(3)+detJ(4)+detJ(5)+detJ(6)+detJ(7)+detJ(8)
-            pd_min = pvolume**(one/three)
 
-            
-!    !===================================================================================================================================
-!    !--------------------------------------------------------RHS CALCULATION------------------------------------------------------------
-!    !===================================================================================================================================
-
-        energy(kblock,iElIe)=zero
-        energy(kblock,iElTh)=zero
-        rhs(kblock,1:ndofel)=zero
-        !energy(kblock,iElKe)=zero
-            
-        if (lflags(iOpCode).eq.jIntForceAndDtStable) then
-            svars(kblock,1) = 0.0d0 ! State variable that store cdot*vol
-            
-            do ip=1,iGP ! ---------------------- loop over all integration points (computation of residuum)--------------------------------
+!! ----------------------------------------------------------------------------------------------------------------------------------------
             
                 H = zero
                 pQf = zero
@@ -4671,14 +4660,6 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     if (pmod.eq.1.0) then
                         if (pDensVolFrac>=pVsat) then  
                         write(*,*) "pDensVolFrac", pDensVolFrac
-!                            filename = '/home/cerecam/Desktop/LimitReached' // trim(JOBNAME) // '.inp'
-!                            INQUIRE(FILE= filename ,EXIST=I_EXIST)
-!                            if (.NOT. I_Exist) then                                
-!                                WRITE(*,*) "Limit has been reached in ",jelem(kblock)," at concentration of ", pCo,"kinc: ", kInc
-!                                open(unit=107, file=filename)
-!                                    WRITE(107,*) "Limit reached in element: ",jelem(kblock),"; at concentration: ", pCo,"; kinc: ", kInc, "; time: ",kInc*dtimeCur, "; job: ", trim(JOBNAME)
-!                                    WRITE(107,*) "The properties used in this simulation are: ", props
-!                                close(107)
                             end if
                             
 !                            rhs(kblock,dofniT) = rhs(kblock,dofniT) &
@@ -4703,6 +4684,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 end do !------------------------------end-loop-ni----------------
 
             end do ! -------------------- ip loop  ------------------------
+
+
 !              
 !    !===================================================================================================================================
 !    !--------------------------------------------------------ROBIN BC: RHS ADDITION------------------------------------------------------------
@@ -4725,38 +4708,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !!                    face 3 nodes = 1562
 !!                    face 4 nodes = 6237
 !!                    face 5 nodes = 4873
-!!                    face 6 nodes = 1584                 
-!                            if (kInc.eq.1) then
-!                    write(*,*) "Robin element: ", jElem(kblock)
-!                    end if
-!                    F1 = cross((coords(kblock,5,:)-coords(kblock,1,:),(coords(kblock,1,:)-coords(kblock,4,:)))
-!                    F1 = F1/NORM(F1)
-!                    F2 = cross((coords(kblock,6,:)-coords(kblock,2,:),(coords(kblock,2,:)-coords(kblock,3,:)))
-!                    F2 = F2/NORM(F2)
-!                    F3 = cross((coords(kblock,1,:)-coords(kblock,2,:),(coords(kblock,2,:)-coords(kblock,3,:)))
-!                    F3 = F3/NORM(F3)
-!                    F4 = cross((coords(kblock,7,:)-coords(kblock,3,:),(coords(kblock,3,:)-coords(kblock,4,:)))
-!                    F4 = F4/NORM(F4)
-!                    F5 = cross((coords(kblock,5,:)-coords(kblock,6,:),(coords(kblock,6,:)-coords(kblock,7,:)))
-!                    F5 = F5/NORM(F5)
-!                    F6 = cross((coords(kblock,6,:)-coords(kblock,2,:),(coords(kblock,2,:)-coords(kblock,1,:)))
-!                    F6 = F6/NORM(F6)
-        
-!                    F_ALL(1,:) = F1
-!                    F_ALL(2,:) = F2
-!                    F_ALL(3,:) = F3
-!                    F_ALL(4,:) = F4
-!                    F_ALL(5,:) = F5
-!                    F_ALL(6,:) = F6
-        
-!                    do i=1,6
-!                        if ABS(F_ALL(i,3).eq.1) then
-!                            Nodes = Face_nodes(i)
-!                            do j = 1,4
-!                                coordquad(i,1)= coords(kblock,Nodes(j),1
-!                            end do
-                
-!                    end do
+!!                    face 6 nodes = 1584
 
 !                   FOR Z0_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F1 (i.e. nodes 1,2,3,4)
 !                   FOR Z1_POLY ELEMENTS THE OUTWARD POINTING FACE IS ALWAYS F2 (i.e. nodes 5,6,7,8)
@@ -5009,6 +4961,27 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         else if (lflags(iOpCode).eq.jMassCalc) then
             !amass(kblock,:,:)= zero
             do ip=1,iGP ! ---------------------- loop over all integration points (computation of mass matrix)--------------------------------
+            
+                xi1=pGPCORD(ip,1)
+                xi2=pGPCORD(ip,2)
+                xi3=pGPCORD(ip,3)
+        
+                if (iNODE==8) then ! cf. WRIGGERS - Nonlinear Finite Element3 Methods 2008 (p. 120)
+        
+                    pNN(ip,1) = one/eight*(1-xi1)*(1-xi2)*(1-xi3)
+                    pNN(ip,2) = one/eight*(1+xi1)*(1-xi2)*(1-xi3)
+                    pNN(ip,3) = one/eight*(1+xi1)*(1+xi2)*(1-xi3)
+                    pNN(ip,4) = one/eight*(1-xi1)*(1+xi2)*(1-xi3)
+                    pNN(ip,5) = one/eight*(1-xi1)*(1-xi2)*(1+xi3)
+                    pNN(ip,6) = one/eight*(1+xi1)*(1-xi2)*(1+xi3)
+                    pNN(ip,7) = one/eight*(1+xi1)*(1+xi2)*(1+xi3)
+                    pNN(ip,8) = one/eight*(1-xi1)*(1+xi2)*(1+xi3)
+        
+                else
+                    write(*,*) "Error in computation of shape functions. The number of nodes does not conform with the element type (4 node tetrahedral element)."
+                    CALL XPLB_EXIT
+                end if
+                detJ(ip) = pvolume**(one/eight)
                 ! summation over node_i
                 do ni=1,iNODE !-----------------------------loop-i--------------
                     
@@ -5103,111 +5076,17 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
         
         ! loop over element block
         do kblock=1,nblock ! ---------------------------------------------------
-!            if (jElem(kblock)>13752) then
-!                write(*,*) "Element VU38"
-!                write(*,*) "Element number", jElem(kblock)
-!                write(*,*) "pGM", pGM
-!                write(*,*) "plam",pLAM
-!                write(*,*) "Ndofel", ndofel
-!                write(*,*)  "Number of properties", nprops
-!            end if
-            ! loop over all integration points (computation of FE variables)
-            pvolume = zero
-            do ip=1,iGP ! ------------------------------------------------------
-    
-    
-                ! natural coordinates of current ip
-                xi1 = pGPCORD(ip,1)
-                xi2 = pGPCORD(ip,2)
-                xi3 = pGPCORD(ip,3)
-    
-                ! coordinate vectors of current element
-                X1 = coords(kblock,:,1)
-                X2 = coords(kblock,:,2)
-                X3 = coords(kblock,:,3)
-                
-                ! --------------------------------------------------------------
-                if (iNODE==8) then
-                    
-                    ! derivatives of shape functions with respect to natural coordinates                
-                    dNdXi1(1) = -one/eight*(1-xi2)*(1-xi3)
-                    dNdXi2(1) = -one/eight*(1-xi1)*(1-xi3)
-                    dNdXi3(1) = -one/eight*(1-xi1)*(1-xi2)
-    
-                    dNdXi1(2) =  one/eight*(1-xi2)*(1-xi3)
-                    dNdXi2(2) =  -one/eight*(1+xi1)*(1-xi3)
-                    dNdXi3(2) =  -one/eight*(1+xi1)*(1-xi2)
-    
-                    dNdXi1(3) =  one/eight*(1+xi2)*(1-xi3)
-                    dNdXi2(3) =  one/eight*(1+xi1)*(1-xi3)
-                    dNdXi3(3) =  -one/eight*(1+xi1)*(1+xi2)
-    
-                    dNdXi1(4) =  -one/eight*(1+xi2)*(1-xi3)
-                    dNdXi2(4) =  one/eight*(1-xi1)*(1-xi3)
-                    dNdXi3(4) =  -one/eight*(1-xi1)*(1+xi2)
-    
-                    dNdXi1(5) =  -one/eight*(1-xi2)*(1+xi3)
-                    dNdXi2(5) =  -one/eight*(1-xi1)*(1+xi3)
-                    dNdXi3(5) =  one/eight*(1-xi1)*(1-xi2)
-    
-                    dNdXi1(6) =  one/eight*(1-xi2)*(1+xi3)
-                    dNdXi2(6) =  -one/eight*(1+xi1)*(1+xi3)
-                    dNdXi3(6) =  one/eight*(1+xi1)*(1-xi2)
-    
-                    dNdXi1(7) =  one/eight*(1+xi2)*(1+xi3)
-                    dNdXi2(7) =  one/eight*(1+xi1)*(1+xi3)
-                    dNdXi3(7) =  one/eight*(1+xi1)*(1+xi2)
-    
-                    dNdXi1(8) =  -one/eight*(1+xi2)*(1+xi3)
-                    dNdXi2(8) =  one/eight*(1-xi1)*(1+xi3)
-                    dNdXi3(8) =  one/eight*(1-xi1)*(1+xi2)
-                 
-                else  
-                    write(*,*) "Error in computation of shape function derivatives. The number of nodes does not conform with the element type (4 node tetrahedral element)." 
-                    CALL XPLB_EXIT    
-                end if
         
-                ! derivatives of physical coordinates with respect to natural coordinates                
-                dX1dxi1=dot(X1,dNdXi1)
-                dX1dxi2=dot(X1,dNdXi2)
-                dX1dxi3=dot(X1,dNdXi3)
-    
-                dX2dxi1=dot(X2,dNdXi1)
-                dX2dxi2=dot(X2,dNdXi2)
-                dX2dxi3=dot(X2,dNdXi3)
-    
-                dX3dxi1=dot(X3,dNdXi1)
-                dX3dxi2=dot(X3,dNdXi2)
-                dX3dxi3=dot(X3,dNdXi3)
-    
-                ! Jacobian determinant (detJ = 6V)
-                JJ(1,:) = (/dX1dxi1, dX2dxi1, dX3dxi1/)
-                JJ(2,:) = (/dX1dxi2, dX2dxi2, dX3dxi2/)
-                JJ(3,:) = (/dX1dxi3, dX2dxi3, dX3dxi3/)
-                
-                detJ(ip) = det(JJ)
-                
-                ! derivatives of shape functions with respect to physical coordinates  
-                do nn=1,iNODE
-                    dNdX1(ip,nn) = one/detJ(ip)*( (dX2dxi2*dX3dxi3-dX3dxi2*dX2dxi3)*dNdXi1(nn) &
-                                                + (dX3dxi1*dX2dxi3-dX2dxi1*dX3dxi3)*dNdXi2(nn) &
-                                                + (dX2dxi1*dX3dxi2-dX3dxi1*dX2dxi2)*dNdXi3(nn) )
-                    dNdX2(ip,nn) = one/detJ(ip)*( (dX3dxi2*dX1dxi3-dX1dxi2*dX3dxi3)*dNdXi1(nn) &
-                                                + (dX1dxi1*dX3dxi3-dX3dxi1*dX1dxi3)*dNdXi2(nn) &
-                                                + (dX3dxi1*dX1dxi2-dX1dxi1*dX3dxi2)*dNdXi3(nn) )
-                    dNdX3(ip,nn) = one/detJ(ip)*( (dX1dxi2*dX2dxi3-dX2dxi2*dX1dxi3)*dNdXi1(nn) &
-                                                + (dX2dxi1*dX1dxi3-dX1dxi1*dX2dxi3)*dNdXi2(nn) &
-                                                + (dX1dxi1*dX2dxi2-dX2dxi1*dX1dxi2)*dNdXi3(nn) )
-    
-                end do !----------------nn-loop --------------------
-    
-            pvolume = pvolume+detJ(ip)
-            end do ! -------------------ip-loop------------------------------- 
+    !    !===================================================================================================================================
+    !    !-----------------------------------ELEMENT LENGTH CALCULATION----------------------------------
+    !    !===================================================================================================================================        
+            pvolume = abs((coords(kblock,1,1)-coords(kblock,2,1))*(coords(kblock,1,2)-coords(kblock,4,2))*(coords(kblock,1,3)-coords(kblock,5,3)))
+            pd_min = abs((coords(kblock,1,1)-coords(kblock,2,1)))
+            
     !    !===================================================================================================================================
     !    !-----------------------------------ELEMENT LENGTH CALCULATION & STABLE TIME INCREMENT CALCULATION----------------------------------
     !    !===================================================================================================================================
             
-            pd_min = pvolume**(one/three)
             cd = sqrt( (pEM*(one-pNU))/(pRHO*(one+pNU)*(one-two*pNU)) )
             Mechtime = (pd_min/cd)
             TimeMin = Mechtime
@@ -5224,6 +5103,91 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                 
             if (lflags(iOpCode).eq.jIntForceAndDtStable) then
                 do ip=1,iGP ! ---------------------- loop over all integration points (computation of residuum)--------------------------------
+                
+                    ! natural coordinates of current ip
+                    xi1 = pGPCORD(ip,1)
+                    xi2 = pGPCORD(ip,2)
+                    xi3 = pGPCORD(ip,3)
+        
+                    ! coordinate vectors of current element
+                    X1 = coords(kblock,:,1)
+                    X2 = coords(kblock,:,2)
+                    X3 = coords(kblock,:,3)
+                    
+                    ! --------------------------------------------------------------
+                    if (iNODE==8) then
+                        
+                        ! derivatives of shape functions with respect to natural coordinates                
+                        dNdXi1(1) = -one/eight*(1-xi2)*(1-xi3)
+                        dNdXi2(1) = -one/eight*(1-xi1)*(1-xi3)
+                        dNdXi3(1) = -one/eight*(1-xi1)*(1-xi2)
+        
+                        dNdXi1(2) =  one/eight*(1-xi2)*(1-xi3)
+                        dNdXi2(2) =  -one/eight*(1+xi1)*(1-xi3)
+                        dNdXi3(2) =  -one/eight*(1+xi1)*(1-xi2)
+        
+                        dNdXi1(3) =  one/eight*(1+xi2)*(1-xi3)
+                        dNdXi2(3) =  one/eight*(1+xi1)*(1-xi3)
+                        dNdXi3(3) =  -one/eight*(1+xi1)*(1+xi2)
+        
+                        dNdXi1(4) =  -one/eight*(1+xi2)*(1-xi3)
+                        dNdXi2(4) =  one/eight*(1-xi1)*(1-xi3)
+                        dNdXi3(4) =  -one/eight*(1-xi1)*(1+xi2)
+        
+                        dNdXi1(5) =  -one/eight*(1-xi2)*(1+xi3)
+                        dNdXi2(5) =  -one/eight*(1-xi1)*(1+xi3)
+                        dNdXi3(5) =  one/eight*(1-xi1)*(1-xi2)
+        
+                        dNdXi1(6) =  one/eight*(1-xi2)*(1+xi3)
+                        dNdXi2(6) =  -one/eight*(1+xi1)*(1+xi3)
+                        dNdXi3(6) =  one/eight*(1+xi1)*(1-xi2)
+        
+                        dNdXi1(7) =  one/eight*(1+xi2)*(1+xi3)
+                        dNdXi2(7) =  one/eight*(1+xi1)*(1+xi3)
+                        dNdXi3(7) =  one/eight*(1+xi1)*(1+xi2)
+        
+                        dNdXi1(8) =  -one/eight*(1+xi2)*(1+xi3)
+                        dNdXi2(8) =  one/eight*(1-xi1)*(1+xi3)
+                        dNdXi3(8) =  one/eight*(1-xi1)*(1+xi2)
+                     
+                    else  
+                        write(*,*) "Error in computation of shape function derivatives. The number of nodes does not conform with the element type (4 node tetrahedral element)." 
+                        CALL XPLB_EXIT    
+                    end if
+            
+                    ! derivatives of physical coordinates with respect to natural coordinates                
+                    dX1dxi1=dot(X1,dNdXi1)
+                    dX1dxi2=dot(X1,dNdXi2)
+                    dX1dxi3=dot(X1,dNdXi3)
+        
+                    dX2dxi1=dot(X2,dNdXi1)
+                    dX2dxi2=dot(X2,dNdXi2)
+                    dX2dxi3=dot(X2,dNdXi3)
+        
+                    dX3dxi1=dot(X3,dNdXi1)
+                    dX3dxi2=dot(X3,dNdXi2)
+                    dX3dxi3=dot(X3,dNdXi3)
+        
+                    ! Jacobian determinant (detJ = 6V)
+                    JJ(1,:) = (/dX1dxi1, dX2dxi1, dX3dxi1/)
+                    JJ(2,:) = (/dX1dxi2, dX2dxi2, dX3dxi2/)
+                    JJ(3,:) = (/dX1dxi3, dX2dxi3, dX3dxi3/)
+                    
+                    detJ(ip) = det(JJ)
+                
+                ! derivatives of shape functions with respect to physical coordinates  
+                do nn=1,iNODE
+                    dNdX1(ip,nn) = one/detJ(ip)*( (dX2dxi2*dX3dxi3-dX3dxi2*dX2dxi3)*dNdXi1(nn) &
+                                                + (dX3dxi1*dX2dxi3-dX2dxi1*dX3dxi3)*dNdXi2(nn) &
+                                                + (dX2dxi1*dX3dxi2-dX3dxi1*dX2dxi2)*dNdXi3(nn) )
+                    dNdX2(ip,nn) = one/detJ(ip)*( (dX3dxi2*dX1dxi3-dX1dxi2*dX3dxi3)*dNdXi1(nn) &
+                                                + (dX1dxi1*dX3dxi3-dX3dxi1*dX1dxi3)*dNdXi2(nn) &
+                                                + (dX3dxi1*dX1dxi2-dX1dxi1*dX3dxi2)*dNdXi3(nn) )
+                    dNdX3(ip,nn) = one/detJ(ip)*( (dX1dxi2*dX2dxi3-dX2dxi2*dX1dxi3)*dNdXi1(nn) &
+                                                + (dX2dxi1*dX1dxi3-dX1dxi1*dX2dxi3)*dNdXi2(nn) &
+                                                + (dX1dxi1*dX2dxi2-dX2dxi1*dX1dxi2)*dNdXi3(nn) )
+    
+                end do !----------------nn-loop --------------------
                     
                     Ux = u(kblock,1:iCORD*iNODE:iCORD)
                     Uy = u(kblock,2:iCORD*iNODE:iCORD)
@@ -5243,9 +5207,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     
                     do ni=1,iNODE !-----------------------------loop-i--------------
                         
-                        do i=1,iCORD
-                            dofni(i) = ni*iCORD-(iCORD-1)+(i-1)
-                        end do
+                        
+                        dofni(1:iCORD) = 1+iCORDTOTAL*((ni*1)-1)+(CordRange-1)
                     
                 !--------------------------------------Displacement RHS--------------------------------------
                         rhs(kblock,dofni) = rhs(kblock,dofni) 	+ pQUAD*pWT(ip)*detJ(ip)*(matvec(P,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))) 
@@ -5412,6 +5375,28 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
             else if (lflags(iOpCode).eq.jMassCalc) then
                 !amass(kblock,:,:)= zero
                 do ip=1,iGP ! ---------------------- loop over all integration points (computation of mass matrix)--------------------------------
+                
+                    xi1=pGPCORD(ip,1)
+                    xi2=pGPCORD(ip,2)
+                    xi3=pGPCORD(ip,3)
+            
+                    if (iNODE==8) then ! cf. WRIGGERS - Nonlinear Finite Element3 Methods 2008 (p. 120)
+            
+                        pNN(ip,1) = one/eight*(1-xi1)*(1-xi2)*(1-xi3)
+                        pNN(ip,2) = one/eight*(1+xi1)*(1-xi2)*(1-xi3)
+                        pNN(ip,3) = one/eight*(1+xi1)*(1+xi2)*(1-xi3)
+                        pNN(ip,4) = one/eight*(1-xi1)*(1+xi2)*(1-xi3)
+                        pNN(ip,5) = one/eight*(1-xi1)*(1-xi2)*(1+xi3)
+                        pNN(ip,6) = one/eight*(1+xi1)*(1-xi2)*(1+xi3)
+                        pNN(ip,7) = one/eight*(1+xi1)*(1+xi2)*(1+xi3)
+                        pNN(ip,8) = one/eight*(1-xi1)*(1+xi2)*(1+xi3)
+            
+                    else
+                        write(*,*) "Error in computation of shape functions. The number of nodes does not conform with the element type (4 node tetrahedral element)."
+                        CALL XPLB_EXIT
+                    end if
+                    
+                    detJ(ip) = pvolume**(one/eight)
                     ! summation over node_i
                     do ni=1,iNODE !-----------------------------loop-i--------------
                         
@@ -5440,9 +5425,7 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
                     amass(kblock,i,i) = amass_row_sum
                 end do
             end if ! ----------------------------jMassCalc--------------------
-                       
-!===============================================================================================================================================
-                                            
+
         end do !-----------------------nblock-----------------------------------
 
     end if ! ------------------------ type.eq.38 loop ---------------------------
