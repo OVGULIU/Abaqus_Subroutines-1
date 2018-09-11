@@ -3956,6 +3956,7 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
     logical :: I_EXIST
     character*256 :: JOBNAME
 	character*256 :: filename
+	character*256 :: cwd
     integer :: KPROCESSNUM
 
     
@@ -3966,7 +3967,7 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
     ! ------ START OF THE ANALYSIS ------
     if (lOp .eq. j_int_StartAnalysis) then
     call VGETJOBNAME(JOBNAME,LENJOBNAME)
-    filename = cwd // 'Du_results_' // trim(JOBNAME) // '.inp'
+    filename = trim(cwd) // 'Du_results_' // trim(JOBNAME) // '.inp'
     INQUIRE(FILE=filename,EXIST=I_EXIST)
     if (I_EXIST) then
         open(unit=107, file=filename)            
@@ -3979,7 +3980,7 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
     write(107,*) 0.0d0
     close(107)
     
-    filename = cwd // 'Du_results_Prev' // trim(JOBNAME) // '.inp'
+    filename = trim(cwd) // 'Du_results_Prev' // trim(JOBNAME) // '.inp'
     INQUIRE(FILE=filename,EXIST=I_EXIST)
     if (I_EXIST) then
         open(unit=107, file=filename)            
@@ -4007,14 +4008,14 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
     ! ------ End of the analysis ------
     else if (lOp .eq. j_int_EndAnalysis) then
     call VGETJOBNAME(JOBNAME,LENJOBNAME)
-    filename = cwd // 'Du_results' // trim(JOBNAME) // '.inp'
+    filename = trim(cwd) // 'Du_results' // trim(JOBNAME) // '.inp'
     INQUIRE(FILE=filename,EXIST=I_EXIST)
     if (I_EXIST) then
         open(unit=107, file=filename)            
         close(UNIT=107,STATUS='DELETE')
         write(*,*) " -- ", filename, " Deleted"
     end if
-    filename = cwd // 'Du_results_Prev' // trim(JOBNAME) // '.inp'
+    filename = trim(cwd) // 'Du_results_Prev' // trim(JOBNAME) // '.inp'
     INQUIRE(FILE=filename,EXIST=I_EXIST)
     if (I_EXIST) then
         open(unit=107, file=filename)            
