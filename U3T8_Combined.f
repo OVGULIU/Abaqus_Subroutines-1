@@ -693,7 +693,7 @@ module SideElements
 5233, 5234, 5235, 5236, 5237, 5238, 5239, 5240, 5241, 5242, 5243, 5244, 5245, 5246, 5247, 5248, & 
 5249, 5250, 5251, 5252, 5253, 5254, 5255, 5256, 5257, 5258, 5259, 5260, 5261, 5262, 5263, 5264, & 
 5265, 5266 /)
-    AREA_X0 = 5266*(1.0d0/96.0d0)*(1.0d0/96.0d0)
+    AREA_X0 = 5266*(100.0d0/96.0d0)*(100.0d0/96.0d0)
 
     X1_POLY = (/508391, 508392, 508393, 508394, 508395, 508396, 508397, 508398, 508399, 508400, 508401, 508402, 508403, 508404, 508405, 508406, & 
 508407, 508408, 508409, 508410, 508411, 508412, 508413, 508414, 508415, 508416, 508417, 508418, 508419, 508420, 508421, 508422, & 
@@ -1026,7 +1026,7 @@ module SideElements
 513639, 513640, 513641, 513642, 513643, 513644, 513645, 513646, 513647, 513648, 513649, 513650, 513651, 513652, 513653, 513654, & 
 513655, 513656, 513657, 513658 /)
 
-    AREA_X1 = 5268*(1.0d0/96.0d0)*(1.0d0/96.0d0)
+    AREA_X1 = 5268*(100.0d0/96.0d0)*(100.0d0/96.0d0)
 
 Y0_POLY = (/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, & 
 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, & 
@@ -1360,7 +1360,7 @@ Y0_POLY = (/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, &
 503054, 503055, 508391, 508392, 508393, 508394, 508395, 508396, 508397, 508398, 508399, 508400, 508401, 508402, 508403, 508404, & 
 508405, 508406, 508407, 508408, 508409, 508410, 508411, 508412, 508413, 508414, 508415, 508416, 508417, 508418, 508419, 508420, & 
 508421, 508422, 508423, 508424, 508425/)
-    AREA_Y0 = 5301*(1.0d0/96.0d0)*(1.0d0/96.0d0)
+    AREA_Y0 = 5301*(100.0d0/96.0d0)*(100.0d0/96.0d0)
 
 Y1_POLY = (/5228, 5229, 5230, 5231, 5232, 5233, 5234, 5235, 5236, 5237, 5238, 5239, 5240, 5241, 5242, 5243, & 
 5244, 5245, 5246, 5247, 5248, 5249, 5250, 5251, 5252, 5253, 5254, 5255, 5256, 5257, 5258, 5259, & 
@@ -1695,7 +1695,7 @@ Y1_POLY = (/5228, 5229, 5230, 5231, 5232, 5233, 5234, 5235, 5236, 5237, 5238, 52
 508387, 508388, 508389, 508390, 513616, 513617, 513618, 513619, 513620, 513621, 513622, 513623, 513624, 513625, 513626, 513627, & 
 513628, 513629, 513630, 513631, 513632, 513633, 513634, 513635, 513636, 513637, 513638, 513639, 513640, 513641, 513642, 513643, & 
 513644, 513645, 513646, 513647, 513648, 513649, 513650, 513651, 513652, 513653, 513654, 513655, 513656, 513657, 513658/)
-    AREA_Y1 = 5327*(1.0d0/96.0d0)*(1.0d0/96.0d0)
+    AREA_Y1 = 5327*(100.0d0/96.0d0)*(100.0d0/96.0d0)
 
 Z0_POLY = (/246, 307, 375, 442, 499, 554, 880, 943, 1002, 1051, 1099, 1145, 1182, 1213, 1254, 1300, & 
 2060, 2101, 2146, 2199, 2261, 2784, 2849, 2913, 2975, 3033, 3087, 3375, 3449, 3527, 3604, 3687, & 
@@ -2023,7 +2023,7 @@ Z0_POLY = (/246, 307, 375, 442, 499, 554, 880, 943, 1002, 1051, 1099, 1145, 1182
 508770, 508832, 508892, 509295, 509352, 509417, 509471, 509521, 509561, 509601, 509637, 509679, 509722, 509770, 509823, 509883, & 
 509948, 510020, 510092, 510161, 510217, 510473, 510516, 510572, 510631, 510693, 511331, 511397, 511461, 511851, 511918, 511990, & 
 512062, 512131, 512200, 512264, 512324, 512625, 512678, 512736, 512790, 512841, 512888, 512939, 513367, 513437, 513505, 513566/)
-    AREA_Z0 = 5216*(1.0d0/96.0d0)*(1.0d0/96.0d0)
+    AREA_Z0 = 5216*(100.0d0/96.0d0)*(100.0d0/96.0d0)
 
 Z1_POLY= (/ 245, 306, 374, 441, 498, 553, 613, 942, 1001, 1050, 1098, 1144, 1181, 1212, 1253, 1299, & 
 1350, 2059, 2100, 2145, 2198, 2260, 2325, 2783, 2848, 2912, 2974, 3032, 3086, 3132, 3374, 3448, & 
@@ -2351,7 +2351,7 @@ Z1_POLY= (/ 245, 306, 374, 441, 498, 553, 613, 942, 1001, 1050, 1098, 1144, 1181
 509769, 509822, 510019, 510091, 510160, 510216, 510515, 510571, 510630, 510692, 510761, 511267, 511330, 511396, 511460, 511516, & 
 511850, 511917, 511989, 512061, 512130, 512199, 512263, 512323, 512380, 512432, 512735, 512789, 512840, 512887, 512938, 512989, & 
 513043, 513436, 513504, 513565, 513615 /)
-    AREA_Z1 = 5268*(1.0d0/96.0d0)*(1.0d0/96.0d0)    
+    AREA_Z1 = 5268*(100.0d0/96.0d0)*(100.0d0/96.0d0)    
     
     end subroutine Poly
 
@@ -3916,6 +3916,13 @@ module constitutive_relations
             !---------------------------------------------------------------------------       
     end subroutine STRESSES_CONCEN_COUPLED
 end module constitutive_relations
+
+SUBROUTINE EXECUTE_COMMAND_LINE(CMD)
+	CHARACTER(len=*) :: CMD
+
+	CALL SYSTEM(trim(CMD))
+END SUBROUTINE EXECUTE_COMMAND_LINE
+
 !===============================================================================
 ! USER SUBROUTINE - UPDATE EXTERNAL DATABASE
 SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
@@ -3955,77 +3962,199 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
     integer :: kstep,kInc
     logical :: I_EXIST
     character*256 :: JOBNAME
-	character*256 :: filename
-	character*256 :: cwd
+    character*256 :: filename
+    character(len=1024) :: filenamenew
+    character*256 :: cwd
     integer :: KPROCESSNUM
 
-    
+!    cwd = '/home/grfemm002/UCT_hpc/2M_96x96x96_89_over_146/'
     kstep = i_Array(i_int_kStep)
     kInc = i_Array(i_int_kInc)
-    cwd = '/home/grfemm002/UCT_hpc/2M_96x96x96_89_over_146/'
+  	cwd = '/home/emmag/2M_96x96x96/'
+!    cwd = '/home/grfemm002/UCT_hpc/2M_96x96x96_89_over_146/'
     
     ! ------ START OF THE ANALYSIS ------
     if (lOp .eq. j_int_StartAnalysis) then
-    call VGETJOBNAME(JOBNAME,LENJOBNAME)
-    filename = trim(cwd) // 'Du_results_' // trim(JOBNAME) // '.inp'
-    INQUIRE(FILE=filename,EXIST=I_EXIST)
-    if (I_EXIST) then
-        open(unit=107, file=filename)            
-        close(UNIT=107,STATUS='DELETE')
-        write(*,*) " -- ", filename, " Deleted"
-    end if
-    open(unit=107,file=filename, status="new", action="write")
-    write(107,*) 0
-    write(107,*) 0.0d0
-    write(107,*) 0.0d0
-    close(107)
+!    call VGETJOBNAME(JOBNAME,LENJOBNAME)
+!    filename = trim(cwd) // 'Du_results_' // trim(JOBNAME) // '.inp'
+!    INQUIRE(FILE=filename,EXIST=I_EXIST)
+!    if (I_EXIST) then
+!        open(unit=107, file=filename)            
+!        close(UNIT=107,STATUS='DELETE')
+!        write(*,*) " -- ", filename, " Deleted"
+!    end if
+!    open(unit=107,file=filename, status="new", action="write")
+!    write(107,*) 0
+!    write(107,*) 0.0d0
+!    write(107,*) 0.0d0
+ !   close(107)
     
-    filename = trim(cwd) // 'Du_results_Prev' // trim(JOBNAME) // '.inp'
-    INQUIRE(FILE=filename,EXIST=I_EXIST)
-    if (I_EXIST) then
-        open(unit=107, file=filename)            
-        close(UNIT=107,STATUS='DELETE')
-        write(*,*) " -- ", filename, " Deleted"
-    end if
-    open(unit=107,file=filename, status="new", action="write")
-    write(107,*) 0
-    write(107,*) 0.0d0
-    write(107,*) 0.0d0
-    close(107)
+!    filename = trim(cwd) // 'Du_results_Prev' // trim(JOBNAME) // '.inp'
+!    INQUIRE(FILE=filename,EXIST=I_EXIST)
+!    if (I_EXIST) then
+!        open(unit=107, file=filename)            
+!        close(UNIT=107,STATUS='DELETE')
+!        write(*,*) " -- ", filename, " Deleted"
+!    end if
+!    open(unit=107,file=filename, status="new", action="write")
+!    write(107,*) 0
+!    write(107,*) 0.0d0
+!    write(107,*) 0.0d0
+!    close(107)
     
     ! ------ Start of the step ------
     else if (lOp .eq. j_int_StartStep) then    
-    CALL VGETRANK( KPROCESSNUM )
-    write(*,*) "KPROCESSNUM", KPROCESSNUM
+!    CALL VGETRANK( KPROCESSNUM )
+!    write(*,*) "KPROCESSNUM", KPROCESSNUM
     ! ------ Setup the increment ------
     else if (lOp .eq. j_int_SetupIncrement) then
     ! ------ Start of increment ------
     else if (lOp .eq. j_int_StartIncrement) then
-    ! ------ End of increment ------
+    if (MOD(int(i_Array(i_int_kInc)),1000000).eq.0d0) then
+        CALL VGETRANK( KPROCESSNUM )
+        if (KPROCESSNUM.eq.0) then
+	    write(*,*) "VEXTERNALDB"
+  	    cwd = '/home/emmag/2M_96x96x96/'
+            call VGETJOBNAME(JOBNAME,LENJOBNAME) 
+            call execute_command_line('sh ' // trim(cwd) // 'PythonScript.sh ' // trim(JOBNAME))
+            if (int(i_Array(i_int_kInc))<9) then
+                write(filenamenew,"(I1)") int(i_Array(i_int_kInc))
+            else if (int(i_Array(i_int_kInc))<99) then
+                write(filenamenew,"(I2)") int(i_Array(i_int_kInc))
+            else if (int(i_Array(i_int_kInc))<999) then
+                write(filenamenew,"(I3)") int(i_Array(i_int_kInc))
+            else if (int(i_Array(i_int_kInc))<9999) then
+                write(filenamenew,"(I4)") int(i_Array(i_int_kInc))
+            else if (int(i_Array(i_int_kInc))<99999) then
+                write(filenamenew,"(I5)") int(i_Array(i_int_kInc))
+            end if
+	    call  execute_command_line('cp ' // trim(cwd) // 'ElecPotentials.csv ' // trim(cwd) // 'Elecpotentials' // trim(JOBNAME) //  trim(filenamenew) // '.csv')
+            call  execute_command_line('cp ' // trim(cwd) // 'Concentrationfield.csv ' // trim(cwd) // 'Concentrationfield' // trim(JOBNAME) //  trim(filenamenew) // '.csv')
+            write(*,*) "PythonScript.sh COMPLETE"  
+        end if  
+    end if
+! ------ End of increment ------
     else if (lOp .eq. j_int_EndIncrement) then
     ! ------ End of the step ------
     else if (lOp .eq. j_int_EndStep) then
     ! ------ End of the analysis ------
     else if (lOp .eq. j_int_EndAnalysis) then
-    call VGETJOBNAME(JOBNAME,LENJOBNAME)
-    filename = trim(cwd) // 'Du_results' // trim(JOBNAME) // '.inp'
-    INQUIRE(FILE=filename,EXIST=I_EXIST)
-    if (I_EXIST) then
-        open(unit=107, file=filename)            
-        close(UNIT=107,STATUS='DELETE')
-        write(*,*) " -- ", filename, " Deleted"
-    end if
-    filename = trim(cwd) // 'Du_results_Prev' // trim(JOBNAME) // '.inp'
-    INQUIRE(FILE=filename,EXIST=I_EXIST)
-    if (I_EXIST) then
-        open(unit=107, file=filename)            
-        close(UNIT=107,STATUS='DELETE')
-        write(*,*) " -- ", filename, " Deleted"
-    end if
+!    call VGETJOBNAME(JOBNAME,LENJOBNAME)
+!    filename = trim(cwd) // 'Du_results' // trim(JOBNAME) // '.inp'
+!    INQUIRE(FILE=filename,EXIST=I_EXIST)
+!    if (I_EXIST) then
+!        open(unit=107, file=filename)            
+!        close(UNIT=107,STATUS='DELETE')
+!        write(*,*) " -- ", filename, " Deleted"
+!    end if
+!    filename = trim(cwd) // 'Du_results_Prev' // trim(JOBNAME) // '.inp'
+!    INQUIRE(FILE=filename,EXIST=I_EXIST)
+!    if (I_EXIST) then
+!        open(unit=107, file=filename)            
+!        close(UNIT=107,STATUS='DELETE')
+!        write(*,*) " -- ", filename, " Deleted"
+!    end if
     end if
     
     return
 end subroutine VEXTERNALDB
+   
+SUBROUTINE VUFIELD(FIELD, NBLOCK, NFIELD, KFIELD, NCOMP, &
+                           KSTEP, JFLAGS, JNODEID, TIME, &
+                           COORDS, U, V, A)
+        include 'vaba_param.inc'        
+        ! indices for the time array 
+        integer, parameter :: i_ufld_Current = 1
+        integer, parameter :: i_ufld_Increment = 2
+        integer, parameter :: i_ufld_Period = 3
+        integer, parameter :: i_ufld_Total = 4
+
+        ! indices for the coordinate array COORDS 
+        integer, parameter :: i_ufld_CoordX = 1
+        integer, parameter :: i_ufld_CoordY = 2
+        integer, parameter :: i_ufld_CoordZ = 3
+
+        ! indices for the displacement array U 
+        integer, parameter :: i_ufld_SpaDisplX = 1
+        integer, parameter :: i_ufld_SpaDislY = 2
+        integer, parameter :: i_ufld_SpaDisplz = 3
+        integer, parameter :: i_ufld_RotDisplX = 4
+        integer, parameter :: i_ufld_RotDisplY = 5
+        integer, parameter :: i_ufld_RotDisplZ = 6
+        integer, parameter :: i_ufld_AcoPress = 7
+        integer, parameter :: i_ufld_Temp = 8
+
+        !indices for velocity array V 
+        integer, parameter :: i_ufld_SpaVelX = 1
+        integer, parameter :: i_ufld_SpaVelY = 2
+        integer, parameter :: i_ufld_SpaVelZ = 3
+        integer, parameter :: i_ufld_RotVelX = 4
+        integer, parameter :: i_ufld_RotVelY = 5
+        integer, parameter :: i_ufld_RotVelZ = 6
+        integer, parameter :: i_ufld_DAcoPress = 7
+        integer, parameter :: i_ufld_DTemp = 8
+
+        ! indicies for the acceleration array A 
+        integer, parameter :: i_ufld_SpaAccelX = 1
+        integer, parameter :: i_ufld_SpaAccelY = 2
+        integer, parameter :: i_ufld_SpaAccelZ = 3
+        integer, parameter :: i_ufld_RotAccelX = 4
+        integer, parameter :: i_ufld_RotAccelY = 5
+        integer, parameter :: i_ufld_RotAccelZ = 6
+        integer, parameter :: i_ufld_DDAcoPress = 7
+        integer, parameter :: i_ufld_DDTemp = 8
+
+        ! indices for JFLAGS 
+        integer, parameter :: i_ufld_kInc = 1
+        integer, parameter :: i_ufld_kPass = 2
+
+        ! Variables passed in for information
+        integer, intent(in) :: NBLOCK
+        integer, intent(in) :: NFIELD
+        integer, intent(in) :: KFIELD
+        integer, intent(in) :: NCOMP
+        integer, intent(in) :: KSTEP
+        integer, intent(in), dimension(i_ufld_kPass) :: JFLAGS
+        integer, intent(in), dimension(NBLOCK) :: JNODEID
+        double precision, intent(in), dimension(4) :: TIME
+        double precision, intent(in), dimension(3,NBLOCK) :: COORDS
+        double precision, intent(in), dimension(8,NBLOCK) :: U,V,A
+        double precision, dimension(912672) :: data_arr
+        integer :: KPROCESSNUM
+
+        ! Dimensioned arrays
+        double precision, intent(inout), dimension(NBLOCK,NCOMP,NFIELD) :: FIELD
+	character*256 :: cwd
+	
+	! Dimensions for XPLB_ABQERR subroutine	
+	integer :: LOP
+	character*256 :: STRING
+	integer :: INTV(2)
+	double precision  :: RealV(1)
+	character*256 :: CHARV(1)   	
+
+!	LOP = 1
+!	String = 'Writing check made to .sta file with one inetger %I'
+!	INTV(1) = 1
+!	REALV(1) = 0.0
+!	CHARV(1) = 'hh'
+	cwd = '/home/emmag/2M_96x96x96/'
+        if (JFLAGS(i_ufld_kInc).eq.1d0 .OR. JFLAGS(i_ufld_kInc).eq.0d0) then
+        else if (MOD(int(JFLAGS(i_ufld_kInc)),10).eq.0d0) then
+!	    CALL XPLB_ABQERR(LOP,STRING,INTV,REALV,CHARV)
+            CALL VGETRANK( KPROCESSNUM )
+            write(*,*) "---------------------- VUFIELD at increment:",JFLAGS(i_ufld_kInc),", Kprocessnum: ",KPROCESSNUM," ----------------------" 
+            open(unit=105, file=trim(cwd) // 'ElecPotentials.csv',status='old')!
+            READ(105,*) data_arr
+    	    close(105)
+            do kblock=1,nblock
+                FIELD(kblock,NCOMP,NFIELD) = data_arr(JNODEID(kblock))
+            end do
+            write(*,*) "VUFIELD: COMPLETE"
+         end if
+     return
+     end subroutine VUFIELD
+
    
 !===============================================================================
 !-------------------------------------------------------------------------------
@@ -4074,10 +4203,10 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     integer, parameter :: iGPR=8		!Number of Gauss Points in reduced integration
     integer, parameter :: iGPquad=4		!Number of Gauss Points for boundary 2D elements
     integer, parameter :: iCORD=3	!Degrees of freedom (mechanical)
-!    integer, parameter :: ICORDTOTAL=4  !Degrees of freedom (total per node (3 mech; 1 temp))
+   ! integer, parameter :: ICORDTOTAL=4  !Degrees of freedom (total per node (3 mech; 1 temp))
     integer, parameter :: iNODE=8	!Number of nodes per element
 
-    ! Abaqus variables
+   ! ! Abaqus variables
     ! ================  
     
     ! predefined parameters - operational code keys
@@ -4399,8 +4528,8 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     !--------------------------Parameters used in modified PNP model-------------------------------------
         pNa = 602.2140857d0
         pPi = 3.14159265358979311d0
-        pRi = 0.502d0
-        pVpoly = 0.7d0
+        pRi = 0.240d0
+        pVpoly = 0.67d0
         pVsat = 1.0d0
         pImmobileConc = 1.0d0 / (4.0d0/3.0d0*pPi*(pRi**3)*pNa)        
     !--------------------------Parameters used in modified PNP model-------------------------------------
