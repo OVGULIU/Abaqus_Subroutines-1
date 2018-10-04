@@ -3923,6 +3923,27 @@ SUBROUTINE EXECUTE_COMMAND_LINE(CMD)
 	CALL SYSTEM(trim(CMD))
 END SUBROUTINE EXECUTE_COMMAND_LINE
 
+SUBROUTINE INT_TO_STRING(INTV,STRINGV)
+
+    implicit none
+    
+    integer, intent(in) :: INTV
+    character*256, intent(inout) :: STRINGV
+    
+    if (intv<9) then
+        write(STRINGV,"(I1)") intv
+    else if (intv<99) then
+        write(STRINGV,"(I2)") intv
+    else if (intv<999) then
+        write(STRINGV,"(I3)") intv
+    else if (intv<9999) then
+        write(STRINGV,"(I4)") intv
+    else if (intv<99999) then
+        write(STRINGV,"(I5)") intv
+    end if    
+
+END SUBROUTINE
+
 !===============================================================================
 ! USER SUBROUTINE - UPDATE EXTERNAL DATABASE
 SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
@@ -3963,9 +3984,13 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
     logical :: I_EXIST
     character*256 :: JOBNAME
     character*256 :: filename
-    character(len=1024) :: filenamenew
+    character(len=1024) :: STRINGV
     character*256 :: cwd
     integer :: KPROCESSNUM
+    integer :: NUMPROCESSES
+    integer :: cpu
+    DOUBLE PRECISION :: iter_tmp, influx_tmp, dcdt_tmp
+    Double precision :: influx_sum, dcdt_sum
 
 !    cwd = '/home/grfemm002/UCT_hpc/2M_96x96x96_89_over_146/'
     kstep = i_Array(i_int_kStep)
@@ -3975,85 +4000,84 @@ SUBROUTINE VEXTERNALDB(lOp, i_Array, niArray, r_Array, nrArray)
     
     ! ------ START OF THE ANALYSIS ------
     if (lOp .eq. j_int_StartAnalysis) then
-!    call VGETJOBNAME(JOBNAME,LENJOBNAME)
-!    filename = trim(cwd) // 'Du_results_' // trim(JOBNAME) // '.inp'
-!    INQUIRE(FILE=filename,EXIST=I_EXIST)
-!    if (I_EXIST) then
-!        open(unit=107, file=filename)            
-!        close(UNIT=107,STATUS='DELETE')
-!        write(*,*) " -- ", filename, " Deleted"
-!    end if
-!    open(unit=107,file=filename, status="new", action="write")
-!    write(107,*) 0
-!    write(107,*) 0.0d0
-!    write(107,*) 0.0d0
- !   close(107)
-    
-!    filename = trim(cwd) // 'Du_results_Prev' // trim(JOBNAME) // '.inp'
-!    INQUIRE(FILE=filename,EXIST=I_EXIST)
-!    if (I_EXIST) then
-!        open(unit=107, file=filename)            
-!        close(UNIT=107,STATUS='DELETE')
-!        write(*,*) " -- ", filename, " Deleted"
-!    end if
-!    open(unit=107,file=filename, status="new", action="write")
-!    write(107,*) 0
-!    write(107,*) 0.0d0
-!    write(107,*) 0.0d0
-!    close(107)
-    
+    CALL VGETRANK( KPROCESSNUM )    
+    call VGETJOBNAME(JOBNAME,LENJOBNAME)
+    Do cpu=1,NUMROCESSES
+        CALL INT_TO_STRING(CPU,filenamenew)
+        filename = trim(cwd) // 'Du_curr' // trim(JOBNAME) // trim(filenamenew) // '.inp'
+        INQUIRE(FILE=filename,EXIST=I_EXIST)
+        if (I_EXIST) then
+            open(unit=107, file=filename)            
+            close(UNIT=107,STATUS='DELETE')
+            write(*,*) " -- ", filename, " Deleted"
+        end if
+        open(unit=107,file=filename, status="new", action="write")
+        write(107,*) 0
+        write(107,*) 0.0d0
+        write(107,*) 0.0d0
+        close(107)
+        
+        filename = trim(cwd) // 'Du_prev' // trim(JOBNAME) //  trim(filenamenew) // '.inp'
+        INQUIRE(FILE=filename,EXIST=I_EXIST)
+        if (I_EXIST) then
+            open(unit=107, file=filename)            
+            close(UNIT=107,STATUS='DELETE')
+            write(*,*) " -- ", filename, " Deleted"
+        end if
+        open(unit=107,file=filename, status="new", action="write")
+        write(107,*) 0
+        write(107,*) 0.0d0
+        write(107,*) 0.0d0
+        close(107)
+    end do
     ! ------ Start of the step ------
     else if (lOp .eq. j_int_StartStep) then    
-!    CALL VGETRANK( KPROCESSNUM )
-!    write(*,*) "KPROCESSNUM", KPROCESSNUM
     ! ------ Setup the increment ------
     else if (lOp .eq. j_int_SetupIncrement) then
     ! ------ Start of increment ------
     else if (lOp .eq. j_int_StartIncrement) then
-    if (MOD(int(i_Array(i_int_kInc)),1000000).eq.0d0) then
+   ! ------ End of increment ------
+    else if (lOp .eq. j_int_EndIncrement) then
+ if (MOD(int(i_Array(i_int_kInc)),1000000).eq.0d0) then
         CALL VGETRANK( KPROCESSNUM )
+        CALL VGETNUMCPUS( NUMPROCESSES )
+
         if (KPROCESSNUM.eq.0) then
 	    write(*,*) "VEXTERNALDB"
   	    cwd = '/home/emmag/2M_96x96x96/'
             call VGETJOBNAME(JOBNAME,LENJOBNAME) 
             call execute_command_line('sh ' // trim(cwd) // 'PythonScript.sh ' // trim(JOBNAME))
-            if (int(i_Array(i_int_kInc))<9) then
-                write(filenamenew,"(I1)") int(i_Array(i_int_kInc))
-            else if (int(i_Array(i_int_kInc))<99) then
-                write(filenamenew,"(I2)") int(i_Array(i_int_kInc))
-            else if (int(i_Array(i_int_kInc))<999) then
-                write(filenamenew,"(I3)") int(i_Array(i_int_kInc))
-            else if (int(i_Array(i_int_kInc))<9999) then
-                write(filenamenew,"(I4)") int(i_Array(i_int_kInc))
-            else if (int(i_Array(i_int_kInc))<99999) then
-                write(filenamenew,"(I5)") int(i_Array(i_int_kInc))
-            end if
-	    call  execute_command_line('cp ' // trim(cwd) // 'ElecPotentials.csv ' // trim(cwd) // 'Elecpotentials' // trim(JOBNAME) //  trim(filenamenew) // '.csv')
+            CALL INT_TO_STRING(int(i_Array(i_int_kInc)),filenamenew)
+            call  execute_command_line('cp ' // trim(cwd) // 'ElecPotentials.csv ' // trim(cwd) // 'Elecpotentials' // trim(JOBNAME) //  trim(filenamenew) // '.csv')
             call  execute_command_line('cp ' // trim(cwd) // 'Concentrationfield.csv ' // trim(cwd) // 'Concentrationfield' // trim(JOBNAME) //  trim(filenamenew) // '.csv')
             write(*,*) "PythonScript.sh COMPLETE"  
+            influx_sum = 0.0d0
+            dcdt_sum = 0.0
+            DO CPU=0,NUMROCESSES
+               CALL INT_TO_STRING(CPU,filenamenew)
+               filename = trim(cwd) // 'Du_curr_' // trim(JOBNAME) // trim(filenamenew) // '.inp'
+               open(unit=106, file=filename)
+               read(106,*) dcdt_tmp   ! Total flux within RVE from previous step c_dot integrated over volue of RVE
+               read(106,*) influx_tmp   ! Total integral of influx calculated from the previous step over area applied
+               close(106)
+               dcdt_sum  = dcdt_sum  + dcdt_tmp
+               influx_sum = influx_sum + influx_tmp
+            END DO            
+            DO CPU=0,NUMROCESSES
+               CALL INT_TO_STRING(CPU,filenamenew)
+               filename = trim(cwd) // 'Du_prev' // trim(JOBNAME) // trim(filenamenew) // '.inp'
+               open(unit=106, file=filename)
+               write(106,*) dcdt_sum   ! Total flux within RVE from previous step c_dot integrated over volue of RVE
+               write(106,*) influx_sum   ! Total integral of influx calculated from the previous step over area applied
+               close(106)
+            END DO  
+            
         end if  
     end if
-! ------ End of increment ------
-    else if (lOp .eq. j_int_EndIncrement) then
     ! ------ End of the step ------
     else if (lOp .eq. j_int_EndStep) then
     ! ------ End of the analysis ------
     else if (lOp .eq. j_int_EndAnalysis) then
-!    call VGETJOBNAME(JOBNAME,LENJOBNAME)
-!    filename = trim(cwd) // 'Du_results' // trim(JOBNAME) // '.inp'
-!    INQUIRE(FILE=filename,EXIST=I_EXIST)
-!    if (I_EXIST) then
-!        open(unit=107, file=filename)            
-!        close(UNIT=107,STATUS='DELETE')
-!        write(*,*) " -- ", filename, " Deleted"
-!    end if
-!    filename = trim(cwd) // 'Du_results_Prev' // trim(JOBNAME) // '.inp'
-!    INQUIRE(FILE=filename,EXIST=I_EXIST)
-!    if (I_EXIST) then
-!        open(unit=107, file=filename)            
-!        close(UNIT=107,STATUS='DELETE')
-!        write(*,*) " -- ", filename, " Deleted"
-!    end if
     end if
     
     return
@@ -4441,13 +4465,16 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     character*256 :: filename2, fname
     integer :: LENJOBNAME
     CHARACTER(len=255) :: cwd
+    integer :: KPROCESSNUM
 !--------------------------Integers -------------------------------------           
 
     integer :: iCORDTOTAL
     integer :: kblock,ip,nn,ni,nj,i,pmod,total,Increment_int, temp1
     double precision :: pVsat
-    double precision :: palpha, pbeta, Total_int, temp2, temp3, area, Ele_temp
+    double precision :: palpha, pbeta, Total_int, iter, dcdt_sum, influx_sum, area, Ele_temp
     double precision :: Total_influx
+    double precision :: dcdt_sum, influx_sum
+    double precision :: dcdt_tmp, influx_tmp
 
     double precision :: AREA_X0, AREA_X1, AREA_Y0, AREA_Y1, AREA_Z0, AREA_Z1
     
@@ -4535,15 +4562,17 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
     !--------------------------Parameters used in modified PNP model-------------------------------------
         
     !===============================================================================================================================================
+
+           CALL VGETRANK( KPROCESSNUM )
+           CALL INT_TO_STRING(KPROCESSNUM,filenamenew)
+           filename2 = '/home/cerecam/Desktop/Du_prev' // trim(JOBNAME) // trim(filenamenew) // '.inp'
+           open(unit=106, file=filename2, status='old')
+           read(106,*) dcdt_sum   ! Total flux within RVE from previous step c_dot integrated over volue of RVE
+           read(106,*) influx_sum   ! Total integral of influx calculated from the previous step over area applied
+           close(106)           
+           pbeta = (dcdt_sum-influx_sum)/AREA_Z0  ! Calculation of the required amount of outflux
         
-!        filename2 = '/home/cerecam/Desktop/Du_results_Prev' // trim(JOBNAME) // '.inp'
-!        open(unit=106, file=filename2)
-!        read(106,*) temp1   ! Increment number
-!        read(106,*) temp2   ! Total flux within RVE from previous step c_dot integrated over volue of RVE
-!        read(106,*) temp3   ! Total integral of influx calculated from the previous step over area applied
-!        pbeta = (temp2-temp3)/AREA_Z0  ! Calculation of the required amount of outflux
         ! loop over element block
-        
         do kblock=1,nblock ! ---------------------------------------------------
             
 !    !===================================================================================================================================
@@ -5116,31 +5145,21 @@ SUBROUTINE VUEL(nblock,rhs,amass,dtimeStable,svars,nsvars, &
 !===============================================================================================================================================
                                             
         end do !-----------------------nblock-----------------------------------
-!        filename = '/home/cerecam/Desktop/Du_results_' // trim(JOBNAME) // '.inp'
-!            open(unit=107, file=filename,status="old",action="read")
-!            read(107,*) Increment_int
-!            read(107,*) Total_int   ! Current total of dc/dt            (**)
-!            read(107,*) Total_influx ! Current total of influx
-        
-!        if (Increment_int.eq.kInc) then ! If on the same increment (i.e. only on a different nblock) add to previous summation values (**)
-!            Total_int = sum(svars(:,1))+Total_int
-!            Total_influx = sum(svars(:,2)) + Total_influx
-!        else    ! If this increment is new (i.e. on the first nblock again)
-!            filename2 = '/home/cerecam/Desktop/Du_results_Prev' // trim(JOBNAME) // '.inp'
-!            open(unit=106, file=filename2, status="old", action="write")
-!            write(106,*) Increment_int
-!            write(106,*) Total_int      ! Store previous summation values (fully 'summed')
-!            write(106,*) Total_influx   ! Store previous summation values (fully 'summed' over all kblocks)
-!            close(106)
-!            Total_int = sum(svars(:,1)) ! New summation values (starting at at nblock==1)
-!            Total_influx = sum(svars(:,2)) ! New summation values (starting new increment at nblock=1)
-            
-!        end if 
-!        Increment_int=kInc
-!        write(107,*) kinc
-!        write(107,*) Total_int
-!        write(107,*) Total_influx ! Writing current summation of influx elements (any nblock, if nblock ==1, is a new summation, else if a incremental summation)
-!        close(107)
+        if (MOD(int(kInc),1000000).eq.0d0) then
+            CALL VGETRANK(KPROCCESSNUM
+            CALL INT_TO_STRING(KPROCESSNUM,filenamenew)
+            filename = '/home/cerecam/Desktop/Du_curr' // trim(JOBNAME) // trim(filenamenew) // '.inp'
+            open(unit=107, file=filename,status="old",action="read")
+            read(107,*) dcdt_int   ! Current total of dc/dt            (**)
+            read(107,*) influx_int ! Current total of influx
+            close(107)
+            dcdt_sum = sum(svars(:,1)) + dcdt_int
+            influx_sum = sum(svars(:,2)) + influx_int
+            open(unit=107, file=filename, status="new",action="write")
+            write(107,*) dcdt_sum
+            write(107,*) influx_sum
+            close(107)
+        end if
     end if ! ------------------------ type.eq.48 loop ---------------------------
     
     if (jtype.eq.38) then 
